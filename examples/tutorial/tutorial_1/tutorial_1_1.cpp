@@ -43,7 +43,11 @@ typedef double T;
 #define DESCRIPTOR plb::descriptors::D2Q9Descriptor
 #define PI 3.14159265
 
-#include "acoustics.h"
+// ---------------------------------------------
+// Includes of acoustics resources
+#include "acoustics/acoustics2D.h"
+using namespace plb_acoustics;
+// ---------------------------------------------
 
 T rho0 = 1.;
 T deltaRho = 1.e-4;
@@ -86,8 +90,8 @@ int main(int argc, char* argv[]) {
     defineDynamics(lattice, wall_4, new BounceBack<T,DESCRIPTOR>);*/
 
     T size_anechoic_buffer = 30;
-    plint side = 1;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, side, omega);
+    plint orientation = 1;
+    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation, omega);
 
     // Main loop over time iterations.
     for (plint iT=0; iT<maxIter; ++iT) {
