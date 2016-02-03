@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 3*150*sqrt(3); // Iterate during 1000 steps.
+    const plint maxIter = 5*150*sqrt(3); // Iterate during 1000 steps.
     const plint nx = 300;       // Choice of lattice dimensions.
     const plint ny = 300;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -90,12 +90,11 @@ int main(int argc, char* argv[]) {
     defineDynamics(lattice, wall_4, new BounceBack<T,DESCRIPTOR>);*/
 
     T size_anechoic_buffer = 30;
-    plint orientation = 1;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation, omega);
+    defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
 
     // Main loop over time iterations.
     for (plint iT=0; iT<maxIter; ++iT) {
-        Box2D centralSquare (50, 50, 150, 150);
+        Box2D centralSquare (150, 150, 150, 150);
 
         //T lattice_speed_sound = 1/sqrt(3);
         T rho_changing = 1. + deltaRho;//*sin(2*PI*(lattice_speed_sound/20)*iT);
