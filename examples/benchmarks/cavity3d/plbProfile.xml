@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<Global>
+    <NumProcesses> 1 </NumProcesses>
+    <NumIterations> 291 </NumIterations>
+    <TotalCells>
+        <Mean> 2.99818e+08 </Mean>
+        <StdDev> 0 </StdDev>
+        <Min> 2.99818e+08 </Min>
+        <Max> 2.99818e+08 </Max>
+        <Values> 2.99818e+08 </Values>
+    </TotalCells>
+    <SuS_raw>
+        <Mean> 1.00746e+07 </Mean>
+        <StdDev> 0 </StdDev>
+        <Min> 1.00746e+07 </Min>
+        <Max> 1.00746e+07 </Max>
+        <Values> 1.00746e+07 </Values>
+    </SuS_raw>
+    <SuS_overall>
+        <Mean> 6.9093e+06 </Mean>
+        <StdDev> 0 </StdDev>
+        <Min> 6.9093e+06 </Min>
+        <Max> 6.9093e+06 </Max>
+        <Values> 6.9093e+06 </Values>
+    </SuS_overall>
+    <Time_per_cycle>
+        <Mean> 0.149118 </Mean>
+        <StdDev> 0 </StdDev>
+        <Min> 0.149118 </Min>
+        <Max> 0.149118 </Max>
+        <Values> 0.149118 </Values>
+    </Time_per_cycle>
+    <Relative_communication_time>
+        <Mean> 1.28018e-05 </Mean>
+        <StdDev> 0 </StdDev>
+        <Min> 1.28018e-05 </Min>
+        <Max> 1.28018e-05 </Max>
+        <Values> 1.28018e-05 </Values>
+    </Relative_communication_time>
+    <Total_io_time>
+        <Mean> 0 </Mean>
+        <StdDev> 0 </StdDev>
+        <Min> 0 </Min>
+        <Max> 2.22507e-308 </Max>
+        <Values> 0 </Values>
+    </Total_io_time>
+    <Relative_io_time>
+        <Mean> 0 </Mean>
+        <StdDev> 0 </StdDev>
+        <Min> 0 </Min>
+        <Max> 2.22507e-308 </Max>
+        <Values> 0 </Values>
+    </Relative_io_time>
+</Global>
