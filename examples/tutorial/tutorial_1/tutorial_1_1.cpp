@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 5*150*sqrt(3); // Iterate during 1000 steps.
+    const plint maxIter = 3*150*sqrt(3); // Iterate during 1000 steps.
     const plint nx = 300;       // Choice of lattice dimensions.
     const plint ny = 300;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -91,6 +91,8 @@ int main(int argc, char* argv[]) {
 
     T size_anechoic_buffer = 30;
     defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
+    defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
+
 
     // Main loop over time iterations.
     for (plint iT=0; iT<maxIter; ++iT) {

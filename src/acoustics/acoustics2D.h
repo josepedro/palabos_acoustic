@@ -26,7 +26,8 @@ namespace plb_acoustics{
 		        DotList2D points_to_aplly_dynamics;
 		        for (int i = 0; i <= length_anechoic_wall; ++i){
 		            points_to_aplly_dynamics.addDot(
-		            	Dot2D(position_anechoic_wall[0] + delta, i));
+		            	Dot2D(position_anechoic_wall[0] + delta,
+		            	position_anechoic_wall[1] + i));
 		        }
 		        AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
@@ -34,6 +35,24 @@ namespace plb_acoustics{
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}
 		}
+
+		// delta increase to the left
+		if(orientation == 3){
+			for(T delta = 0; delta <= size_anechoic_buffer; delta++){        
+		        DotList2D points_to_aplly_dynamics;
+		        for (int i = 0; i <= length_anechoic_wall; ++i){
+		            points_to_aplly_dynamics.addDot(
+		            	Dot2D(position_anechoic_wall[0] + delta,
+		            	position_anechoic_wall[1] + i));
+		        }
+		        AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
+		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
+		        T delta_left = 30 - delta;
+		        anechoicDynamics->setDelta(delta_left);
+		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+	    	}
+		}
+
 	}
 
 	template<typename T, template<typename U> class Descriptor>
@@ -42,7 +61,19 @@ namespace plb_acoustics{
 	 	plint orientation = 1;
 	    plint length_anechoic_wall = ny;
 	    // position x and y
+	    cout << (plint) nx - size_anechoic_buffer - 1 << endl;
 	    Array<plint, 2> position_anechoic_wall((plint) nx - size_anechoic_buffer - 1, 0);
+	    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer,
+	                       orientation, omega, position_anechoic_wall, length_anechoic_wall);
+	}
+
+	template<typename T, template<typename U> class Descriptor>
+	void defineAnechoicWallOnTheLeftSide(plint nx, plint ny,
+	 MultiBlockLattice2D<T,Descriptor>& lattice, T size_anechoic_buffer, T omega){
+	 	plint orientation = 3;
+	    plint length_anechoic_wall = ny;
+	    // position x and y
+	    Array<plint, 2> position_anechoic_wall(0, 0);
 	    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer,
 	                       orientation, omega, position_anechoic_wall, length_anechoic_wall);
 	}
