@@ -87,10 +87,8 @@ int main(int argc, char* argv[]) {
 
         T lattice_speed_sound = 1/sqrt(3);
         T rho_changing = 1. + deltaRho*sin(2*PI*(lattice_speed_sound/20)*iT);
-        if (iT != 0)
-        {
+        if (iT != 0){
             initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
-
         }
         
         if (iT%20==0) {  // Write an image every 40th time step.
