@@ -93,6 +93,7 @@ int main(int argc, char* argv[]) {
     defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
     defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
     defineAnechoicWallOnTheTopSide(nx, ny, lattice, size_anechoic_buffer, omega);
+    defineAnechoicWallOnTheBottomSide(nx, ny, lattice, size_anechoic_buffer, omega);
 
 
     // Main loop over time iterations.

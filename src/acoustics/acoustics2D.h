@@ -69,6 +69,28 @@ namespace plb_acoustics{
 	    	}
 		}
 
+		// delta increase to the bottom
+		if(orientation == 2){
+			for(T delta = 0; delta <= size_anechoic_buffer; delta++){        
+		        DotList2D points_to_aplly_dynamics;
+		        for (int i = 0; i <= length_anechoic_wall; ++i){
+		            points_to_aplly_dynamics.addDot(
+		            	Dot2D(position_anechoic_wall[0] + i,
+		            	position_anechoic_wall[1] +  delta));
+		        }
+		        AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
+		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
+		        T delta_left = 30 - delta;
+		        anechoicDynamics->setDelta(delta_left);
+		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+	    	}
+		}
+
+		else{
+			cout << "Anechoic Dynamics not Defined." << endl;
+			cout << "Choose the correct orientation number." << endl;
+		}
+
 	}
 
 	template<typename T, template<typename U> class Descriptor>
@@ -100,6 +122,17 @@ namespace plb_acoustics{
 	    plint length_anechoic_wall = nx;
 	    // position x and y
 	    Array<plint, 2> position_anechoic_wall(0, (plint) ny - size_anechoic_buffer - 1);
+	    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer,
+	                       orientation, omega, position_anechoic_wall, length_anechoic_wall);
+	}
+
+	template<typename T, template<typename U> class Descriptor>
+	void defineAnechoicWallOnTheBottomSide(plint nx, plint ny,
+	 MultiBlockLattice2D<T,Descriptor>& lattice, T size_anechoic_buffer, T omega){
+	 	plint orientation = 2;
+	    plint length_anechoic_wall = nx;
+	    // position x and y
+	    Array<plint, 2> position_anechoic_wall(0, 0);
 	    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer,
 	                       orientation, omega, position_anechoic_wall, length_anechoic_wall);
 	}
