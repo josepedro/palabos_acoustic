@@ -52,9 +52,6 @@ using namespace plb_acoustics;
 T rho0 = 1.;
 T deltaRho = 1.e-4;
 
-//defineAnechoicWall(const plint&, const plint&, plb::MultiBlockLattice2D<double, plb::descriptors::D2Q9Descriptor>&)
-
-
 int main(int argc, char* argv[]) {
     plbInit(&argc, &argv);
     global::directories().setOutputDir("./tmp/");
@@ -78,31 +75,19 @@ int main(int argc, char* argv[]) {
     
     lattice.initialize();
 
-    // tomara que ele nao de nenhum problem
-     // Square x1,y1=30,30 and x2,y2=270,270
-    /*Box2D wall_1(30, 30, 30, 270);
-    Box2D wall_2(30, 270, 270, 270);
-    Box2D wall_3(270, 270, 30, 270);
-    Box2D wall_4(30, 270, 30, 30);
-    defineDynamics(lattice, wall_1, new BounceBack<T,DESCRIPTOR>);
-    defineDynamics(lattice, wall_2, new BounceBack<T,DESCRIPTOR>);
-    defineDynamics(lattice, wall_3, new BounceBack<T,DESCRIPTOR>);
-    defineDynamics(lattice, wall_4, new BounceBack<T,DESCRIPTOR>);*/
-
     T size_anechoic_buffer = 30;
-    defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
-    defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
     defineAnechoicWallOnTheTopSide(nx, ny, lattice, size_anechoic_buffer, omega);
     defineAnechoicWallOnTheBottomSide(nx, ny, lattice, size_anechoic_buffer, omega);
-
+    defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
+    defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
 
     // Main loop over time iterations.
     for (plint iT=0; iT<maxIter; ++iT) {
         Box2D centralSquare (150, 150, 150, 150);
 
-        //T lattice_speed_sound = 1/sqrt(3);
-        T rho_changing = 1. + deltaRho;//*sin(2*PI*(lattice_speed_sound/20)*iT);
-        if (iT == 0)
+        T lattice_speed_sound = 1/sqrt(3);
+        T rho_changing = 1. + deltaRho*sin(2*PI*(lattice_speed_sound/20)*iT);
+        if (iT != 0)
         {
             initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
 
@@ -116,9 +101,6 @@ int main(int argc, char* argv[]) {
             //   in the matrix
 
             imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
-
-            //imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeDensity(lattice));
-            //cout << setprecision(10) << lattice.get(290, 290).computeDensity() << endl;
         }
 
         // Execute lattice Boltzmann iteration.
@@ -126,19 +108,4 @@ int main(int argc, char* argv[]) {
         
     }
    
-    /*plint x = 150;
-    plb_ofstream ofile("profile.dat");
-    for (; x < 300; ++x){
-        ofile << setprecision(10) << lattice.get(250, 250).computeDensity() - rho0 << endl;
-    }*/
-    
-        //real    0m8.515s
-        //user    0m7.232s
-        //sys 0m0.444s
-
-        
-
-    //t1 = 10.50759912 0.135527422
-    //Box2D line(150, 300, ny/2, ny/2);
-    //ofile << setprecision(3) << *computeDensity(*extractSubDomain(lattice, line)) << endl;
 }

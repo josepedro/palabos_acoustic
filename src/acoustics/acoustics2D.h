@@ -37,7 +37,7 @@ namespace plb_acoustics{
 		}
 
 		// delta increase to the top
-		if(orientation == 4){
+		else if(orientation == 4){
 			for(T delta = 0; delta <= size_anechoic_buffer; delta++){        
 		        DotList2D points_to_aplly_dynamics;
 		        for (int i = 0; i <= length_anechoic_wall; ++i){
@@ -53,7 +53,7 @@ namespace plb_acoustics{
 		}
 
 		// delta increase to the left
-		if(orientation == 3){
+		else if(orientation == 3){
 			for(T delta = 0; delta <= size_anechoic_buffer; delta++){        
 		        DotList2D points_to_aplly_dynamics;
 		        for (int i = 0; i <= length_anechoic_wall; ++i){
@@ -70,7 +70,7 @@ namespace plb_acoustics{
 		}
 
 		// delta increase to the bottom
-		if(orientation == 2){
+		else if(orientation == 2){
 			for(T delta = 0; delta <= size_anechoic_buffer; delta++){        
 		        DotList2D points_to_aplly_dynamics;
 		        for (int i = 0; i <= length_anechoic_wall; ++i){
