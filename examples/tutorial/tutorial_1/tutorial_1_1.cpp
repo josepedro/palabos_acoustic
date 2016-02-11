@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 6*150*sqrt(3); // Iterate during 1000 steps.
+    const plint maxIter = 3*150*sqrt(3); // Iterate during 1000 steps.
     const plint nx = 300;       // Choice of lattice dimensions.
     const plint ny = 300;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -90,6 +90,7 @@ int main(int argc, char* argv[]) {
     defineDynamics(lattice, wall_4, new BounceBack<T,DESCRIPTOR>);*/
 
     T size_anechoic_buffer = 30;
+    Array<T,2> velocity((T)0.5, (T)0.5);
     defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
     defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
     defineAnechoicWallOnTheTopSide(nx, ny, lattice, size_anechoic_buffer, omega);
@@ -118,7 +119,7 @@ int main(int argc, char* argv[]) {
             imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
 
             //imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeDensity(lattice));
-            //cout << setprecision(10) << lattice.get(290, 290).computeDensity() << endl;
+            cout << setprecision(10) << lattice.get(150, 150).computeDensity() << endl;
         }
 
         // Execute lattice Boltzmann iteration.

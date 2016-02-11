@@ -643,9 +643,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     T sigma_m = 0.3;
     //T delta = total_distance - 1;
     T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
-    Array<T,2> velocity; velocity[0] = 0; velocity[1] = 0;
+    Array<T,2> j_target; j_target[0] = 0; j_target[1] = 0;
+    T rhoBar_target = rhoBar;
     T feq, f_target;
-    plint iPop; 
+    plint iPop;
 
 
     // Constants of Lattice model (eg. D2Q9)
@@ -655,31 +656,54 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     T t2_omega = D::t[2] * omega;
 
     T jSqr   = j[0]*j[0] + j[1]*j[1];
+    T jSqr_target = j_target[0]*j_target[0] + j_target[1]*j_target[1];
+    
     T kx     = (T)3 * j[0];
+    T kx_target = (T)3 * j_target[0];
+    
     T ky     = (T)3 * j[1];
+    T ky_target = (T)3 * j_target[1];
+    
     T kxSqr_ = invRho / (T)2 * kx*kx;
-    T kySqr_ = invRho / (T)2 * ky*ky;
-    T kxky_  = invRho * kx*ky;
+    T kxSqr_target = invRho / (T)2 * kx_target*kx_target;
 
+    T kySqr_ = invRho / (T)2 * ky*ky;
+    T kySqr_target = invRho / (T)2 * ky_target*ky_target;
+
+    T kxky_  = invRho * kx*ky;
+    T kxky_target  = invRho * kx_target*ky_target;
+
+    // ---------------------------------
     T C1 = rhoBar + invRho*(T)3*jSqr;
+    // Calculating target value
+    T C1_target = rhoBar_target + invRho*(T)3*jSqr_target;
+    // -------------
     T C2, C3;
+    // Declaring target values
+    T C2_target, C3_target;
 
     // i=0
     C3 = -kxSqr_ - kySqr_;
+    C3_target = -kxSqr_target - kySqr_target;
     f[0] *= one_m_omega; f[0] += t0_omega * (C1+C3);
     // plus aspects of anechoic condition
     feq = D::t[0]*(C1+C3);
     f_target = 0;
+    //f_target = D::t[0]*(C1_target + C3_target);
+    //std::cout << "f_target: " << f_target << std::endl;
     iPop = 0;
     f[iPop] += -sigma_target*(feq - f_target);
 
     // i=1 and i=5
     C2 = -kx + ky;
+    C2_target = -kx_target + ky_target;
     C3 = -kxky_;
+    C3_target = -kxky_target;
     f[1] *= one_m_omega; f[1] += t1_omega * (C1+C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[1]*(C1+C2+C3);
     f_target = 0;
+    //f_target = D::t[1]*(C1_target + C2_target + C3_target);
     iPop = 1;
     f[iPop] += -sigma_target*(feq - f_target);
     //
@@ -687,17 +711,20 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     // plus aspects of anechoic condition
     feq = D::t[1]*(C1-C2+C3);
     f_target = 0;
+    //f_target = D::t[1]*(C1_target - C2_target + C3_target);;
     iPop = 5;
     f[iPop] += -sigma_target*(feq - f_target);
     //
 
     // i=2 and i=6
     C2 = -kx;
-    C3 = -kySqr_;
+    C2_target = -kx_target;
+    C3_target = -kySqr_target;
     f[2] *= one_m_omega; f[2] += t2_omega * (C1+C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[2]*(C1+C2+C3);
     f_target = 0;
+    //f_target = D::t[2]*(C1_target + C2_target + C3_target);
     iPop = 2;
     f[iPop] += -sigma_target*(feq - f_target);
     //
@@ -705,17 +732,21 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     // plus aspects of anechoic condition
     feq = D::t[2]*(C1-C2+C3);
     f_target = 0;
+    //f_target = D::t[2]*(C1_target - C2_target + C3_target);;
     iPop = 6;
     f[iPop] += -sigma_target*(feq - f_target);
     //
 
     // i=3 and i=7
     C2 = -kx - ky;
+    C2_target = -kx_target - ky_target;
     C3 = kxky_;
+    C3_target = kxky_target;
     f[3] *= one_m_omega; f[3] += t1_omega * (C1+C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[1]*(C1+C2+C3);
     f_target = 0;
+    //f_target = D::t[1]*(C1_target + C2_target + C3_target);
     iPop = 3;
     f[iPop] += -sigma_target*(feq - f_target);
     //
@@ -723,17 +754,21 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     // plus aspects of anechoic condition
     feq = D::t[1]*(C1-C2+C3);
     f_target = 0;
+    //f_target = D::t[1]*(C1_target - C2_target + C3_target);;
     iPop = 7;
     f[iPop] += -sigma_target*(feq - f_target);
     //
 
     // i=4 and i=8
     C2 = -ky;
+    C2_target = -ky_target;
     C3 = -kxSqr_;
+    C3_target = -kxSqr_target;
     f[4] *= one_m_omega; f[4] += t2_omega * (C1+C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[2]*(C1+C2+C3);
     f_target = 0;
+    //f_target = D::t[2]*(C1_target + C2_target + C3_target);
     iPop = 4;
     f[iPop] += -sigma_target*(feq - f_target);
     //
@@ -741,6 +776,7 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     // plus aspects of anechoic condition
     feq = D::t[2]*(C1-C2+C3);
     f_target = 0;
+    //f_target = D::t[2]*(C1_target - C2_target + C3_target);
     iPop = 8;
     f[iPop] += -sigma_target*(feq - f_target);
     //

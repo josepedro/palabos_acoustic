@@ -422,6 +422,9 @@ void AnechoicDynamics<T,Descriptor>::collide(Cell<T,Descriptor>& cell, BlockStat
     T rhoBar;
     Array<T,Descriptor<T>::d> j;
     momentTemplates<T,Descriptor>::get_rhoBar_j(cell, rhoBar, j);
+    //j[0] = 0.001;
+    //j[1] = 0.001; 
+    //std::cout << "velocity x: " << j[0] << " - velocity y: " << j[1] << std::endl;
     // Some times collide external is called
     T uSqr = dynamicsTemplates<T,Descriptor>::anechoic_ma2_collision(cell, rhoBar, j, this->getOmega(), this->getDelta());
     if (cell.takesStatistics()) {
@@ -429,6 +432,7 @@ void AnechoicDynamics<T,Descriptor>::collide(Cell<T,Descriptor>& cell, BlockStat
     }
 }
 
+// Probably this function will vanish
 template<typename T, template<typename U> class Descriptor>
 void AnechoicDynamics<T,Descriptor>::collideExternal (
         Cell<T,Descriptor>& cell, T rhoBar,

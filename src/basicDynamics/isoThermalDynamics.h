@@ -166,6 +166,7 @@ public:
                          BlockStatistics& statistics_);
 
     /// Implementation of the collision step, with imposed macroscopic variables
+    // Probably this function will vanish
     virtual void collideExternal(Cell<T,Descriptor>& cell, T rhoBar,
                          Array<T,Descriptor<T>::d> const& j, T thetaBar, BlockStatistics& stat);
 
