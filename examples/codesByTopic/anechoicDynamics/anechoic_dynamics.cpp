@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 6*150*sqrt(3); // Iterate during 1000 steps.
+    const plint maxIter = 3*150*sqrt(3); // Iterate during 1000 steps.
     const plint nx = 300;       // Choice of lattice dimensions.
     const plint ny = 300;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -75,18 +75,49 @@ int main(int argc, char* argv[]) {
     
     lattice.initialize();
 
+    // Anechoic Condition
     T size_anechoic_buffer = 30;
-    defineAnechoicWallOnTheTopSide(nx, ny, lattice, size_anechoic_buffer, omega);
-    defineAnechoicWallOnTheBottomSide(nx, ny, lattice, size_anechoic_buffer, omega);
-    defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
-    defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
+    //left
+    plint orientation = 3;
+    Array<T,2> position_anechoic_wall((T)0,(T)0);
+    plint length_anechoic_wall = ny;
+    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    omega, position_anechoic_wall, length_anechoic_wall);
+
+    //right
+    orientation = 1;
+    Array<T,2> position_anechoic_wall_2((T)nx - 32,(T)0);
+    length_anechoic_wall = ny;
+    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    omega, position_anechoic_wall_2, length_anechoic_wall);
+
+    //top
+    orientation = 4;
+    Array<T,2> position_anechoic_wall_3((T) 20, (T)ny - 32);
+    length_anechoic_wall = nx - 40;
+    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    omega, position_anechoic_wall_3, length_anechoic_wall);
+
+    //bottom
+    orientation = 2;
+    Array<T,2> position_anechoic_wall_1((T)20,(T)0);
+    length_anechoic_wall = nx - 40;
+    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    omega, position_anechoic_wall_1, length_anechoic_wall);
+
+
+    //defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
+    //defineAnechoicWallOnTheTopSide(nx, ny, lattice, size_anechoic_buffer, omega);
+    //defineAnechoicWallOnTheBottomSide(nx, ny, lattice, size_anechoic_buffer, omega);
+    //defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
+    //defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
 
     // Main loop over time iterations.
     for (plint iT=0; iT<maxIter; ++iT) {
         Box2D centralSquare (150, 150, 150, 150);
 
         T lattice_speed_sound = 1/sqrt(3);
-        T rho_changing = 1. + deltaRho*sin(2*PI*(lattice_speed_sound/20)*iT);
+        T rho_changing = 1. + deltaRho;//*sin(2*PI*(lattice_speed_sound/20)*iT);
         if (iT != 0){
             initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
         }
