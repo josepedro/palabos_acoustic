@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 3*150*sqrt(3); // Iterate during 1000 steps.
+    const plint maxIter = 6*150*sqrt(3); // Iterate during 1000 steps.
     const plint nx = 300;       // Choice of lattice dimensions.
     const plint ny = 300;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
     //bottom
     orientation = 2;
     Array<T,2> position_anechoic_wall_1((T)20,(T)0);
-    length_anechoic_wall = nx - 40;
+    length_anechoic_wall = nx - 40  ;
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_1, length_anechoic_wall);
 
@@ -113,12 +113,17 @@ int main(int argc, char* argv[]) {
     //defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
 
     // Main loop over time iterations.
+    plint x = 150;
+    plb_ofstream ofile("ponto_1.dat");
+    for (; x < 300; ++x){
+        
+    }
     for (plint iT=0; iT<maxIter; ++iT) {
         Box2D centralSquare (150, 150, 150, 150);
 
         T lattice_speed_sound = 1/sqrt(3);
         T rho_changing = 1. + deltaRho;//*sin(2*PI*(lattice_speed_sound/20)*iT);
-        if (iT != 0){
+        if (iT == 0){
             initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
         }
         
@@ -129,7 +134,8 @@ int main(int argc, char* argv[]) {
             // Write a GIF file with colors rescaled to the range of values
             //   in the matrix
 
-            imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
+            //imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
+            ofile << setprecision(10) << lattice.get(150, 150).computeDensity() - rho0 << endl;
         }
 
         // Execute lattice Boltzmann iteration.
