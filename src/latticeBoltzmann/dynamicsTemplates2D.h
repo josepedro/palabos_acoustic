@@ -643,7 +643,8 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     T sigma_m = 0.3;
     //T delta = total_distance - 1;
     T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
-    Array<T,2> j_target; j_target[0] = 0; j_target[1] = 0;
+    T ux = 0.1/util::sqr(3);
+    Array<T,2> j_target; j_target[0] = ux; j_target[1] = 0;
     T rhoBar_target = rhoBar;
     T feq, f_target;
     plint iPop;
@@ -688,8 +689,8 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     f[0] *= one_m_omega; f[0] += t0_omega * (C1+C3);
     // plus aspects of anechoic condition
     feq = D::t[0]*(C1+C3);
-    f_target = 0;
-    //f_target = D::t[0]*(C1_target + C3_target);
+    //f_target = 0;
+    f_target = D::t[0]*(C1_target + C3_target);
     //std::cout << "f_target: " << f_target << std::endl;
     iPop = 0;
     f[iPop] += -sigma_target*(feq - f_target);
@@ -702,16 +703,16 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     f[1] *= one_m_omega; f[1] += t1_omega * (C1+C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[1]*(C1+C2+C3);
-    f_target = 0;
-    //f_target = D::t[1]*(C1_target + C2_target + C3_target);
+    //f_target = 0;
+    f_target = D::t[1]*(C1_target + C2_target + C3_target);
     iPop = 1;
     f[iPop] += -sigma_target*(feq - f_target);
     //
     f[5] *= one_m_omega; f[5] += t1_omega * (C1-C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[1]*(C1-C2+C3);
-    f_target = 0;
-    //f_target = D::t[1]*(C1_target - C2_target + C3_target);;
+    //f_target = 0;
+    f_target = D::t[1]*(C1_target - C2_target + C3_target);;
     iPop = 5;
     f[iPop] += -sigma_target*(feq - f_target);
     //
@@ -723,16 +724,16 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     f[2] *= one_m_omega; f[2] += t2_omega * (C1+C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[2]*(C1+C2+C3);
-    f_target = 0;
-    //f_target = D::t[2]*(C1_target + C2_target + C3_target);
+    //f_target = 0;
+    f_target = D::t[2]*(C1_target + C2_target + C3_target);
     iPop = 2;
     f[iPop] += -sigma_target*(feq - f_target);
     //
     f[6] *= one_m_omega; f[6] += t2_omega * (C1-C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[2]*(C1-C2+C3);
-    f_target = 0;
-    //f_target = D::t[2]*(C1_target - C2_target + C3_target);;
+    //f_target = 0;
+    f_target = D::t[2]*(C1_target - C2_target + C3_target);;
     iPop = 6;
     f[iPop] += -sigma_target*(feq - f_target);
     //
@@ -745,16 +746,16 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     f[3] *= one_m_omega; f[3] += t1_omega * (C1+C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[1]*(C1+C2+C3);
-    f_target = 0;
-    //f_target = D::t[1]*(C1_target + C2_target + C3_target);
+    //f_target = 0;
+    f_target = D::t[1]*(C1_target + C2_target + C3_target);
     iPop = 3;
     f[iPop] += -sigma_target*(feq - f_target);
     //
     f[7] *= one_m_omega; f[7] += t1_omega * (C1-C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[1]*(C1-C2+C3);
-    f_target = 0;
-    //f_target = D::t[1]*(C1_target - C2_target + C3_target);;
+    //f_target = 0;
+    f_target = D::t[1]*(C1_target - C2_target + C3_target);;
     iPop = 7;
     f[iPop] += -sigma_target*(feq - f_target);
     //
@@ -767,16 +768,16 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     f[4] *= one_m_omega; f[4] += t2_omega * (C1+C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[2]*(C1+C2+C3);
-    f_target = 0;
-    //f_target = D::t[2]*(C1_target + C2_target + C3_target);
+    //f_target = 0;
+    f_target = D::t[2]*(C1_target + C2_target + C3_target);
     iPop = 4;
     f[iPop] += -sigma_target*(feq - f_target);
     //
     f[8] *= one_m_omega; f[8] += t2_omega * (C1-C2+C3);
     // plus aspects of anechoic condition
     feq = D::t[2]*(C1-C2+C3);
-    f_target = 0;
-    //f_target = D::t[2]*(C1_target - C2_target + C3_target);
+    //f_target = 0;
+    f_target = D::t[2]*(C1_target - C2_target + C3_target);
     iPop = 8;
     f[iPop] += -sigma_target*(feq - f_target);
     //

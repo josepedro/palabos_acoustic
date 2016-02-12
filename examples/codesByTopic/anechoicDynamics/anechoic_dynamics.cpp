@@ -59,21 +59,24 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 6*150*sqrt(3); // Iterate during 1000 steps.
+    const plint maxIter = 80*150*sqrt(3); // Iterate during 1000 steps.
     const plint nx = 300;       // Choice of lattice dimensions.
     const plint ny = 300;
     const T omega = 1.98;        // Choice of the relaxation parameter
 
-    MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new BGKdynamics<T,DESCRIPTOR>(omega));
+    MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
 
     lattice.periodicity().toggleAll(false); // Use periodic boundaries.
 
-    Array<T,2> u0((T)0,(T)0);
+    Array<T,2> u0((T)0.0/std::sqrt(3),(T)0);
 
     // Initialize constant density everywhere.
     initializeAtEquilibrium(lattice, lattice.getBoundingBox(), rho0, u0);
     
     lattice.initialize();
+
+    Box2D quadrado( 100, 110, 100, 150);
+    defineDynamics(lattice, quadrado, new BounceBack<T,DESCRIPTOR>(rho0));
 
     // Anechoic Condition
     T size_anechoic_buffer = 30;
@@ -95,15 +98,20 @@ int main(int argc, char* argv[]) {
     orientation = 4;
     Array<T,2> position_anechoic_wall_3((T) 20, (T)ny - 32);
     length_anechoic_wall = nx - 40;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall_3, length_anechoic_wall);
+    //defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    //omega, position_anechoic_wall_3, length_anechoic_wall);
 
     //bottom
     orientation = 2;
     Array<T,2> position_anechoic_wall_1((T)20,(T)0);
-    length_anechoic_wall = nx - 40  ;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall_1, length_anechoic_wall);
+    length_anechoic_wall = nx - 32  ;
+    //defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    //omega, position_anechoic_wall_1, length_anechoic_wall);
+
+    Box2D cima(0, 300, 298, 299);
+    defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
+    Box2D baixo(0, 300, 1, 2);
+    defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
 
 
     //defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
@@ -115,27 +123,25 @@ int main(int argc, char* argv[]) {
     // Main loop over time iterations.
     plint x = 150;
     plb_ofstream ofile("ponto_1.dat");
-    for (; x < 300; ++x){
-        
-    }
     for (plint iT=0; iT<maxIter; ++iT) {
         Box2D centralSquare (150, 150, 150, 150);
 
         T lattice_speed_sound = 1/sqrt(3);
         T rho_changing = 1. + deltaRho;//*sin(2*PI*(lattice_speed_sound/20)*iT);
         if (iT == 0){
-            initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
+            //initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
         }
         
-        if (iT%20==0) {  // Write an image every 40th time step.
+        if (iT%40==0) {  // Write an image every 40th time step.
             pcout << "Writing GIF file at iT=" << iT << endl;
             // Instantiate an image writer with the color map "leeloo".
             ImageWriter<T> imageWriter("leeloo");
             // Write a GIF file with colors rescaled to the range of values
             //   in the matrix
-
-            //imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
-            ofile << setprecision(10) << lattice.get(150, 150).computeDensity() - rho0 << endl;
+            imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeVorticity(*computeVelocity(lattice)));
+            //imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeDensity(lattice));
+            //imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho*100, (T) rho0 + deltaRho*100);
+            ofile << setprecision(10) << lattice.get(200, 200).computeDensity() - rho0 << endl;
         }
 
         // Execute lattice Boltzmann iteration.
