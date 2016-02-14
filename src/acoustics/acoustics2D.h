@@ -18,7 +18,8 @@ namespace plb_acoustics{
 	void defineAnechoicWall(plint nx, plint ny,
 	 MultiBlockLattice2D<T,Descriptor>& lattice,
 	  T size_anechoic_buffer, plint orientation, T omega, 
-	  Array<plint, 2> position_anechoic_wall, plint length_anechoic_wall){
+	  Array<plint, 2> position_anechoic_wall, plint length_anechoic_wall,
+	  T rhoBar_target, Array<T,2> j_target){
 		
 		// delta increase to the right
 		if(orientation == 1){
@@ -32,6 +33,9 @@ namespace plb_acoustics{
 		        AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
 		        anechoicDynamics->setDelta((T) delta);
+		        anechoicDynamics->setRhoBar_target(rhoBar_target);
+		        j_target[0] = -j_target[0];  
+		        anechoicDynamics->setJ_target(j_target);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}
 		}
@@ -65,6 +69,8 @@ namespace plb_acoustics{
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
 		        T delta_left = 30 - delta;
 		        anechoicDynamics->setDelta(delta_left);
+		        anechoicDynamics->setRhoBar_target(rhoBar_target);
+		        anechoicDynamics->setJ_target(j_target);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}
 		}

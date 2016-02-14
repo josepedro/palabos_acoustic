@@ -81,10 +81,11 @@ static T bgk_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar, Array<T,Descripto
         ::bgk_ma2_collision(cell.getRawPopulations(), rhoBar, j, omega);
 }
 
-static T anechoic_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar, Array<T,Descriptor<T>::d> const& j, T omega, T delta)
+static T anechoic_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar, 
+    Array<T,Descriptor<T>::d> const& j, T omega, T delta, T rhoBar_target, Array<T,2> j_target)
 {
     return dynamicsTemplatesImpl<T,typename Descriptor<T>::BaseDescriptor>
-        ::anechoic_ma2_collision(cell.getRawPopulations(), rhoBar, j, omega, delta);
+        ::anechoic_ma2_collision(cell.getRawPopulations(), rhoBar, j, omega, delta, rhoBar_target, j_target);
 }
 
 static T complete_bgk_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar, T invRho, Array<T,Descriptor<T>::d> const& j, T omega)

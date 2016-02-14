@@ -426,7 +426,8 @@ void AnechoicDynamics<T,Descriptor>::collide(Cell<T,Descriptor>& cell, BlockStat
     //j[1] = 0.001; 
     //std::cout << "velocity x: " << j[0] << " - velocity y: " << j[1] << std::endl;
     // Some times collide external is called
-    T uSqr = dynamicsTemplates<T,Descriptor>::anechoic_ma2_collision(cell, rhoBar, j, this->getOmega(), this->getDelta());
+    T uSqr = dynamicsTemplates<T,Descriptor>::anechoic_ma2_collision(cell, rhoBar, j, 
+        this->getOmega(), this->getDelta(), this->getRhoBar_target(), this->getJ_target());
     if (cell.takesStatistics()) {
         gatherStatistics(statistics, rhoBar, uSqr);
     }
@@ -438,7 +439,8 @@ void AnechoicDynamics<T,Descriptor>::collideExternal (
         Cell<T,Descriptor>& cell, T rhoBar,
         Array<T,Descriptor<T>::d> const& j, T thetaBar, BlockStatistics& stat )
 {
-    dynamicsTemplates<T,Descriptor>::anechoic_ma2_collision(cell, rhoBar, j, this->getOmega(), this->getDelta());
+    dynamicsTemplates<T,Descriptor>::anechoic_ma2_collision(cell, rhoBar, j, this->getOmega(),
+     this->getDelta(), this->getRhoBar_target(), this->getJ_target());
 }
 
 template<typename T, template<typename U> class Descriptor>
@@ -458,6 +460,28 @@ void AnechoicDynamics<T,Descriptor>::setDelta(T delta){
 template<typename T, template<typename U> class Descriptor>
 T AnechoicDynamics<T,Descriptor>::getDelta(){
     return this->delta;
+}
+
+// RhoBar_target to develop outflow
+template<typename T, template<typename U> class Descriptor>
+void AnechoicDynamics<T,Descriptor>::setRhoBar_target(T rhoBar_target){
+    this->rhoBar_target = rhoBar_target;
+}
+
+template<typename T, template<typename U> class Descriptor>
+T AnechoicDynamics<T,Descriptor>::getRhoBar_target(){
+    return this->rhoBar_target;
+}
+
+// J_target is velocity to anechoic
+template<typename T, template<typename U> class Descriptor>
+void AnechoicDynamics<T,Descriptor>::setJ_target(Array<T,2> j_target){
+    this->j_target = j_target;
+}
+
+template<typename T, template<typename U> class Descriptor>
+Array<T,2> AnechoicDynamics<T,Descriptor>::getJ_target(){
+    return this->j_target;
 }
 
 template<typename T, template<typename U> class Descriptor>

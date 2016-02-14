@@ -637,18 +637,145 @@ static T bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> const& j,
     return invRho*invRho*jSqr;
 }
 
-static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> const& j, T omega, T invRho, T delta) {
+static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, 
+    Array<T,2> const& j, T omega, T invRho, T delta, T rhoBar_target ,Array<T,2> j_target) {
     // Parameters of Anechoic Condition
     T total_distance = 30;
     T sigma_m = 0.3;
     //T delta = total_distance - 1;
     T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
-    T ux = 0.1/util::sqr(3);
-    Array<T,2> j_target; j_target[0] = ux; j_target[1] = 0;
-    T rhoBar_target = rhoBar;
+    //Array<T,2> j_target; j_target[0] = 0.11/std::sqrt(3); j_target[1] = 0.0/std::sqrt(3);
+    //T rhoBar_target = rhoBar + (T) 1.e-2;
     T feq, f_target;
-    plint iPop;
 
+    // Constants of BGK D2Q9
+    T one_m_omega = (T)1 - omega;
+    T t0_omega = D::t[0] * omega;
+    T t1_omega = D::t[1] * omega;
+    T t2_omega = D::t[2] * omega;
+
+    T jSqr   = j[0]*j[0] + j[1]*j[1];
+    T jSqr_target = j_target[0]*j_target[0] + j_target[1]*j_target[1];
+
+    T kx     = (T)3 * j[0];
+    T kx_target = (T)3 * j_target[0];
+
+    T ky     = (T)3 * j[1];
+    T ky_target = (T)3 * j_target[1];
+
+    T kxSqr_ = invRho / (T)2 * kx*kx;
+    T kxSqr_target = invRho / (T)2 * kx_target*kx_target;
+
+    T kySqr_ = invRho / (T)2 * ky*ky;
+    T kySqr_target = invRho / (T)2 * ky_target*ky_target;
+
+    T kxky_  = invRho * kx*ky;
+    T kxky_target  = invRho * kx_target*ky_target;
+
+    T C1 = rhoBar + invRho*(T)3*jSqr;
+    // Calculating target value
+    T C1_target = rhoBar_target + invRho*(T)3*jSqr_target;
+    // -------
+    T C2, C3;
+     // Declaring target values
+    T C2_target, C3_target;
+    
+    T ux = j[0]*invRho;
+    T ux_target = j_target[0]*invRho;
+    T uy = j[1]*invRho;
+    T uy_target = j_target[1]*invRho;
+    
+    T ux2 = ux*ux; T ux2_target = ux_target*ux_target;
+    T uy2 = uy*uy; T uy2_target = uy_target*uy_target;
+
+
+    // i=0
+    C3 = -kxSqr_ - kySqr_;
+    C3_target = -kxSqr_target - kySqr_target;
+    f[0] *= one_m_omega; f[0] += t0_omega*(C1+C3) + omega*j[0]*ux*uy2;
+    feq = D::t[0]*(C1+C3) + j[0]*ux*uy2;
+    f_target = D::t[0]*(C1_target + C3_target) + j_target[0]*ux_target*uy2_target;
+    f[0] += -sigma_target*(feq - f_target);
+//     f[0] *= one_m_omega; f[0] += t0_omega * (C1+C3+j[0]*ux*uy2);
+
+    // i=1 and i=5
+    C2 = -kx + ky;
+    C2_target = -kx_target + ky_target;
+    C3 = -kxky_;
+    C3_target = -kxky_target; 
+    //--
+    f[1] *= one_m_omega; f[1] += t1_omega*(C1+C2+C3) + omega*(T)0.25*j[0]*uy*(ux*uy+ux-uy);
+    feq = D::t[1]*(C1+C2+C3) + 0.25*j[0]*uy*(ux*uy+ux-uy);
+    f_target = D::t[1]*(C1_target + C2_target + C3_target) + 0.25*j_target[0]*
+    uy_target*(ux_target*uy_target+ux_target-uy_target);
+    f[1] += -sigma_target*(feq - f_target);
+    //--
+    f[5] *= one_m_omega; f[5] += t1_omega * (C1-C2+C3) + omega*(T)0.25*j[0]*uy*(ux*uy-ux+uy);
+    feq = D::t[1]*(C1-C2+C3) + 0.25*j[0]*uy*(ux*uy-ux+uy);
+    f_target = D::t[1]*(C1_target - C2_target  +C3_target) + 0.25*j_target[0]*
+    uy_target*(ux_target*uy_target - ux_target +uy_target);
+    f[5] += -sigma_target*(feq - f_target);
+
+//     f[1] *= one_m_omega; f[1] += t1_omega * (C1+C2+C3+(T)0.25*j[0]*uy*(ux*uy+ux-uy));
+//     f[5] *= one_m_omega; f[5] += t1_omega * (C1-C2+C3+(T)0.25*j[0]*uy*(ux*uy-ux+uy));
+
+    // i=2 and i=6
+    C2 = -kx;
+    C2_target = -kx_target;
+    C3 = -kySqr_;
+    C3_target = -kySqr_target;
+    f[2] *= one_m_omega; f[2] += t2_omega * (C1+C2+C3) - omega*(T)0.5*j[0]*uy2*(ux-(T)1);
+    feq = D::t[2]*(C1+C2+C3) - 0.5*j[0]*uy2*(ux-(T)1);
+    f_target = D::t[2]*(C1_target+C2_target+C3_target) - 0.5*j_target[0]*uy2_target*(ux_target-(T)1);
+    f[2] += -sigma_target*(feq - f_target);
+    //--
+    f[6] *= one_m_omega; f[6] += t2_omega * (C1-C2+C3) - omega*(T)0.5*j[0]*uy2*(ux+(T)1);
+    feq = D::t[2]*(C1-C2+C3) - 0.5*j[0]*uy2*(ux+(T)1);
+    f_target = D::t[2]*(C1_target-C2_target+C3_target) - 0.5*j_target[0]*uy2_target*(ux_target+(T)1);
+    f[6] += -sigma_target*(feq - f_target);
+//     f[2] *= one_m_omega; f[2] += t2_omega * (C1+C2+C3 - (T)0.5*j[0]*uy2*(ux-(T)1));
+//     f[6] *= one_m_omega; f[6] += t2_omega * (C1-C2+C3 - (T)0.5*j[0]*uy2*(ux+(T)1));
+
+    // i=3 and i=7
+    C2 = -kx - ky;
+    C2_target = -kx_target - ky_target;
+    C3 = kxky_;
+    C3_target = kxky_target;
+    f[3] *= one_m_omega; f[3] += t1_omega * (C1+C2+C3) + omega*(T)0.25*j[0]*uy*(ux*uy-ux-uy);
+    feq = D::t[1]*(C1+C2+C3) + 0.25*j[0]*uy*(ux*uy-ux-uy);
+    f_target = D::t[1]*(C1_target+C2_target+C3_target) + 
+    0.25*j_target[0]*uy_target*(ux_target*uy_target-ux_target-uy_target);
+    f[3] += -sigma_target*(feq - f_target);
+    //--
+    f[7] *= one_m_omega; f[7] += t1_omega * (C1-C2+C3) + omega*(T)0.25*j[0]*uy*(ux*uy+ux+uy);
+    feq = D::t[1]*(C1-C2+C3) + 0.25*j[0]*uy*(ux*uy+ux+uy);
+    f_target = D::t[1]*(C1_target-C2_target+C3_target) + 
+    0.25*j_target[0]*uy_target*(ux_target*uy_target+ux_target+uy_target);
+    f[7] += -sigma_target*(feq - f_target);
+//     f[3] *= one_m_omega; f[3] += t1_omega * (C1+C2+C3 + (T)0.25*j[0]*uy*(ux*uy-ux-uy));
+//     f[7] *= one_m_omega; f[7] += t1_omega * (C1-C2+C3 + (T)0.25*j[0]*uy*(ux*uy+ux+uy));
+
+    // i=4 and i=8
+    C2 = -ky;
+    C2_target = -ky_target;
+    C3 = -kxSqr_;
+    C3_target = -kxSqr_target;
+    f[4] *= one_m_omega; f[4] += t2_omega * (C1+C2+C3) - omega*(T)0.5*j[1]*ux2*(uy-(T)1);
+    feq = D::t[2]*(C1+C2+C3) - 0.5*j[1]*ux2*(uy-(T)1);
+    f_target = D::t[2]*(C1_target+C2_target+C3_target) - 0.5*j_target[1]*ux2_target*(uy_target-(T)1);
+    f[4] += -sigma_target*(feq - f_target);
+    //--
+    f[8] *= one_m_omega; f[8] += t2_omega * (C1-C2+C3) - omega*(T)0.5*j[1]*ux2*(uy+(T)1);
+    feq = D::t[2]*(C1-C2+C3) - 0.5*j[1]*ux2*(uy+(T)1);
+    f_target = D::t[2]*(C1_target-C2_target+C3_target) - 0.5*j_target[1]*ux2_target*(uy_target+(T)1);
+    f[8] += -sigma_target*(feq - f_target);
+//     f[4] *= one_m_omega; f[4] += t2_omega * (C1+C2+C3 - (T)0.5*j[1]*ux2*(uy-(T)1));
+//     f[8] *= one_m_omega; f[8] += t2_omega * (C1-C2+C3 - (T)0.5*j[1]*ux2*(uy+(T)1));
+
+    return invRho*invRho*jSqr;
+
+
+/*
 
     // Constants of Lattice model (eg. D2Q9)
     T one_m_omega = (T)1 - omega;
@@ -782,7 +909,7 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,2> cons
     f[iPop] += -sigma_target*(feq - f_target);
     //
 
-    return invRho*invRho*jSqr;
+    return invRho*invRho*jSqr;*/
 }
 
 static T complete_bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, T invRho, Array<T,2> const& j, T omega) {
@@ -874,8 +1001,10 @@ static T bgk_ma2_collision(Array<T,D::q>& f, T rhoBar, Array<T,2> const& j, T om
     return bgk_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar));
 }
 
-static T anechoic_ma2_collision(Array<T,D::q>& f, T rhoBar, Array<T,2> const& j, T omega, T delta) {
-    return anechoic_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar), delta);
+static T anechoic_ma2_collision(Array<T,D::q>& f, T rhoBar, 
+    Array<T,2> const& j, T omega, T delta, T rhoBar_target, Array<T,2> j_target) {
+    return anechoic_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar), delta, 
+    rhoBar_target, j_target);
 }
 
 static T bgk_inc_collision(Array<T,D::q>& f, T rhoBar, Array<T,2> const& j, T omega, T invRho0=(T)1 ) {

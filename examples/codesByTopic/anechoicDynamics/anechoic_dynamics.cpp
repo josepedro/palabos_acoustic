@@ -59,14 +59,15 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 80*150*sqrt(3); // Iterate during 1000 steps.
+    const plint maxIter = 120*150*sqrt(3); // Iterate during 1000 steps.
     const plint nx = 300;       // Choice of lattice dimensions.
     const plint ny = 300;
     const T omega = 1.98;        // Choice of the relaxation parameter
 
+    pcout << "Total iteration: " << maxIter << std::endl;
     MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
 
-    lattice.periodicity().toggleAll(false); // Use periodic boundaries.
+    //lattice.periodicity().toggleAll(false); // Use periodic boundaries.
 
     Array<T,2> u0((T)0.0/std::sqrt(3),(T)0);
 
@@ -75,43 +76,47 @@ int main(int argc, char* argv[]) {
     
     lattice.initialize();
 
-    Box2D quadrado( 100, 110, 100, 150);
+    Box2D quadrado( 150 - 20, 150 + 20, 150 - 20, 150 + 20);
     defineDynamics(lattice, quadrado, new BounceBack<T,DESCRIPTOR>(rho0));
 
     // Anechoic Condition
-    T size_anechoic_buffer = 30;
+   T size_anechoic_buffer = 30;
+   T rhoBar_target = rho0 + 1.e-3;
+   Array<T,2> j_target(0.11/std::sqrt(3), 0.0/std::sqrt(3));
     //left
-    plint orientation = 3;
+   plint orientation = 3;
     Array<T,2> position_anechoic_wall((T)0,(T)0);
-    plint length_anechoic_wall = ny;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall, length_anechoic_wall);
+    plint length_anechoic_wall = ny + 1;
+  defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    omega, position_anechoic_wall, length_anechoic_wall,
+    rhoBar_target, j_target);
 
     //right
     orientation = 1;
-    Array<T,2> position_anechoic_wall_2((T)nx - 32,(T)0);
-    length_anechoic_wall = ny;
+    Array<T,2> position_anechoic_wall_2((T)nx - 30,(T)0);
+    length_anechoic_wall = ny + 1;
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall_2, length_anechoic_wall);
+    omega, position_anechoic_wall_2, length_anechoic_wall,
+    rhoBar_target, j_target);
 
     //top
     orientation = 4;
-    Array<T,2> position_anechoic_wall_3((T) 20, (T)ny - 32);
-    length_anechoic_wall = nx - 40;
-    //defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    //omega, position_anechoic_wall_3, length_anechoic_wall);
+    /*Array<T,2> position_anechoic_wall_3((T) 20, (T)ny - 30);
+    length_anechoic_wall = nx - 30;
+    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    omega, position_anechoic_wall_3, length_anechoic_wall);*/
 
     //bottom
-    orientation = 2;
+    /*orientation = 2;
     Array<T,2> position_anechoic_wall_1((T)20,(T)0);
     length_anechoic_wall = nx - 32  ;
-    //defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    //omega, position_anechoic_wall_1, length_anechoic_wall);
+    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    omega, position_anechoic_wall_1, length_anechoic_wall);*/
 
     Box2D cima(0, 300, 298, 299);
-    defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
+    //defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
     Box2D baixo(0, 300, 1, 2);
-    defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
+    //defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
 
 
     //defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
@@ -138,12 +143,17 @@ int main(int argc, char* argv[]) {
             ImageWriter<T> imageWriter("leeloo");
             // Write a GIF file with colors rescaled to the range of values
             //   in the matrix
-            imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeVorticity(*computeVelocity(lattice)));
+            imageWriter.writeScaledGif(createFileName("u", iT, 6),
+                               *computeVelocityNorm(lattice) );
+           // imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeVorticity(*computeVelocity(lattice)));
             //imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeDensity(lattice));
-            //imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho*100, (T) rho0 + deltaRho*100);
-            ofile << setprecision(10) << lattice.get(200, 200).computeDensity() - rho0 << endl;
+           //imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
+             pcout << "; av energy ="
+                  << setprecision(10) << getStoredAverageEnergy<T>(lattice)
+                  << "; av rho ="
+                  << getStoredAverageDensity<T>(lattice) << endl;
         }
-
+        ofile << setprecision(10) << lattice.get(200, 200).computeDensity() - rho0 << endl;
         // Execute lattice Boltzmann iteration.
         lattice.collideAndStream();
         
