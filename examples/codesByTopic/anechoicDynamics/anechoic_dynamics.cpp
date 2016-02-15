@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 120*150*sqrt(3); // Iterate during 1000 steps.
+    const plint maxIter = 200000; // Iterate during 1000 steps.
     const plint nx = 300;       // Choice of lattice dimensions.
     const plint ny = 300;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     
     lattice.initialize();
 
-    Box2D quadrado( 150 - 20, 150 + 20, 150 - 20, 150 + 20);
+    Box2D quadrado( 150 - 10, 150 + 10, 150 - 10, 150 + 10);
     defineDynamics(lattice, quadrado, new BounceBack<T,DESCRIPTOR>(rho0));
 
     // Anechoic Condition
@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
             //initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
         }
         
-        if (iT%40==0) {  // Write an image every 40th time step.
+        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "Writing GIF file at iT=" << iT << endl;
             // Instantiate an image writer with the color map "leeloo".
             ImageWriter<T> imageWriter("leeloo");
