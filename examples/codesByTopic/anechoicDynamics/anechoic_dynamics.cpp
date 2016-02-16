@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 
     // Anechoic Condition
    T size_anechoic_buffer = 30;
-   T rhoBar_target = rho0 + 1.e-3;
+   T rhoBar_target = 1.e-3;
    Array<T,2> j_target(0.11/std::sqrt(3), 0.0/std::sqrt(3));
     //left
    plint orientation = 3;
@@ -101,17 +101,21 @@ int main(int argc, char* argv[]) {
 
     //top
     orientation = 4;
-    /*Array<T,2> position_anechoic_wall_3((T) 20, (T)ny - 30);
-    length_anechoic_wall = nx - 30;
+    Array<T,2> position_anechoic_wall_3((T) 0, (T)ny - 30);
+    length_anechoic_wall = nx + 1;
+    Array<T,2> test(-j_target[0], j_target[1]);
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall_3, length_anechoic_wall);*/
+    omega, position_anechoic_wall_3, length_anechoic_wall,
+    rhoBar_target, test);
 
     //bottom
-    /*orientation = 2;
-    Array<T,2> position_anechoic_wall_1((T)20,(T)0);
-    length_anechoic_wall = nx - 32  ;
+    orientation = 2;
+    Array<T,2> position_anechoic_wall_1((T)0,(T)0);
+    length_anechoic_wall = nx + 1;
+    Array<T,2> test_1(-j_target[0], j_target[1]);
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall_1, length_anechoic_wall);*/
+    omega, position_anechoic_wall_1, length_anechoic_wall,
+    rhoBar_target, test_1);
 
     Box2D cima(0, 300, 298, 299);
     //defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
