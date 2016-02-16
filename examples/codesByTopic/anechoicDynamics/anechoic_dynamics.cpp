@@ -60,8 +60,8 @@ int main(int argc, char* argv[]) {
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
     const plint maxIter = 200000; // Iterate during 1000 steps.
-    const plint nx = 300;       // Choice of lattice dimensions.
-    const plint ny = 300;
+    const plint nx = 600;       // Choice of lattice dimensions.
+    const plint ny = 400;
     const T omega = 1.98;        // Choice of the relaxation parameter
 
     pcout << "Total iteration: " << maxIter << std::endl;
@@ -103,7 +103,8 @@ int main(int argc, char* argv[]) {
     orientation = 4;
     Array<T,2> position_anechoic_wall_3((T) 0, (T)ny - 30);
     length_anechoic_wall = nx + 1;
-    Array<T,2> test(-j_target[0], j_target[1]);
+    Array<T,2> test(0,0);
+    //Array<T,2> test(-j_target[0], j_target[1]);
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_3, length_anechoic_wall,
     rhoBar_target, test);
@@ -112,7 +113,9 @@ int main(int argc, char* argv[]) {
     orientation = 2;
     Array<T,2> position_anechoic_wall_1((T)0,(T)0);
     length_anechoic_wall = nx + 1;
-    Array<T,2> test_1(-j_target[0], j_target[1]);
+
+    //Array<T,2> test_1(-j_target[0], j_target[1]);
+    Array<T,2> test_1(0,0);
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_1, length_anechoic_wall,
     rhoBar_target, test_1);
@@ -130,8 +133,6 @@ int main(int argc, char* argv[]) {
     //defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
 
     // Main loop over time iterations.
-    plint x = 150;
-    plb_ofstream ofile("ponto_1.dat");
     for (plint iT=0; iT<maxIter; ++iT) {
         Box2D centralSquare (150, 150, 150, 150);
 
@@ -141,23 +142,96 @@ int main(int argc, char* argv[]) {
             //initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
         }
         
-        if (iT%100==0) {  // Write an image every 40th time step.
-            pcout << "Writing GIF file at iT=" << iT << endl;
+       if (iT%1000==0) {  // Write an image every 40th time step.
+            pcout << "iT= " << iT << endl;
             // Instantiate an image writer with the color map "leeloo".
-            ImageWriter<T> imageWriter("leeloo");
+            /*ImageWriter<T> imageWriter("leeloo");
             // Write a GIF file with colors rescaled to the range of values
             //   in the matrix
             imageWriter.writeScaledGif(createFileName("u", iT, 6),
-                               *computeVelocityNorm(lattice) );
+                               *computeVelocityNorm(lattice) );*/
            // imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeVorticity(*computeVelocity(lattice)));
             //imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeDensity(lattice));
            //imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
              pcout << "; av energy ="
                   << setprecision(10) << getStoredAverageEnergy<T>(lattice)
                   << "; av rho ="
-                  << getStoredAverageDensity<T>(lattice) << endl;
+                  << getStoredAverageDensity<T>(lattice)
+                  << "; av norm_velocity ="
+                  << setprecision(10) << getStoredMaxVelocity<T>(lattice)
+                  << endl;
         }
-        ofile << setprecision(10) << lattice.get(200, 200).computeDensity() - rho0 << endl;
+
+        if (iT == 100){
+            plb_ofstream ofile_100("velocity_uy_100.dat");
+            Array<T,2> u;
+            for (int i = 0; i < ny; ++i){
+                lattice.get(nx/2, i).computeVelocity(u);
+                ofile_100 << setprecision(10) <<  u[1] << endl;    
+            }
+        }
+
+        if (iT == 500){
+            plb_ofstream ofile_500("velocity_uy_500.dat");
+            Array<T,2> u;
+            for (int i = 0; i < ny; ++i){
+                lattice.get(nx/2, i).computeVelocity(u);
+                ofile_500 << setprecision(10) <<  u[1] << endl;    
+            }
+        }
+
+        if (iT == 1000){
+            plb_ofstream ofile_1000("velocity_uy_1000.dat");
+            Array<T,2> u;
+            for (int i = 0; i < ny; ++i){
+                lattice.get(nx/2, i).computeVelocity(u);
+                ofile_1000 << setprecision(10) <<  u[1] << endl;    
+            }
+        }
+
+        if (iT == 5000){
+            plb_ofstream ofile_5000("velocity_uy_5000.dat");
+            Array<T,2> u;
+            for (int i = 0; i < ny; ++i){
+                lattice.get(nx/2, i).computeVelocity(u);
+                ofile_5000 << setprecision(10) <<  u[1] << endl;    
+            }
+        }
+
+        if (iT == 10000){
+            plb_ofstream ofile_10000("velocity_uy_10000.dat");
+            Array<T,2> u;
+            for (int i = 0; i < ny; ++i){
+                lattice.get(nx/2, i).computeVelocity(u);
+                ofile_10000 << setprecision(10) <<  u[1] << endl;    
+            }
+        }
+        if (iT == 20000){
+            plb_ofstream ofile_20000("velocity_uy_20000.dat");
+            Array<T,2> u;
+            for (int i = 0; i < ny; ++i){
+                lattice.get(nx/2, i).computeVelocity(u);
+                ofile_20000 << setprecision(10) <<  u[1] << endl;    
+            }
+        }
+        if (iT == 50000){
+            plb_ofstream ofile_50000("velocity_uy_50000.dat");
+            Array<T,2> u;
+            for (int i = 0; i < ny; ++i){
+                lattice.get(nx/2, i).computeVelocity(u);
+                ofile_50000 << setprecision(10) <<  u[1] << endl;    
+            }
+        }
+        if (iT == 100000){
+            plb_ofstream ofile_100000("velocity_uy_100000.dat");
+            Array<T,2> u;
+            for (int i = 0; i < ny; ++i){
+                lattice.get(nx/2, i).computeVelocity(u);
+                ofile_100000 << setprecision(10) <<  u[1] << endl;    
+            }
+        }
+
+        
         // Execute lattice Boltzmann iteration.
         lattice.collideAndStream();
         
