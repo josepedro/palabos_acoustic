@@ -34,7 +34,7 @@ namespace plb_acoustics{
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
 		        anechoicDynamics->setDelta((T) delta);
 		        anechoicDynamics->setRhoBar_target(rhoBar_target);
-		        j_target[0] = -j_target[0];  
+		        //j_target[0] = -j_target[0];  
 		        anechoicDynamics->setJ_target(j_target);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}
@@ -53,8 +53,6 @@ namespace plb_acoustics{
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
 		        anechoicDynamics->setDelta((T) delta);
 		        anechoicDynamics->setRhoBar_target(rhoBar_target);
-		        
-
 		        anechoicDynamics->setJ_target(j_target);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}

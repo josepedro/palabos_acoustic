@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 200000; // Iterate during 1000 steps.
+    const plint maxIter = 100001; // Iterate during 1000 steps.
     const plint nx = 600;       // Choice of lattice dimensions.
     const plint ny = 400;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -77,11 +77,11 @@ int main(int argc, char* argv[]) {
     lattice.initialize();
 
     Box2D quadrado( 150 - 10, 150 + 10, 150 - 10, 150 + 10);
-    defineDynamics(lattice, quadrado, new BounceBack<T,DESCRIPTOR>(rho0));
+    //defineDynamics(lattice, quadrado, new BounceBack<T,DESCRIPTOR>(rho0));
 
     // Anechoic Condition
    T size_anechoic_buffer = 30;
-   T rhoBar_target = 1.e-3;
+   T rhoBar_target = 0;
    Array<T,2> j_target(0.11/std::sqrt(3), 0.0/std::sqrt(3));
     //left
    plint orientation = 3;
@@ -107,22 +107,21 @@ int main(int argc, char* argv[]) {
     //Array<T,2> test(-j_target[0], j_target[1]);
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_3, length_anechoic_wall,
-    rhoBar_target, test);
+    rhoBar_target, j_target);
 
     //bottom
     orientation = 2;
     Array<T,2> position_anechoic_wall_1((T)0,(T)0);
     length_anechoic_wall = nx + 1;
-
     //Array<T,2> test_1(-j_target[0], j_target[1]);
     Array<T,2> test_1(0,0);
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_1, length_anechoic_wall,
-    rhoBar_target, test_1);
+    rhoBar_target, j_target);
 
-    Box2D cima(0, 300, 298, 299);
+    Box2D cima(0, nx, ny - 1, ny);
     //defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
-    Box2D baixo(0, 300, 1, 2);
+    Box2D baixo(0, nx, 0, 1);
     //defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
 
 
@@ -149,7 +148,8 @@ int main(int argc, char* argv[]) {
             // Write a GIF file with colors rescaled to the range of values
             //   in the matrix
             imageWriter.writeScaledGif(createFileName("u", iT, 6),
-                               *computeVelocityNorm(lattice) );*/
+                               *computeVelocityNorm(lattice) );
+                               */
            // imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeVorticity(*computeVelocity(lattice)));
             //imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeDensity(lattice));
            //imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
                   << setprecision(10) << getStoredAverageEnergy<T>(lattice)
                   << "; av rho ="
                   << getStoredAverageDensity<T>(lattice)
-                  << "; av norm_velocity ="
+                  << "; av max velocity ="
                   << setprecision(10) << getStoredMaxVelocity<T>(lattice)
                   << endl;
         }
@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
             Array<T,2> u;
             for (int i = 0; i < ny; ++i){
                 lattice.get(nx/2, i).computeVelocity(u);
-                ofile_100 << setprecision(10) <<  u[1] << endl;    
+                ofile_100 << setprecision(10) << u[0] << " " << u[1] << endl;    
             }
         }
 
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
             Array<T,2> u;
             for (int i = 0; i < ny; ++i){
                 lattice.get(nx/2, i).computeVelocity(u);
-                ofile_500 << setprecision(10) <<  u[1] << endl;    
+                ofile_500 << setprecision(10) << u[0] << " " << u[1] << endl;    
             }
         }
 
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
             Array<T,2> u;
             for (int i = 0; i < ny; ++i){
                 lattice.get(nx/2, i).computeVelocity(u);
-                ofile_1000 << setprecision(10) <<  u[1] << endl;    
+                ofile_1000 << setprecision(10) << u[0] << " " << u[1] << endl;    
             }
         }
 
@@ -194,7 +194,7 @@ int main(int argc, char* argv[]) {
             Array<T,2> u;
             for (int i = 0; i < ny; ++i){
                 lattice.get(nx/2, i).computeVelocity(u);
-                ofile_5000 << setprecision(10) <<  u[1] << endl;    
+                ofile_5000 << setprecision(10) << u[0] << " " << u[1] << endl;    
             }
         }
 
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
             Array<T,2> u;
             for (int i = 0; i < ny; ++i){
                 lattice.get(nx/2, i).computeVelocity(u);
-                ofile_10000 << setprecision(10) <<  u[1] << endl;    
+                ofile_10000 << setprecision(10) << u[0] << " " << u[1] << endl;    
             }
         }
         if (iT == 20000){
@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
             Array<T,2> u;
             for (int i = 0; i < ny; ++i){
                 lattice.get(nx/2, i).computeVelocity(u);
-                ofile_20000 << setprecision(10) <<  u[1] << endl;    
+                ofile_20000 << setprecision(10) << u[0] << " " << u[1] << endl;    
             }
         }
         if (iT == 50000){
@@ -219,7 +219,7 @@ int main(int argc, char* argv[]) {
             Array<T,2> u;
             for (int i = 0; i < ny; ++i){
                 lattice.get(nx/2, i).computeVelocity(u);
-                ofile_50000 << setprecision(10) <<  u[1] << endl;    
+                ofile_50000 << setprecision(10) << u[0] << " " << u[1] << endl;    
             }
         }
         if (iT == 100000){
@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
             Array<T,2> u;
             for (int i = 0; i < ny; ++i){
                 lattice.get(nx/2, i).computeVelocity(u);
-                ofile_100000 << setprecision(10) <<  u[1] << endl;    
+                ofile_100000 << setprecision(10) << u[0] << " " << u[1] << endl;    
             }
         }
 
