@@ -51,6 +51,7 @@ using namespace plb_acoustics;
 
 T rho0 = 1.;
 T deltaRho = 1.e-4;
+T lattice_speed_sound = 1/sqrt(3);
 
 int main(int argc, char* argv[]) {
     plbInit(&argc, &argv);
@@ -59,35 +60,35 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 100001; // Iterate during 1000 steps.
-    const plint nx = 600;       // Choice of lattice dimensions.
-    const plint ny = 400;
+    const plint maxIter = 10000; // 120000 Iterate during 1000 steps.
+    const plint nx = 1000;       // Choice of lattice dimensions.
+    const plint ny = 670;
     const T omega = 1.98;        // Choice of the relaxation parameter
 
     pcout << "Total iteration: " << maxIter << std::endl;
     MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
 
-    //lattice.periodicity().toggleAll(false); // Use periodic boundaries.
-
-    Array<T,2> u0((T)0.0/std::sqrt(3),(T)0);
+    Array<T,2> u0((T)0,(T)0);
 
     // Initialize constant density everywhere.
     initializeAtEquilibrium(lattice, lattice.getBoundingBox(), rho0, u0);
     
     lattice.initialize();
 
-    Box2D quadrado( 150 - 10, 150 + 10, 150 - 10, 150 + 10);
-    //defineDynamics(lattice, quadrado, new BounceBack<T,DESCRIPTOR>(rho0));
+    plint size_square = 2;
+    Box2D square(nx/2 - size_square/2, nx/2 + size_square/2,
+    ny/2 - size_square/2, ny/2 + size_square/2);
+    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>(rho0));
 
     // Anechoic Condition
-   T size_anechoic_buffer = 30;
-   T rhoBar_target = 0;
-   Array<T,2> j_target(0.11/std::sqrt(3), 0.0/std::sqrt(3));
+    T size_anechoic_buffer = 30;
+    T rhoBar_target = 0;
+    Array<T,2> j_target(0.11/std::sqrt(3), 0.0/std::sqrt(3));
     //left
-   plint orientation = 3;
+    plint orientation = 3;
     Array<T,2> position_anechoic_wall((T)0,(T)0);
     plint length_anechoic_wall = ny + 1;
-  defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
+    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall, length_anechoic_wall,
     rhoBar_target, j_target);
 
@@ -103,138 +104,91 @@ int main(int argc, char* argv[]) {
     orientation = 4;
     Array<T,2> position_anechoic_wall_3((T) 0, (T)ny - 30);
     length_anechoic_wall = nx + 1;
-    Array<T,2> test(0,0);
-    //Array<T,2> test(-j_target[0], j_target[1]);
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_3, length_anechoic_wall,
-    rhoBar_target, j_target);
+    rhoBar_target, u0);
 
     //bottom
     orientation = 2;
     Array<T,2> position_anechoic_wall_1((T)0,(T)0);
     length_anechoic_wall = nx + 1;
-    //Array<T,2> test_1(-j_target[0], j_target[1]);
-    Array<T,2> test_1(0,0);
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_1, length_anechoic_wall,
-    rhoBar_target, j_target);
+    rhoBar_target, u0);
 
     Box2D cima(0, nx, ny - 1, ny);
     //defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
     Box2D baixo(0, nx, 0, 1);
     //defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
 
-
-    //defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
-    //defineAnechoicWallOnTheTopSide(nx, ny, lattice, size_anechoic_buffer, omega);
-    //defineAnechoicWallOnTheBottomSide(nx, ny, lattice, size_anechoic_buffer, omega);
-    //defineAnechoicWallOnTheRightSide(nx, ny, lattice, size_anechoic_buffer, omega);
-    //defineAnechoicWallOnTheLeftSide(nx, ny, lattice, size_anechoic_buffer, omega);
-
     // Main loop over time iterations.
+    plb_ofstream pressure_file("pressure_50000.dat");
+    plb_ofstream velocities_file("velocities_50000.dat");
     for (plint iT=0; iT<maxIter; ++iT) {
-        Box2D centralSquare (150, 150, 150, 150);
+        Box2D centralSquare (nx/2, nx/2, ny/2, ny/2);
 
-        T lattice_speed_sound = 1/sqrt(3);
-        T rho_changing = 1. + deltaRho;//*sin(2*PI*(lattice_speed_sound/20)*iT);
-        if (iT == 0){
+        plb_ofstream pressures_space_file("pressures_space_file.dat");
+        for (int i = 0; i < ny; i++){
+            T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(nx/2, i).computeDensity() - rho0);
+            pressures_space_file << setprecision(10) << pressure << endl;                
+            pcout << i << " " << pressure << endl;
+        }
+
+        //T rho_changing = 1. + deltaRho*sin(2*PI*(lattice_speed_sound/200)*iT);
+        if (iT != 0){
             //initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
+        }
+
+        if (iT>=60000){
+            T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(680, 460).computeDensity() - rho0);
+            pressure_file << setprecision(10) << pressure << endl;
+
+             Array<T,2> u;
+             lattice.get(300, ny/2).computeVelocity(u);
+             velocities_file << setprecision(10) << u[0] << " " << u[1] << endl;
+
+             if (iT%1000==0) {  // Write an image every 40th time step.
+                pcout << "iT= " << iT << endl;
+                ImageWriter<T> imageWriter("leeloo");
+                imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
+                                   *computeVelocityNorm(lattice) );
+                imageWriter.writeGif(createFileName("density", iT, 6), 
+                *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
+
+            }
+       
+
         }
         
        if (iT%1000==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
-            // Instantiate an image writer with the color map "leeloo".
-            /*ImageWriter<T> imageWriter("leeloo");
-            // Write a GIF file with colors rescaled to the range of values
-            //   in the matrix
-            imageWriter.writeScaledGif(createFileName("u", iT, 6),
+            ImageWriter<T> imageWriter("leeloo");
+            imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                *computeVelocityNorm(lattice) );
-                               */
+            imageWriter.writeGif(createFileName("density", iT, 6), 
+            *computeDensity(lattice), (T) rho0 - deltaRho/100, (T) rho0 + deltaRho/100);
+            
+            /*ImageWriter<T> imageWriter("leeloo");
+            imageWriter.writeScaledGif(createFileName("u", iT, 6),
+                               *computeVelocityNorm(lattice) );*/
+                               
            // imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeVorticity(*computeVelocity(lattice)));
             //imageWriter.writeScaledGif(createFileName("u", iT, 6), *computeDensity(lattice));
            //imageWriter.writeGif(createFileName("u", iT, 6), *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
-             pcout << "; av energy ="
+             pcout << " energy ="
                   << setprecision(10) << getStoredAverageEnergy<T>(lattice)
-                  << "; av rho ="
+                  << " rho ="
                   << getStoredAverageDensity<T>(lattice)
-                  << "; av max velocity ="
+                  << " max_velocity ="
                   << setprecision(10) << getStoredMaxVelocity<T>(lattice)
                   << endl;
         }
 
-        if (iT == 100){
-            plb_ofstream ofile_100("velocity_uy_100.dat");
-            Array<T,2> u;
-            for (int i = 0; i < ny; ++i){
-                lattice.get(nx/2, i).computeVelocity(u);
-                ofile_100 << setprecision(10) << u[0] << " " << u[1] << endl;    
-            }
-        }
-
-        if (iT == 500){
-            plb_ofstream ofile_500("velocity_uy_500.dat");
-            Array<T,2> u;
-            for (int i = 0; i < ny; ++i){
-                lattice.get(nx/2, i).computeVelocity(u);
-                ofile_500 << setprecision(10) << u[0] << " " << u[1] << endl;    
-            }
-        }
-
-        if (iT == 1000){
-            plb_ofstream ofile_1000("velocity_uy_1000.dat");
-            Array<T,2> u;
-            for (int i = 0; i < ny; ++i){
-                lattice.get(nx/2, i).computeVelocity(u);
-                ofile_1000 << setprecision(10) << u[0] << " " << u[1] << endl;    
-            }
-        }
-
-        if (iT == 5000){
-            plb_ofstream ofile_5000("velocity_uy_5000.dat");
-            Array<T,2> u;
-            for (int i = 0; i < ny; ++i){
-                lattice.get(nx/2, i).computeVelocity(u);
-                ofile_5000 << setprecision(10) << u[0] << " " << u[1] << endl;    
-            }
-        }
-
-        if (iT == 10000){
-            plb_ofstream ofile_10000("velocity_uy_10000.dat");
-            Array<T,2> u;
-            for (int i = 0; i < ny; ++i){
-                lattice.get(nx/2, i).computeVelocity(u);
-                ofile_10000 << setprecision(10) << u[0] << " " << u[1] << endl;    
-            }
-        }
-        if (iT == 20000){
-            plb_ofstream ofile_20000("velocity_uy_20000.dat");
-            Array<T,2> u;
-            for (int i = 0; i < ny; ++i){
-                lattice.get(nx/2, i).computeVelocity(u);
-                ofile_20000 << setprecision(10) << u[0] << " " << u[1] << endl;    
-            }
-        }
-        if (iT == 50000){
-            plb_ofstream ofile_50000("velocity_uy_50000.dat");
-            Array<T,2> u;
-            for (int i = 0; i < ny; ++i){
-                lattice.get(nx/2, i).computeVelocity(u);
-                ofile_50000 << setprecision(10) << u[0] << " " << u[1] << endl;    
-            }
-        }
-        if (iT == 100000){
-            plb_ofstream ofile_100000("velocity_uy_100000.dat");
-            Array<T,2> u;
-            for (int i = 0; i < ny; ++i){
-                lattice.get(nx/2, i).computeVelocity(u);
-                ofile_100000 << setprecision(10) << u[0] << " " << u[1] << endl;    
-            }
-        }
-
-        
         // Execute lattice Boltzmann iteration.
         lattice.collideAndStream();
         
     }
+
+    
    
 }
