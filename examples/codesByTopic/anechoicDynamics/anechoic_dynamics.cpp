@@ -53,6 +53,39 @@ T rho0 = 1.;
 T deltaRho = 1.e-4;
 T lattice_speed_sound = 1/sqrt(3);
 
+class polar
+{
+    public:
+        float r,th;
+        polar(){}
+        polar(int a,int b)
+        {
+            r=a;
+            th=b;
+        }
+        void show()
+        {
+            cout<<"In polar form:\nr="<<r<<" and theta="<<th;
+            
+        }
+};
+class rectangular
+{
+    public:
+        float x,y;
+        rectangular(){}
+        rectangular(polar p)
+        {
+            x=p.r*cos(p.th);
+            y=p.r*sin(p.th);
+        }
+        void show()
+        {
+            cout<<"\nIn Rectangular form:\nx="<<x<<"and y="<<y;
+            
+        }
+};
+
 int main(int argc, char* argv[]) {
     plbInit(&argc, &argv);
     global::directories().setOutputDir("./tmp/");
@@ -60,7 +93,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 10000; // 120000 Iterate during 1000 steps.
+    const plint maxIter = 40000; // 120000 Iterate during 1000 steps.
     const plint nx = 1000;       // Choice of lattice dimensions.
     const plint ny = 670;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -83,7 +116,7 @@ int main(int argc, char* argv[]) {
     // Anechoic Condition
     T size_anechoic_buffer = 30;
     T rhoBar_target = 0;
-    Array<T,2> j_target(0.11/std::sqrt(3), 0.0/std::sqrt(3));
+    Array<T,2> j_target(0.12/std::sqrt(3), 0.0/std::sqrt(3));
     //left
     plint orientation = 3;
     Array<T,2> position_anechoic_wall((T)0,(T)0);
@@ -122,51 +155,61 @@ int main(int argc, char* argv[]) {
     //defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
 
     // Main loop over time iterations.
-    plb_ofstream pressure_file("pressure_50000.dat");
+    plb_ofstream pressures_time_file("pressures_time.dat");
     plb_ofstream velocities_file("velocities_50000.dat");
     for (plint iT=0; iT<maxIter; ++iT) {
         Box2D centralSquare (nx/2, nx/2, ny/2, ny/2);
-
-        plb_ofstream pressures_space_file("pressures_space_file.dat");
-        for (int i = 0; i < ny; i++){
-            T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(nx/2, i).computeDensity() - rho0);
-            pressures_space_file << setprecision(10) << pressure << endl;                
-            pcout << i << " " << pressure << endl;
-        }
 
         //T rho_changing = 1. + deltaRho*sin(2*PI*(lattice_speed_sound/200)*iT);
         if (iT != 0){
             //initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
         }
 
-        if (iT>=60000){
-            T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(680, 460).computeDensity() - rho0);
-            pressure_file << setprecision(10) << pressure << endl;
+       if (iT%1000==0) {  // Write an image every 40th time step.
+            pcout << "iT= " << iT << endl;
 
-             Array<T,2> u;
-             lattice.get(300, ny/2).computeVelocity(u);
-             velocities_file << setprecision(10) << u[0] << " " << u[1] << endl;
-
-             if (iT%1000==0) {  // Write an image every 40th time step.
-                pcout << "iT= " << iT << endl;
+            if (iT>=0){
                 ImageWriter<T> imageWriter("leeloo");
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityNorm(lattice) );
                 imageWriter.writeGif(createFileName("density", iT, 6), 
-                *computeDensity(lattice), (T) rho0 - deltaRho/1000, (T) rho0 + deltaRho/1000);
+                *computeDensity(lattice), (T) rho0 + -9e-06, (T) rho0 + 4e-05);    
+                
+                // Capturing pressures over time
+                T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(nx/2, ny - 40).computeDensity() - rho0);
+                pressures_time_file << setprecision(10) << pressure << endl;
 
+                // Capturing pressures over space
+                plb_ofstream pressures_space_file("pressures_space.dat");
+                for (int i = 0; i < ny; i++){
+                    T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(nx/2, i).computeDensity() - rho0);
+                    pressures_space_file << setprecision(10) << pressure << endl;                
+                }
+
+                // Calculating directivity
+                /*plb_ofstream directivity_file("directivity.dat");
+                T theta;
+                pcout << "Start to calculate directivity .... " << endl; 
+                for (T i = 0; i < 630; i++){
+                    theta = i/100;
+                    polar polar_obj(ny/2 - 40, theta);
+                    rectangular rectangular_obj;
+                    rectangular_obj = polar_obj;
+                    plint position_x = nx/2 + (plint) rectangular_obj.x;
+                    pcout << position_x << endl;
+                    plint position_y = ny/2 + (plint) rectangular_obj.y; 
+                    pcout << position_y << endl;
+                    T pressure = lattice_speed_sound*lattice_speed_sound*
+                    (lattice.get(position_x, position_y).computeDensity() - rho0);
+                    directivity_file << setprecision(10) << pressure << endl;
+                }
+                pcout << "Finish calculate directivity .... " << endl;*/
             }
-       
 
-        }
-        
-       if (iT%1000==0) {  // Write an image every 40th time step.
-            pcout << "iT= " << iT << endl;
-            ImageWriter<T> imageWriter("leeloo");
-            imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
-                               *computeVelocityNorm(lattice) );
-            imageWriter.writeGif(createFileName("density", iT, 6), 
-            *computeDensity(lattice), (T) rho0 - deltaRho/100, (T) rho0 + deltaRho/100);
+            /*plb_ofstream matrix_pressure_file("matrix_pressure.dat");
+            if (iT == 30000){
+                matrix_pressure_file << setprecision(10) << 
+            }*/
             
             /*ImageWriter<T> imageWriter("leeloo");
             imageWriter.writeScaledGif(createFileName("u", iT, 6),
