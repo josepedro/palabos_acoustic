@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 40000; // 120000 Iterate during 1000 steps.
+    const plint maxIter = 120000; // 120000 Iterate during 1000 steps.
     const plint nx = 1000;       // Choice of lattice dimensions.
     const plint ny = 670;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -114,9 +114,10 @@ int main(int argc, char* argv[]) {
     defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>(rho0));
 
     // Anechoic Condition
-    T size_anechoic_buffer = 30;
     T rhoBar_target = 0;
-    Array<T,2> j_target(0.12/std::sqrt(3), 0.0/std::sqrt(3));
+    Array<T,2> j_target(0.11/std::sqrt(3), 0.0/std::sqrt(3));
+    T size_anechoic_buffer = 30;
+  
     //left
     plint orientation = 3;
     Array<T,2> position_anechoic_wall((T)0,(T)0);
@@ -173,7 +174,7 @@ int main(int argc, char* argv[]) {
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityNorm(lattice) );
                 imageWriter.writeGif(createFileName("density", iT, 6), 
-                *computeDensity(lattice), (T) rho0 + -9e-06, (T) rho0 + 4e-05);    
+                *computeDensity(lattice), (T) rho0 + -9e-06, (T) rho0 + 4e-05);
                 
                 // Capturing pressures over time
                 T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(nx/2, ny - 40).computeDensity() - rho0);
@@ -186,24 +187,14 @@ int main(int argc, char* argv[]) {
                     pressures_space_file << setprecision(10) << pressure << endl;                
                 }
 
-                // Calculating directivity
-                /*plb_ofstream directivity_file("directivity.dat");
-                T theta;
-                pcout << "Start to calculate directivity .... " << endl; 
-                for (T i = 0; i < 630; i++){
-                    theta = i/100;
-                    polar polar_obj(ny/2 - 40, theta);
-                    rectangular rectangular_obj;
-                    rectangular_obj = polar_obj;
-                    plint position_x = nx/2 + (plint) rectangular_obj.x;
-                    pcout << position_x << endl;
-                    plint position_y = ny/2 + (plint) rectangular_obj.y; 
-                    pcout << position_y << endl;
-                    T pressure = lattice_speed_sound*lattice_speed_sound*
-                    (lattice.get(position_x, position_y).computeDensity() - rho0);
-                    directivity_file << setprecision(10) << pressure << endl;
-                }
-                pcout << "Finish calculate directivity .... " << endl;*/
+                // Capturing pressure matrix
+                stringstream ss;
+                ss << "matrix_density/density_matrix_" << iT << ".dat";
+                //char *name_file = ss.str();
+                plb_ofstream pressure_matrix_file(ss.str().c_str());
+                pressure_matrix_file << setprecision(10) << *computeDensity(lattice) << endl;
+                pressure_matrix_file.close();
+
             }
 
             /*plb_ofstream matrix_pressure_file("matrix_pressure.dat");
