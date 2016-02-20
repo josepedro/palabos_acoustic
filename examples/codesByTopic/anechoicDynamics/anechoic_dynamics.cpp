@@ -95,8 +95,8 @@ int main(int argc, char* argv[]) {
 
     const plint maxIter = 120000; // 120000 Iterate during 1000 steps.
     const plint nx = 1000;       // Choice of lattice dimensions.
-    const plint ny = 670;
-    const T omega = 1.98;        // Choice of the relaxation parameter
+    const plint ny = 1000;
+    const T omega = 1.95;        // Choice of the relaxation parameter
 
     pcout << "Total iteration: " << maxIter << std::endl;
     MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
@@ -115,8 +115,8 @@ int main(int argc, char* argv[]) {
 
     // Anechoic Condition
     T rhoBar_target = 0;
-    Array<T,2> j_target(0.11/std::sqrt(3), 0.0/std::sqrt(3));
-    T size_anechoic_buffer = 30;
+    Array<T,2> j_target(0.13/std::sqrt(3), 0.0/std::sqrt(3));
+    T size_anechoic_buffer = 60;
   
     //left
     plint orientation = 3;
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
 
     //right
     orientation = 1;
-    Array<T,2> position_anechoic_wall_2((T)nx - 30,(T)0);
+    Array<T,2> position_anechoic_wall_2((T)nx - size_anechoic_buffer,(T)0);
     length_anechoic_wall = ny + 1;
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_2, length_anechoic_wall,
@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
 
     //top
     orientation = 4;
-    Array<T,2> position_anechoic_wall_3((T) 0, (T)ny - 30);
+    Array<T,2> position_anechoic_wall_3((T) 0, (T)ny - size_anechoic_buffer);
     length_anechoic_wall = nx + 1;
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_3, length_anechoic_wall,
@@ -174,7 +174,8 @@ int main(int argc, char* argv[]) {
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityNorm(lattice) );
                 imageWriter.writeGif(createFileName("density", iT, 6), 
-                *computeDensity(lattice), (T) rho0 + -9e-06, (T) rho0 + 4e-05);
+                *computeDensity(lattice), (T) rho0 + -0.01, (T) rho0 + 0.01);
+
                 
                 // Capturing pressures over time
                 T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(nx/2, ny - 40).computeDensity() - rho0);
