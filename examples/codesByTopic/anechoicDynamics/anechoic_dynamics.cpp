@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
     const plint maxIter = 120000; // 120000 Iterate during 1000 steps.
     const plint nx = 1000;       // Choice of lattice dimensions.
     const plint ny = 1000;
-    const T omega = 1.95;        // Choice of the relaxation parameter
+    const T omega = 1.98;        // Choice of the relaxation parameter
 
     pcout << "Total iteration: " << maxIter << std::endl;
     MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
     // Anechoic Condition
     T rhoBar_target = 0;
     Array<T,2> j_target(0.13/std::sqrt(3), 0.0/std::sqrt(3));
-    T size_anechoic_buffer = 60;
+    T size_anechoic_buffer = 30;
   
     //left
     plint orientation = 3;

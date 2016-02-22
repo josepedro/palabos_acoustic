@@ -104,6 +104,46 @@ namespace plb_acoustics{
 	}
 
 	template<typename T, template<typename U> class Descriptor>
+	void defineAnechoicBoards(plint nx, plint ny,
+	 MultiBlockLattice2D<T,Descriptor>& lattice,
+	  T size_anechoic_buffer, T omega, Array<T,2> j_target_1, 
+	  Array<T,2> j_target_2, Array<T,2> j_target_3,
+          Array<T,2> j_target_4, T rhoBar_target_1, 
+	  T rhoBar_target_2, T rhoBar_target_3, T rhoBar_target_4){
+	 	for(T delta = 0; delta <= size_anechoic_buffer; delta++){
+			// for in all points-cell lattice
+			for(plint y = 0; y < ny; y++){
+				for(plint x = 0; x < nx; x++){
+					// condition to right (1)
+					if(x == (nx-delta) &&
+					  y >= (delta-1) && 
+					  y < (ny-delta)){
+						// set delta here
+					}
+					// condition to bottom (2)
+					else if(x >= (delta-1) &&
+					  x < (nx-delta) &&
+					  y == delta){
+						// set delta here
+					}
+					// condition to left (3)
+					else if(x == delta &&
+					  y >= (delta-1) &&
+					  y < (ny-delta)){
+						// set delta here
+					}
+					// condition to top (4)
+					else if(x >= (delta-1) &&
+					  x < (nx-delta) &&
+					  y == (ny-delta)){
+						// set delta here
+					}
+				}
+			}
+		}
+	}
+
+	template<typename T, template<typename U> class Descriptor>
 	void defineAnechoicWallOnTheRightSide(plint nx, plint ny,
 	 MultiBlockLattice2D<T,Descriptor>& lattice, T size_anechoic_buffer, T omega){
 	 	plint orientation = 1;
