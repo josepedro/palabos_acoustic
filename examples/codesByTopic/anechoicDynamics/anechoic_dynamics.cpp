@@ -94,8 +94,8 @@ int main(int argc, char* argv[]) {
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
     const plint maxIter = 120000; // 120000 Iterate during 1000 steps.
-    const plint nx = 1000;       // Choice of lattice dimensions.
-    const plint ny = 1000;
+    const plint nx = 500;       // Choice of lattice dimensions.
+    const plint ny = 500;
     const T omega = 1.98;        // Choice of the relaxation parameter
 
     pcout << "Total iteration: " << maxIter << std::endl;
@@ -115,11 +115,15 @@ int main(int argc, char* argv[]) {
 
     // Anechoic Condition
     T rhoBar_target = 0;
-    Array<T,2> j_target(0.13/std::sqrt(3), 0.0/std::sqrt(3));
+    Array<T,2> j_target(0.15/std::sqrt(3), 0.0/std::sqrt(3));
     T size_anechoic_buffer = 30;
+    // Define Anechoic Boards
+    defineAnechoicBoards(nx, ny, lattice, size_anechoic_buffer,
+	  omega, j_target, u0, j_target, u0,
+	  rhoBar_target, rhoBar_target, rhoBar_target, rhoBar_target);
   
     //left
-    plint orientation = 3;
+    /*plint orientation = 3;
     Array<T,2> position_anechoic_wall((T)0,(T)0);
     plint length_anechoic_wall = ny + 1;
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
@@ -148,7 +152,7 @@ int main(int argc, char* argv[]) {
     length_anechoic_wall = nx + 1;
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
     omega, position_anechoic_wall_1, length_anechoic_wall,
-    rhoBar_target, u0);
+    rhoBar_target, u0);*/
 
     Box2D cima(0, nx, ny - 1, ny);
     //defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
@@ -158,15 +162,26 @@ int main(int argc, char* argv[]) {
     // Main loop over time iterations.
     plb_ofstream pressures_time_file("pressures_time.dat");
     plb_ofstream velocities_file("velocities_50000.dat");
+    Box2D wall_top(0, nx-1, ny-1, ny-1);
+    defineDynamics(lattice, wall_top, new BounceBack<T,DESCRIPTOR>(rho0));
+    Box2D wall_bottom(0, nx-1, 0, 0);
+    defineDynamics(lattice, wall_bottom, new BounceBack<T,DESCRIPTOR>(rho0));
+    Box2D wall_left(0, 0, 0, ny-1);
+    defineDynamics(lattice, wall_left, new BounceBack<T,DESCRIPTOR>(rho0));
+    Box2D wall_right(nx-1, nx-1, 0, ny-1);
+    /*AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
+    new AnechoicDynamics<T,DESCRIPTOR>(omega);
+    T delta;
+    anechoicDynamics->setDelta(delta);
+    anechoicDynamics->setRhoBar_target(rhoBar_target);
+    anechoicDynamics->setJ_target(j_target);
+    //defineDynamics(lattice, wall_top, anechoicDynamics);
+    //defineDynamics(lattice, wall_bottom, anechoicDynamics);
+    //defineDynamics(lattice, wall_left, anechoicDynamics);
+    //defineDynamics(lattice, wall_right, anechoicDynamics);*/
     for (plint iT=0; iT<maxIter; ++iT) {
-        Box2D centralSquare (nx/2, nx/2, ny/2, ny/2);
 
-        //T rho_changing = 1. + deltaRho*sin(2*PI*(lattice_speed_sound/200)*iT);
-        if (iT != 0){
-            //initializeAtEquilibrium (lattice, centralSquare, rho_changing, u0);
-        }
-
-       if (iT%1000==0) {  // Write an image every 40th time step.
+       if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
 
             if (iT>=0){
@@ -174,7 +189,7 @@ int main(int argc, char* argv[]) {
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityNorm(lattice) );
                 imageWriter.writeGif(createFileName("density", iT, 6), 
-                *computeDensity(lattice), (T) rho0 + -0.01, (T) rho0 + 0.01);
+                *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001);
 
                 
                 // Capturing pressures over time

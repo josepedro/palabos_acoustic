@@ -119,24 +119,56 @@ namespace plb_acoustics{
 					  y >= (delta-1) && 
 					  y < (ny-delta)){
 						// set delta here
+						AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
+						new AnechoicDynamics<T,DESCRIPTOR>(omega);
+						anechoicDynamics->setDelta(delta);
+						anechoicDynamics->setRhoBar_target(rhoBar_target_1);
+						anechoicDynamics->setJ_target(j_target_1);
+						DotList2D points_to_aplly_dynamics;
+						points_to_aplly_dynamics.addDot(Dot2D(x,y));
+						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 					}
 					// condition to bottom (2)
 					else if(x >= (delta-1) &&
 					  x < (nx-delta) &&
 					  y == delta){
 						// set delta here
+						AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
+						new AnechoicDynamics<T,DESCRIPTOR>(omega);
+						anechoicDynamics->setDelta(delta);
+						anechoicDynamics->setRhoBar_target(rhoBar_target_2);
+						anechoicDynamics->setJ_target(j_target_2);
+						DotList2D points_to_aplly_dynamics;
+						points_to_aplly_dynamics.addDot(Dot2D(x,y));
+						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 					}
 					// condition to left (3)
 					else if(x == delta &&
 					  y >= (delta-1) &&
 					  y < (ny-delta)){
 						// set delta here
+						AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
+						new AnechoicDynamics<T,DESCRIPTOR>(omega);
+						anechoicDynamics->setDelta(delta);
+						anechoicDynamics->setRhoBar_target(rhoBar_target_3);
+						anechoicDynamics->setJ_target(j_target_3);
+						DotList2D points_to_aplly_dynamics;
+						points_to_aplly_dynamics.addDot(Dot2D(x,y));
+						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 					}
 					// condition to top (4)
 					else if(x >= (delta-1) &&
 					  x < (nx-delta) &&
 					  y == (ny-delta)){
 						// set delta here
+						AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
+						new AnechoicDynamics<T,DESCRIPTOR>(omega);
+						anechoicDynamics->setDelta(delta);
+						anechoicDynamics->setRhoBar_target(rhoBar_target_4);
+						anechoicDynamics->setJ_target(j_target_4);
+						DotList2D points_to_aplly_dynamics;
+						points_to_aplly_dynamics.addDot(Dot2D(x,y));
+						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 					}
 				}
 			}
