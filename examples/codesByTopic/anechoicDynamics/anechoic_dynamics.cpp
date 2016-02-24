@@ -130,25 +130,21 @@ int main(int argc, char* argv[]) {
             // to face 1 (left)
             for (plint y = ny/2 - size_surface; y < ny/2 + size_surface; y++){
                 plint x = nx/2 - size_surface;
-                pcout << "left points: " << x << "," << y << endl;
                 pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
             }
             // to face 2 (top)
             for (plint x = nx/2 - size_surface; x < nx/2 + size_surface; x++){
                 plint y = ny/2 + size_surface;
-                pcout << "top points: " << x << "," << y << endl;
                 pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
             }
             // to face 3 (right)
             for (plint y = ny/2 + size_surface; y > ny/2 - size_surface; y--){
                 plint x = ny/2 + size_surface;
-                pcout << "right points: " << x << "," << y << endl;
                 pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
             }
             // to face 4 (bottom)
             for (plint x = nx/2 + size_surface; x > nx/2 - size_surface; x--){
                 plint y = ny/2 - size_surface;
-                pcout << "bottom points: " << x << "," << y << endl;
                 pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
             }
 
