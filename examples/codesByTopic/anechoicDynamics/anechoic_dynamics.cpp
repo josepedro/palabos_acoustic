@@ -53,39 +53,6 @@ T rho0 = 1.;
 T deltaRho = 1.e-4;
 T lattice_speed_sound = 1/sqrt(3);
 
-class polar
-{
-    public:
-        float r,th;
-        polar(){}
-        polar(int a,int b)
-        {
-            r=a;
-            th=b;
-        }
-        void show()
-        {
-            cout<<"In polar form:\nr="<<r<<" and theta="<<th;
-            
-        }
-};
-class rectangular
-{
-    public:
-        float x,y;
-        rectangular(){}
-        rectangular(polar p)
-        {
-            x=p.r*cos(p.th);
-            y=p.r*sin(p.th);
-        }
-        void show()
-        {
-            cout<<"\nIn Rectangular form:\nx="<<x<<"and y="<<y;
-            
-        }
-};
-
 int main(int argc, char* argv[]) {
     plbInit(&argc, &argv);
     global::directories().setOutputDir("./tmp/");
@@ -109,9 +76,9 @@ int main(int argc, char* argv[]) {
     lattice.initialize();
 
     plint size_square = 2;
-    Box2D square(nx/4 - size_square/2, nx/4 + size_square/2,
+    Box2D square(nx/2 - size_square/2, nx/2 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2);
-    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>(rho0));
+    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)999));
 
     // Anechoic Condition
     T rhoBar_target = 0;
@@ -121,38 +88,6 @@ int main(int argc, char* argv[]) {
     defineAnechoicBoards(nx, ny, lattice, size_anechoic_buffer,
 	  omega, j_target, j_target, j_target, j_target,
 	  rhoBar_target, rhoBar_target, rhoBar_target, rhoBar_target);
-  
-    /*//left
-    plint orientation = 3;
-    Array<T,2> position_anechoic_wall((T)0,(T)0);
-    plint length_anechoic_wall = ny + 1;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall, length_anechoic_wall,
-    rhoBar_target, j_target);
-
-    //right
-    orientation = 1;
-    Array<T,2> position_anechoic_wall_2((T)nx - size_anechoic_buffer,(T)0);
-    length_anechoic_wall = ny + 1;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall_2, length_anechoic_wall,
-    rhoBar_target, j_target);
-
-    //top
-    orientation = 4;
-    Array<T,2> position_anechoic_wall_3((T) 0, (T)ny - size_anechoic_buffer);
-    length_anechoic_wall = nx + 1;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall_3, length_anechoic_wall,
-    rhoBar_target, u0);
-
-    //bottom
-    orientation = 2;
-    Array<T,2> position_anechoic_wall_1((T)0,(T)0);
-    length_anechoic_wall = nx + 1;
-    defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
-    omega, position_anechoic_wall_1, length_anechoic_wall,
-    rhoBar_target, u0);*/
 
     Box2D cima(0, nx, ny - 1, ny);
     //defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
@@ -160,8 +95,6 @@ int main(int argc, char* argv[]) {
     //defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
 
     // Main loop over time iterations.
-    plb_ofstream pressures_time_file("pressures_time.dat");
-    plb_ofstream velocities_file("velocities_50000.dat");
     Box2D wall_top(0, nx-1, ny-1, ny-1);
     defineDynamics(lattice, wall_top, new BounceBack<T,DESCRIPTOR>(rho0));
     Box2D wall_bottom(0, nx-1, 0, 0);
@@ -187,6 +120,40 @@ int main(int argc, char* argv[]) {
            //initializeAtEquilibrium(lattice, ponto, rho0 + deltaRho, u0); 
         }
 
+        if (iT == 0){
+            /*plb_ofstream fw_h_surface_file_2("fw_h_surface_2.dat");
+            plb_ofstream fw_h_surface_file_250("fw_h_surface_250.dat");
+            plb_ofstream fw_h_surface_file_500("fw_h_surface_500.dat");
+            plb_ofstream fw_h_surface_file_800("fw_h_surface_800.dat");*/
+
+            plint size_surface = 1;
+            // to face 1 (left)
+            for (plint y = ny/2 - size_surface; y < ny/2 + size_surface; y++){
+                plint x = nx/2 - size_surface;
+                pcout << "left points: " << x << "," << y << endl;
+                pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
+            }
+            // to face 2 (top)
+            for (plint x = nx/2 - size_surface; x < nx/2 + size_surface; x++){
+                plint y = ny/2 + size_surface;
+                pcout << "top points: " << x << "," << y << endl;
+                pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
+            }
+            // to face 3 (right)
+            for (plint y = ny/2 + size_surface; y > ny/2 - size_surface; y--){
+                plint x = ny/2 + size_surface;
+                pcout << "right points: " << x << "," << y << endl;
+                pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
+            }
+            // to face 4 (bottom)
+            for (plint x = nx/2 + size_surface; x > nx/2 - size_surface; x--){
+                plint y = ny/2 - size_surface;
+                pcout << "bottom points: " << x << "," << y << endl;
+                pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
+            }
+
+        }
+
 
        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
@@ -197,18 +164,6 @@ int main(int argc, char* argv[]) {
                                    *computeVelocityNorm(lattice) );
                 imageWriter.writeGif(createFileName("density", iT, 6), 
                 *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
-
-                
-                // Capturing pressures over time
-                T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(nx/2, ny - 40).computeDensity() - rho0);
-                pressures_time_file << setprecision(10) << pressure << endl;
-
-                // Capturing pressures over space
-                plb_ofstream pressures_space_file("pressures_space.dat");
-                for (int i = 0; i < ny; i++){
-                    T pressure = lattice_speed_sound*lattice_speed_sound*(lattice.get(nx/2, i).computeDensity() - rho0);
-                    pressures_space_file << setprecision(10) << pressure << endl;                
-                }
 
                 // Capturing pressure matrix
                 stringstream ss;
