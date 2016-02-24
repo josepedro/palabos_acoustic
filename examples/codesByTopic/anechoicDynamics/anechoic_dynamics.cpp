@@ -94,8 +94,8 @@ int main(int argc, char* argv[]) {
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
     const plint maxIter = 120000; // 120000 Iterate during 1000 steps.
-    const plint nx = 500;       // Choice of lattice dimensions.
-    const plint ny = 500;
+    const plint nx = 1000;       // Choice of lattice dimensions.
+    const plint ny = 1000;
     const T omega = 1.98;        // Choice of the relaxation parameter
 
     pcout << "Total iteration: " << maxIter << std::endl;
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
     lattice.initialize();
 
     plint size_square = 2;
-    Box2D square(nx/2 - size_square/2, nx/2 + size_square/2,
+    Box2D square(nx/4 - size_square/2, nx/4 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2);
     defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>(rho0));
 
@@ -119,11 +119,11 @@ int main(int argc, char* argv[]) {
     T size_anechoic_buffer = 30;
     // Define Anechoic Boards
     defineAnechoicBoards(nx, ny, lattice, size_anechoic_buffer,
-	  omega, j_target, u0, j_target, u0,
+	  omega, j_target, j_target, j_target, j_target,
 	  rhoBar_target, rhoBar_target, rhoBar_target, rhoBar_target);
   
-    //left
-    /*plint orientation = 3;
+    /*//left
+    plint orientation = 3;
     Array<T,2> position_anechoic_wall((T)0,(T)0);
     plint length_anechoic_wall = ny + 1;
     defineAnechoicWall(nx, ny, lattice, size_anechoic_buffer, orientation,
@@ -181,6 +181,13 @@ int main(int argc, char* argv[]) {
     //defineDynamics(lattice, wall_right, anechoicDynamics);*/
     for (plint iT=0; iT<maxIter; ++iT) {
 
+        Box2D ponto(nx/2, nx/2, ny/2, ny/2);
+
+        if (iT==0){
+           //initializeAtEquilibrium(lattice, ponto, rho0 + deltaRho, u0); 
+        }
+
+
        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
 
@@ -189,7 +196,7 @@ int main(int argc, char* argv[]) {
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityNorm(lattice) );
                 imageWriter.writeGif(createFileName("density", iT, 6), 
-                *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001);
+                *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
 
                 
                 // Capturing pressures over time
