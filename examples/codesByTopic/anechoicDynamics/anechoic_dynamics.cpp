@@ -47,6 +47,8 @@ typedef double T;
 // Includes of acoustics resources
 #include "acoustics/acoustics2D.h"
 using namespace plb_acoustics;
+typedef vector<T> Row;
+typedef vector< Row > Matrix;
 // ---------------------------------------------
 
 T rho0 = 1.;
@@ -112,65 +114,48 @@ int main(int argc, char* argv[]) {
     //defineDynamics(lattice, wall_bottom, anechoicDynamics);
     //defineDynamics(lattice, wall_left, anechoicDynamics);
     //defineDynamics(lattice, wall_right, anechoicDynamics);*/
-    for (plint iT=0; iT<maxIter; ++iT) {
 
-        Box2D ponto(nx/2, nx/2, ny/2, ny/2);
+    // parameters to FW-HS
+    Array<T, 2> center((plint) nx/2, (plint) ny/2);
+    plint distance_center =  200;
+    // total number of points
+    plint total_points_fwhs = distance_center*2*4;
+    Matrix matrix_sfwh_pressure(total_points_fwhs, Row(maxIter + 2));
+    for (plint iT=0; iT <= maxIter; iT++) {
 
-        if (iT==0){
-           //initializeAtEquilibrium(lattice, ponto, rho0 + deltaRho, u0); 
-        }
+        // Capturing density matrix
+        stringstream ss_density;
+        ss_density << "data/" << iT << "_density.dat";
+        plb_ofstream density_file(ss_density.str().c_str());
+        density_file << setprecision(10) << *computeDensity(lattice) << endl;
+        density_file.close();
 
-        if (iT == 0){
-            /*plb_ofstream fw_h_surface_file_2("fw_h_surface_2.dat");
-            plb_ofstream fw_h_surface_file_250("fw_h_surface_250.dat");
-            plb_ofstream fw_h_surface_file_500("fw_h_surface_500.dat");
-            plb_ofstream fw_h_surface_file_800("fw_h_surface_800.dat");*/
+        // Capturing velocity in x
+        stringstream ss_velocity_x;
+        ss_velocity_x << "data/" << iT << "_velocity_x.dat";
+        plb_ofstream velocity_x_file(ss_velocity_x.str().c_str());
+        velocity_x_file << setprecision(10) << *computeVelocityComponent(lattice, 0) << endl;
+        velocity_x_file.close();                
 
-            plint size_surface = 1;
-            // to face 1 (left)
-            for (plint y = ny/2 - size_surface; y < ny/2 + size_surface; y++){
-                plint x = nx/2 - size_surface;
-                pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
-            }
-            // to face 2 (top)
-            for (plint x = nx/2 - size_surface; x < nx/2 + size_surface; x++){
-                plint y = ny/2 + size_surface;
-                pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
-            }
-            // to face 3 (right)
-            for (plint y = ny/2 + size_surface; y > ny/2 - size_surface; y--){
-                plint x = ny/2 + size_surface;
-                pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
-            }
-            // to face 4 (bottom)
-            for (plint x = nx/2 + size_surface; x > nx/2 - size_surface; x--){
-                plint y = ny/2 - size_surface;
-                pcout << "value: " << setprecision(10) << lattice.get(x, y).computeDensity() << endl;
-            }
+        // Capturing velocity in y
+        stringstream ss_velocity_y;
+        ss_velocity_y << "data/" << iT << "_velocity_y.dat";
+        plb_ofstream velocity_y_file(ss_velocity_y.str().c_str());
+        velocity_y_file << setprecision(10) << *computeVelocityComponent(lattice, 1) << endl;
+        velocity_y_file.close();          
 
-        }
 
 
        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
 
             if (iT>=0){
-                ImageWriter<T> imageWriter("leeloo");
+                /*ImageWriter<T> imageWriter("leeloo");
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
-                                   *computeVelocityNorm(lattice) );
+                                   *computeVelocityComponent(lattice, 1));
                 imageWriter.writeGif(createFileName("density", iT, 6), 
-                *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
-
-                // Capturing pressure matrix
-                stringstream ss;
-                ss << "matrix_density/density_matrix_" << iT << ".dat";
-                //char *name_file = ss.str();
-                plb_ofstream pressure_matrix_file(ss.str().c_str());
-                pressure_matrix_file << setprecision(10) << *computeDensity(lattice) << endl;
-                pressure_matrix_file.close();
-
+                *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);*/
             }
-
             /*plb_ofstream matrix_pressure_file("matrix_pressure.dat");
             if (iT == 30000){
                 matrix_pressure_file << setprecision(10) << 
@@ -197,6 +182,4 @@ int main(int argc, char* argv[]) {
         
     }
 
-    
-   
 }
