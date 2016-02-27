@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 120000; // 120000 Iterate during 1000 steps.
+    const plint maxIter = 15000; // 120000. 5400 keeps
     const plint nx = 1000;       // Choice of lattice dimensions.
     const plint ny = 1000;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -96,7 +96,6 @@ int main(int argc, char* argv[]) {
     Box2D baixo(0, nx, 0, 1);
     //defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
 
-    // Main loop over time iterations.
     Box2D wall_top(0, nx-1, ny-1, ny-1);
     defineDynamics(lattice, wall_top, new BounceBack<T,DESCRIPTOR>(rho0));
     Box2D wall_bottom(0, nx-1, 0, 0);
@@ -119,44 +118,95 @@ int main(int argc, char* argv[]) {
     Array<T, 2> center((plint) nx/2, (plint) ny/2);
     plint distance_center =  200;
     // total number of points
+    plint start_transient_iteration = 5400;
     plint total_points_fwhs = distance_center*2*4;
-    Matrix matrix_sfwh_pressure(total_points_fwhs, Row(maxIter + 2));
+    Matrix matrix_sfwh_pressure(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
+    Matrix matrix_sfwh_velocity_x(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
+    Matrix matrix_sfwh_velocity_y(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
+    // Main loop over time iterations.
     for (plint iT=0; iT <= maxIter; iT++) {
 
-        // Capturing density matrix
-        stringstream ss_density;
-        ss_density << "data/" << iT << "_density.dat";
-        plb_ofstream density_file(ss_density.str().c_str());
-        density_file << setprecision(10) << *computeDensity(lattice) << endl;
-        density_file.close();
+        if (iT >= start_transient_iteration){
+        
+            plint point_surface = 0;
+            // to face 1 (left)
+            for (plint y = center[1] - distance_center; y < center[1] + distance_center; y++){
+                plint x = center[0] - distance_center;
+                matrix_sfwh_pressure[point_surface][0] = x; 
+                matrix_sfwh_pressure[point_surface][1] = y;
+                matrix_sfwh_velocity_x[point_surface][0] = x; 
+                matrix_sfwh_velocity_x[point_surface][1] = y;
+                matrix_sfwh_velocity_y[point_surface][0] = x; 
+                matrix_sfwh_velocity_y[point_surface][1] = y;
+                matrix_sfwh_pressure[point_surface][iT - start_transient_iteration + 2] = (lattice.get(x, y).computeDensity())/3;
+                Array<T, 2> velocities((T) 9999, (T) 9999);
+                lattice.get(x, y).computeVelocity(velocities);
+                matrix_sfwh_velocity_x[point_surface][iT - start_transient_iteration + 2] = velocities[0];
+                matrix_sfwh_velocity_y[point_surface][iT - start_transient_iteration + 2] = velocities[1];
+                point_surface++;
+            }
+            // to face 2 (top)
+            for (plint x = center[0] - distance_center; x < center[0] + distance_center; x++){
+                plint y = center[1] + distance_center;
+                matrix_sfwh_pressure[point_surface][0] = x; 
+                matrix_sfwh_pressure[point_surface][1] = y;
+                matrix_sfwh_velocity_x[point_surface][0] = x; 
+                matrix_sfwh_velocity_x[point_surface][1] = y;
+                matrix_sfwh_velocity_y[point_surface][0] = x; 
+                matrix_sfwh_velocity_y[point_surface][1] = y;
+                matrix_sfwh_pressure[point_surface][iT - start_transient_iteration + 2] = (lattice.get(x, y).computeDensity())/3;
+                Array<T, 2> velocities((T) 9999, (T) 9999);
+                lattice.get(x, y).computeVelocity(velocities);
+                matrix_sfwh_velocity_x[point_surface][iT - start_transient_iteration + 2] = velocities[0];
+                matrix_sfwh_velocity_y[point_surface][iT - start_transient_iteration + 2] = velocities[1];
+                point_surface++;
+            }
+            // to face 3 (right)
+            for (plint y = center[1] + distance_center; y > center[1] - distance_center; y--){
+                plint x = center[1] + distance_center;
+                matrix_sfwh_pressure[point_surface][0] = x; 
+                matrix_sfwh_pressure[point_surface][1] = y;
+                matrix_sfwh_velocity_x[point_surface][0] = x; 
+                matrix_sfwh_velocity_x[point_surface][1] = y;
+                matrix_sfwh_velocity_y[point_surface][0] = x; 
+                matrix_sfwh_velocity_y[point_surface][1] = y;
+                matrix_sfwh_pressure[point_surface][iT - start_transient_iteration + 2] = (lattice.get(x, y).computeDensity())/3;
+                Array<T, 2> velocities((T) 9999, (T) 9999);
+                lattice.get(x, y).computeVelocity(velocities);
+                matrix_sfwh_velocity_x[point_surface][iT - start_transient_iteration + 2] = velocities[0];
+                matrix_sfwh_velocity_y[point_surface][iT - start_transient_iteration + 2] = velocities[1];
+                point_surface++;
+            }
+            // to face 4 (bottom)
+            for (plint x = center[0] + distance_center; x > center[0] - distance_center; x--){
+                plint y = center[1] - distance_center;
+                matrix_sfwh_pressure[point_surface][0] = x; 
+                matrix_sfwh_pressure[point_surface][1] = y;
+                matrix_sfwh_velocity_x[point_surface][0] = x; 
+                matrix_sfwh_velocity_x[point_surface][1] = y;
+                matrix_sfwh_velocity_y[point_surface][0] = x; 
+                matrix_sfwh_velocity_y[point_surface][1] = y;
+                matrix_sfwh_pressure[point_surface][iT - start_transient_iteration + 2] = (lattice.get(x, y).computeDensity())/3;
+                Array<T, 2> velocities((T) 9999, (T) 9999);
+                lattice.get(x, y).computeVelocity(velocities);
+                matrix_sfwh_velocity_x[point_surface][iT - start_transient_iteration + 2] = velocities[0];
+                matrix_sfwh_velocity_y[point_surface][iT - start_transient_iteration + 2] = velocities[1];
+                point_surface++;
+            }
 
-        // Capturing velocity in x
-        stringstream ss_velocity_x;
-        ss_velocity_x << "data/" << iT << "_velocity_x.dat";
-        plb_ofstream velocity_x_file(ss_velocity_x.str().c_str());
-        velocity_x_file << setprecision(10) << *computeVelocityComponent(lattice, 0) << endl;
-        velocity_x_file.close();                
-
-        // Capturing velocity in y
-        stringstream ss_velocity_y;
-        ss_velocity_y << "data/" << iT << "_velocity_y.dat";
-        plb_ofstream velocity_y_file(ss_velocity_y.str().c_str());
-        velocity_y_file << setprecision(10) << *computeVelocityComponent(lattice, 1) << endl;
-        velocity_y_file.close();          
-
-
+        }
 
        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
 
-            if (iT>=0){
-                /*ImageWriter<T> imageWriter("leeloo");
+            /*if (iT>=0){
+                ImageWriter<T> imageWriter("leeloo");
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
-                                   *computeVelocityComponent(lattice, 1));
+                                   *computeVelocityComponent(lattice, 0));
                 imageWriter.writeGif(createFileName("density", iT, 6), 
-                *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);*/
+                *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
             }
-            /*plb_ofstream matrix_pressure_file("matrix_pressure.dat");
+            plb_ofstream matrix_pressure_file("matrix_pressure.dat");
             if (iT == 30000){
                 matrix_pressure_file << setprecision(10) << 
             }*/
@@ -182,4 +232,20 @@ int main(int argc, char* argv[]) {
         
     }
 
+    plb_ofstream sfwh_pressure_file("data_sfwh/sfwh_pressure.dat");
+    plb_ofstream sfwh_velocity_x_file("data_sfwh/sfwh_velocity_x.dat");
+    plb_ofstream sfwh_velocity_y_file("data_sfwh/sfwh_velocity_y.dat");
+    for (plint point = 0; point < total_points_fwhs; point++){
+        for (plint time_step = 0; time_step < maxIter - start_transient_iteration + 2; time_step++){
+            sfwh_pressure_file <<  setprecision(10) << matrix_sfwh_pressure[point][time_step] << " ";
+            sfwh_velocity_x_file <<  setprecision(10) << matrix_sfwh_velocity_x[point][time_step] << " ";
+            sfwh_velocity_y_file <<  setprecision(10) << matrix_sfwh_velocity_y[point][time_step] << " ";
+        }
+        sfwh_pressure_file << endl;
+        sfwh_velocity_x_file << endl;
+        sfwh_velocity_y_file << endl;
+    }
+    sfwh_pressure_file.close();
+    sfwh_velocity_x_file.close();
+    sfwh_velocity_y_file.close();
 }
