@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 15000; // 120000. 5400 keeps
+    const plint maxIter = 120000; // 120000. 5400 keeps
     const plint nx = 1000;       // Choice of lattice dimensions.
     const plint ny = 1000;
     const T omega = 1.98;        // Choice of the relaxation parameter
@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
 
-            /*if (iT>=0){
+            if (iT>=0){
                 ImageWriter<T> imageWriter("leeloo");
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityComponent(lattice, 0));
@@ -208,8 +208,8 @@ int main(int argc, char* argv[]) {
             }
             plb_ofstream matrix_pressure_file("matrix_pressure.dat");
             if (iT == 30000){
-                matrix_pressure_file << setprecision(10) << 
-            }*/
+                matrix_pressure_file << setprecision(10) << " ";
+            }
             
             /*ImageWriter<T> imageWriter("leeloo");
             imageWriter.writeScaledGif(createFileName("u", iT, 6),
