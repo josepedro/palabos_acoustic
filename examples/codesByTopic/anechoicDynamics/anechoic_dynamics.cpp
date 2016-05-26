@@ -65,7 +65,8 @@ int main(int argc, char* argv[]) {
     const plint maxIter = 15000; // 120000. 5400 keeps
     const plint nx = 1000;       // Choice of lattice dimensions.
     const plint ny = 1000;
-    const T omega = 1.98;        // Choice of the relaxation parameter
+    const T omega = 1.9685;        // Choice of the relaxation parameter
+    T Reynolds_number = 150;
 
     pcout << "Total iteration: " << maxIter << std::endl;
     MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
@@ -84,7 +85,7 @@ int main(int argc, char* argv[]) {
 
     // Anechoic Condition
     T rhoBar_target = 0;
-    Array<T,2> j_target(0.15/std::sqrt(3), 0.0/std::sqrt(3));
+    Array<T,2> j_target(0.2/std::sqrt(3), 0.0/std::sqrt(3));
     T size_anechoic_buffer = 30;
     // Define Anechoic Boards
     defineAnechoicBoards(nx, ny, lattice, size_anechoic_buffer,
@@ -116,7 +117,7 @@ int main(int argc, char* argv[]) {
 
     // parameters to FW-HS
     Array<T, 2> center((plint) nx/2, (plint) ny/2);
-    plint distance_center =  200;
+    plint distance_center =  10;
     // total number of points
     plint start_transient_iteration = 5400;
     plint total_points_fwhs = distance_center*2*4;
@@ -199,13 +200,15 @@ int main(int argc, char* argv[]) {
        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
 
-            /*if (iT>=0){
+            if (iT>=0){
                 ImageWriter<T> imageWriter("leeloo");
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityComponent(lattice, 0));
                 imageWriter.writeGif(createFileName("density", iT, 6), 
                 *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
             }
+
+            /*
             plb_ofstream matrix_pressure_file("matrix_pressure.dat");
             if (iT == 30000){
                 matrix_pressure_file << setprecision(10) << 
