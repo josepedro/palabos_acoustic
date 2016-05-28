@@ -41,7 +41,6 @@ using namespace std;
 
 typedef double T;
 #define DESCRIPTOR plb::descriptors::D2Q9Descriptor
-#define PI 3.14159265
 
 // ---------------------------------------------
 // Includes of acoustics resources
@@ -54,6 +53,8 @@ typedef vector< Row > Matrix;
 T rho0 = 1.;
 T deltaRho = 1.e-4;
 T lattice_speed_sound = 1/sqrt(3);
+
+
 
 int main(int argc, char* argv[]) {
     plbInit(&argc, &argv);
@@ -69,6 +70,7 @@ int main(int argc, char* argv[]) {
     T Reynolds_number = 150;
 
     pcout << "Total iteration: " << maxIter << std::endl;
+
     MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
 
     Array<T,2> u0((T)0,(T)0);
@@ -207,7 +209,22 @@ int main(int argc, char* argv[]) {
                 imageWriter.writeGif(createFileName("density", iT, 6), 
                 *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
             }
+            if (iT == 5400){
+                T point;
+                std::ifstream points_radian_file;
+                points_radian_file.open("points_radian.txt");
+                while (!points_radian_file.eof()){
+                    points_radian_file >> point;
+                    plint directivity_x = 75*2*cos(point);
+                    plint directivity_y = 75*2*sin(point);
 
+                    pcout << "X: " << directivity_x << std::endl;
+                    pcout << "Y: " << directivity_y << std::endl;
+
+                    pcout << "Point read from file: " << point << std::endl;
+                }
+                points_radian_file.close();
+            }
             /*
             plb_ofstream matrix_pressure_file("matrix_pressure.dat");
             if (iT == 30000){
@@ -251,4 +268,6 @@ int main(int argc, char* argv[]) {
     sfwh_pressure_file.close();
     sfwh_velocity_x_file.close();
     sfwh_velocity_y_file.close();
+
+
 }
