@@ -54,7 +54,8 @@ const T rho0 = 1.;
 const T deltaRho = 1.e-4;
 const T lattice_speed_sound = 1/sqrt(3);
 // 120000. 5400 keeps (5000 finish transient and 6000 vortice contact anechoic condition) 
-const plint maxIter = 15000; 
+const plint maxIter = 15000;
+const plint start_transient_iteration = 5000;
 //const plint maxIter = 5500; // 120000. 5400 keeps
 const plint nx = 1000;       // Choice of lattice dimensions.
 const plint ny = 1000;
@@ -98,51 +99,24 @@ int main(int argc, char* argv[]) {
     T size_anechoic_buffer = 30;
     // Define Anechoic Boards
     defineAnechoicBoards(nx, ny, lattice, size_anechoic_buffer,
-	  omega, j_target, j_target, j_target, j_target,
-	  rhoBar_target, rhoBar_target, rhoBar_target, rhoBar_target);
-
-    
+      omega, j_target, j_target, j_target, j_target,
+      rhoBar_target, rhoBar_target, rhoBar_target, rhoBar_target);
 
     // parameters to FW-HS
     Array<T, 2> center((plint) nx/2, (plint) ny/2);
     plint distance_center =  10;
     // total number of points
-    plint start_transient_iteration = 5400;
     plint total_points_fwhs = distance_center*2*4;
     Matrix matrix_sfwh_pressure(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
     Matrix matrix_sfwh_velocity_x(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
     Matrix matrix_sfwh_velocity_y(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
+    // ------------------
+
+    // Setting pressure points to calculate FFT
     
-    // Build array of radians angles directivity
-    std::ifstream points_radian_file;
-    points_radian_file.open("points_radian.txt");
-    Row points_radian;
-    T point;
-    while(!points_radian_file.eof()){
-        points_radian_file >> point;
-        points_radian.push_back(point);
-    }
-    points_radian_file.close();
-
-    Row pressure_points_directivity;
-    for (int i = 0; i < points_radian.size(); ++i){
-        pressure_points_directivity.push_back(0);
-    }
-    // --------------------------------
-
+    
     // Main loop over time iterations.
     for (plint iT=0; iT <= maxIter; iT++) {
-
-        if(iT >= 5000 && iT <= 5500){
-            // Getting points of pressure directivity
-            for (int i = 0; i < points_radian.size(); ++i){
-                plint directivity_x = 75*size_square*cos(points_radian[i]) + nx/2;
-                plint directivity_y = 75*size_square*sin(points_radian[i]) + ny/2;
-                T pressure_directivity = (lattice.get(directivity_x,
-                 directivity_y).computeDensity() - rho0)/3;
-                pressure_points_directivity[i] += pressure_directivity*pressure_directivity;
-            }
-        }
 
         if (iT >= start_transient_iteration){
         
@@ -217,13 +191,13 @@ int main(int argc, char* argv[]) {
        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
 
-            if (iT>=0){
+            /*if (iT>=0){
                 ImageWriter<T> imageWriter("leeloo");
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityComponent(lattice, 0));
                 imageWriter.writeGif(createFileName("density", iT, 6), 
                 *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
-            }
+            }*/
            
             /*
             plb_ofstream matrix_pressure_file("matrix_pressure.dat");
@@ -268,14 +242,5 @@ int main(int argc, char* argv[]) {
     sfwh_pressure_file.close();
     sfwh_velocity_x_file.close();
     sfwh_velocity_y_file.close();
-
-    // Getting points of pressure directivity
-    plb_ofstream directivity_results_file("directivity_results.dat");
-    for (int i = 0; i < points_radian.size(); ++i){
-        pressure_points_directivity[i] = (sqrt(pressure_points_directivity[i]/
-            points_radian.size()))/(velocity_flow*velocity_flow);
-        directivity_results_file <<  setprecision(10) << pressure_points_directivity[i] << std::endl;
-    }    
-    directivity_results_file.close();
 
 }
