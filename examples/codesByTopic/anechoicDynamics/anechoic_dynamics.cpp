@@ -50,11 +50,20 @@ typedef vector<T> Row;
 typedef vector< Row > Matrix;
 // ---------------------------------------------
 
-T rho0 = 1.;
-T deltaRho = 1.e-4;
-T lattice_speed_sound = 1/sqrt(3);
-
-
+const T rho0 = 1.;
+const T deltaRho = 1.e-4;
+const T lattice_speed_sound = 1/sqrt(3);
+// 120000. 5400 keeps (5000 finish transient and 6000 vortice contact anechoic condition) 
+const plint maxIter = 15000; 
+//const plint maxIter = 5500; // 120000. 5400 keeps
+const plint nx = 1000;       // Choice of lattice dimensions.
+const plint ny = 1000;
+const T reynolds_number = 150;
+const T mach_number = 0.2;
+const T velocity_flow = mach_number*lattice_speed_sound;
+const plint size_square = 2;
+const T tau = (0.5 + ((velocity_flow*size_square)/(reynolds_number*lattice_speed_sound*lattice_speed_sound)));
+const T omega = 1/tau;
 
 int main(int argc, char* argv[]) {
     plbInit(&argc, &argv);
@@ -63,11 +72,9 @@ int main(int argc, char* argv[]) {
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
 
-    const plint maxIter = 15000; // 120000. 5400 keeps
-    const plint nx = 1000;       // Choice of lattice dimensions.
-    const plint ny = 1000;
-    const T omega = 1.9685;        // Choice of the relaxation parameter
-    T Reynolds_number = 150;
+    pcout << "omega: " << omega << std::endl;
+    pcout << "velocity_flow: " << velocity_flow << std::endl;
+    pcout << "resultado: " << tau << std::endl;
 
     pcout << "Total iteration: " << maxIter << std::endl;
 
@@ -87,35 +94,14 @@ int main(int argc, char* argv[]) {
 
     // Anechoic Condition
     T rhoBar_target = 0;
-    Array<T,2> j_target(0.2/std::sqrt(3), 0.0/std::sqrt(3));
+    Array<T,2> j_target(velocity_flow, 0.0/std::sqrt(3));
     T size_anechoic_buffer = 30;
     // Define Anechoic Boards
     defineAnechoicBoards(nx, ny, lattice, size_anechoic_buffer,
 	  omega, j_target, j_target, j_target, j_target,
 	  rhoBar_target, rhoBar_target, rhoBar_target, rhoBar_target);
 
-    Box2D cima(0, nx, ny - 1, ny);
-    //defineDynamics(lattice, cima, new BounceBack<T,DESCRIPTOR>(rho0));
-    Box2D baixo(0, nx, 0, 1);
-    //defineDynamics(lattice, baixo, new BounceBack<T,DESCRIPTOR>(rho0));
-
-    Box2D wall_top(0, nx-1, ny-1, ny-1);
-    defineDynamics(lattice, wall_top, new BounceBack<T,DESCRIPTOR>(rho0));
-    Box2D wall_bottom(0, nx-1, 0, 0);
-    defineDynamics(lattice, wall_bottom, new BounceBack<T,DESCRIPTOR>(rho0));
-    Box2D wall_left(0, 0, 0, ny-1);
-    defineDynamics(lattice, wall_left, new BounceBack<T,DESCRIPTOR>(rho0));
-    Box2D wall_right(nx-1, nx-1, 0, ny-1);
-    /*AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
-    new AnechoicDynamics<T,DESCRIPTOR>(omega);
-    T delta;
-    anechoicDynamics->setDelta(delta);
-    anechoicDynamics->setRhoBar_target(rhoBar_target);
-    anechoicDynamics->setJ_target(j_target);
-    //defineDynamics(lattice, wall_top, anechoicDynamics);
-    //defineDynamics(lattice, wall_bottom, anechoicDynamics);
-    //defineDynamics(lattice, wall_left, anechoicDynamics);
-    //defineDynamics(lattice, wall_right, anechoicDynamics);*/
+    
 
     // parameters to FW-HS
     Array<T, 2> center((plint) nx/2, (plint) ny/2);
@@ -126,8 +112,37 @@ int main(int argc, char* argv[]) {
     Matrix matrix_sfwh_pressure(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
     Matrix matrix_sfwh_velocity_x(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
     Matrix matrix_sfwh_velocity_y(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
+    
+    // Build array of radians angles directivity
+    std::ifstream points_radian_file;
+    points_radian_file.open("points_radian.txt");
+    Row points_radian;
+    T point;
+    while(!points_radian_file.eof()){
+        points_radian_file >> point;
+        points_radian.push_back(point);
+    }
+    points_radian_file.close();
+
+    Row pressure_points_directivity;
+    for (int i = 0; i < points_radian.size(); ++i){
+        pressure_points_directivity.push_back(0);
+    }
+    // --------------------------------
+
     // Main loop over time iterations.
     for (plint iT=0; iT <= maxIter; iT++) {
+
+        if(iT >= 5000 && iT <= 5500){
+            // Getting points of pressure directivity
+            for (int i = 0; i < points_radian.size(); ++i){
+                plint directivity_x = 75*size_square*cos(points_radian[i]) + nx/2;
+                plint directivity_y = 75*size_square*sin(points_radian[i]) + ny/2;
+                T pressure_directivity = (lattice.get(directivity_x,
+                 directivity_y).computeDensity() - rho0)/3;
+                pressure_points_directivity[i] += pressure_directivity*pressure_directivity;
+            }
+        }
 
         if (iT >= start_transient_iteration){
         
@@ -209,22 +224,7 @@ int main(int argc, char* argv[]) {
                 imageWriter.writeGif(createFileName("density", iT, 6), 
                 *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
             }
-            if (iT == 5400){
-                T point;
-                std::ifstream points_radian_file;
-                points_radian_file.open("points_radian.txt");
-                while (!points_radian_file.eof()){
-                    points_radian_file >> point;
-                    plint directivity_x = 75*2*cos(point);
-                    plint directivity_y = 75*2*sin(point);
-
-                    pcout << "X: " << directivity_x << std::endl;
-                    pcout << "Y: " << directivity_y << std::endl;
-
-                    pcout << "Point read from file: " << point << std::endl;
-                }
-                points_radian_file.close();
-            }
+           
             /*
             plb_ofstream matrix_pressure_file("matrix_pressure.dat");
             if (iT == 30000){
@@ -269,5 +269,13 @@ int main(int argc, char* argv[]) {
     sfwh_velocity_x_file.close();
     sfwh_velocity_y_file.close();
 
+    // Getting points of pressure directivity
+    plb_ofstream directivity_results_file("directivity_results.dat");
+    for (int i = 0; i < points_radian.size(); ++i){
+        pressure_points_directivity[i] = (sqrt(pressure_points_directivity[i]/
+            points_radian.size()))/(velocity_flow*velocity_flow);
+        directivity_results_file <<  setprecision(10) << pressure_points_directivity[i] << std::endl;
+    }    
+    directivity_results_file.close();
 
 }
