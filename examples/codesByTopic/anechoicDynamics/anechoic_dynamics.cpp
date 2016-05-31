@@ -55,13 +55,13 @@ const T deltaRho = 1.e-4;
 const T lattice_speed_sound = 1/sqrt(3);
 const T lattice_speed_sound_square = lattice_speed_sound*lattice_speed_sound;
 // 120000. 5400 keeps (5000 finish transient and 6000 vortice contact anechoic condition) 
-const plint maxIter = 15000;
+const plint maxIter = 150000;
 const plint start_transient_iteration = 5000;
 const plint finish_time_to_began_vortice_anechoic_condition = 6000;
 const plint scale_size = 12;
 //const plint maxIter = 5500; // 120000. 5400 keeps
 const plint nx = 1000;       // Choice of lattice dimensions.
-const plint ny = 250;
+const plint ny = 400;
 const T reynolds_number = 150;
 const T mach_number = 0.2;
 const T velocity_flow = mach_number*lattice_speed_sound;
@@ -117,14 +117,14 @@ int main(int argc, char* argv[]) {
        if (iT%100==0) {  // Write an image every 40th time step.
             pcout << "iT= " << iT << endl;
 
-            if (iT>=0 && iT%800==0){
+            if (iT>=0 && iT%1000==0){
                 ImageWriter<T> imageWriter("leeloo");
                 imageWriter.writeScaledGif(createFileName("velocity", iT, 6),
                                    *computeVelocityComponent(lattice, 0));
                 imageWriter.writeScaledGif(createFileName("vorticity", iT, 6), 
                     *computeVorticity(*computeVelocity(lattice)));
                 imageWriter.writeGif(createFileName("density", iT, 6), 
-                *computeDensity(lattice), (T) rho0 + -0.001, (T) rho0 + 0.001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
+                *computeDensity(lattice), (T) rho0 + -0.0001, (T) rho0 + 0.0001); //(T) rho0 + -0.001, (T) rho0 + 0.001);
             }
            
             /*
