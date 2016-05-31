@@ -53,9 +53,11 @@ typedef vector< Row > Matrix;
 const T rho0 = 1.;
 const T deltaRho = 1.e-4;
 const T lattice_speed_sound = 1/sqrt(3);
+const T lattice_speed_sound_square = lattice_speed_sound*lattice_speed_sound;
 // 120000. 5400 keeps (5000 finish transient and 6000 vortice contact anechoic condition) 
 const plint maxIter = 15000;
 const plint start_transient_iteration = 5000;
+const plint finish_time_to_began_vortice_anechoic_condition = 6000;
 //const plint maxIter = 5500; // 120000. 5400 keeps
 const plint nx = 1000;       // Choice of lattice dimensions.
 const plint ny = 1000;
@@ -104,7 +106,7 @@ int main(int argc, char* argv[]) {
 
     // parameters to FW-HS
     Array<T, 2> center((plint) nx/2, (plint) ny/2);
-    plint distance_center =  10;
+    plint distance_center = 10;
     // total number of points
     plint total_points_fwhs = distance_center*2*4;
     Matrix matrix_sfwh_pressure(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
@@ -113,12 +115,19 @@ int main(int argc, char* argv[]) {
     // ------------------
 
     // Setting pressure points to calculate FFT
-    
-    
+    Row pressure_points_partial;
+    Row pressure_points_complete;
     // Main loop over time iterations.
     for (plint iT=0; iT <= maxIter; iT++) {
 
         if (iT >= start_transient_iteration){
+
+            pressure_points_complete.
+                push_back((lattice.get(nx/2, (ny/2) + 75*size_square).computeDensity() - rho0)*lattice_speed_sound_square);
+            if (iT <= finish_time_to_began_vortice_anechoic_condition){
+                pressure_points_partial.
+                    push_back((lattice.get(nx/2, (ny/2) + 75*size_square).computeDensity() - rho0)*lattice_speed_sound_square);
+            }
         
             plint point_surface = 0;
             // to face 1 (left)
@@ -130,7 +139,8 @@ int main(int argc, char* argv[]) {
                 matrix_sfwh_velocity_x[point_surface][1] = y;
                 matrix_sfwh_velocity_y[point_surface][0] = x; 
                 matrix_sfwh_velocity_y[point_surface][1] = y;
-                matrix_sfwh_pressure[point_surface][iT - start_transient_iteration + 2] = (lattice.get(x, y).computeDensity())/3;
+                matrix_sfwh_pressure[point_surface][iT - start_transient_iteration + 2] = 
+                    (lattice.get(x, y).computeDensity())/3;
                 Array<T, 2> velocities((T) 9999, (T) 9999);
                 lattice.get(x, y).computeVelocity(velocities);
                 matrix_sfwh_velocity_x[point_surface][iT - start_transient_iteration + 2] = velocities[0];
@@ -217,7 +227,7 @@ int main(int argc, char* argv[]) {
                   << " rho ="
                   << getStoredAverageDensity<T>(lattice)
                   << " max_velocity ="
-                  << setprecision(10) << getStoredMaxVelocity<T>(lattice)
+                  << setprecision(10) << (getStoredMaxVelocity<T>(lattice))/lattice_speed_sound
                   << endl;
         }
 
@@ -226,9 +236,9 @@ int main(int argc, char* argv[]) {
         
     }
 
-    plb_ofstream sfwh_pressure_file("data_sfwh/sfwh_pressure.dat");
-    plb_ofstream sfwh_velocity_x_file("data_sfwh/sfwh_velocity_x.dat");
-    plb_ofstream sfwh_velocity_y_file("data_sfwh/sfwh_velocity_y.dat");
+    plb_ofstream sfwh_pressure_file("sfwh_pressure.dat");
+    plb_ofstream sfwh_velocity_x_file("sfwh_velocity_x.dat");
+    plb_ofstream sfwh_velocity_y_file("sfwh_velocity_y.dat");
     for (plint point = 0; point < total_points_fwhs; point++){
         for (plint time_step = 0; time_step < maxIter - start_transient_iteration + 2; time_step++){
             sfwh_pressure_file <<  setprecision(10) << matrix_sfwh_pressure[point][time_step] << " ";
@@ -242,5 +252,14 @@ int main(int argc, char* argv[]) {
     sfwh_pressure_file.close();
     sfwh_velocity_x_file.close();
     sfwh_velocity_y_file.close();
+
+    plb_ofstream pressure_points_complete_file("pressure_points_complete_file.dat");
+    plb_ofstream pressure_points_partial_file("pressure_points_complete_partial.dat");
+    for (int i = 0; i < pressure_points_complete.size(); ++i){
+        pressure_points_complete_file << setprecision(10) << pressure_points_complete[i] << std::endl;
+    }
+    for (int i = 0; i < pressure_points_partial.size(); ++i){
+        pressure_points_partial_file << setprecision(10) << pressure_points_partial[i] << std::endl;
+    }
 
 }
