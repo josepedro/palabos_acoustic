@@ -44,7 +44,15 @@ pressures_theta = abs(pressures_theta)/(U^2);
 pressures_theta = pressures_theta/max(pressures_theta);
 pressures_theta = pressures_theta';
 
-figure; polar(theta, pressures_theta, '*');
+compare_pressure_theta_10 = open('pressures_theta.mat');
+compare_pressure_theta_10 = compare_pressure_theta_10.pressures_theta;
+
+%figure; polar(theta, pressures_theta, '--');
+%hold on; polar(theta, compare_pressure_theta_10, 'red');
+
+%save(filename,variables);
+
+figure; polar(theta, pressures_theta, '--');
 hold on; polar(theta, DNS_vortex_shedding(:,1), 'red');
 polar(Curle_vortex_shedding(:,2)*(pi/180), Curle_vortex_shedding(:,1), 'black');
 title( ... 
@@ -52,4 +60,28 @@ title( ...
 'Interpreter','latex','FontSize',16);
 xlabel('Angle [Degree]','Interpreter','latex','FontSize',16); 
 ylabel('Normalized Magnitude','Interpreter','latex','FontSize',16);
-legend('Lattice Boltzmann and FW-H Analogy','DNS', 'DNS and Curle Analogy');
+legend('LBM and FW-H Analogy - Radius Surface = 2','DNS', 'DNS and Curle Analogy');
+
+%title( ... 
+%'Time histories of the fluctuation pressure', ... 
+%'Interpreter','latex','FontSize',16);
+%xlabel('Time step [Lattice unit]','Interpreter','latex','FontSize',16); 
+%ylabel('Pressure variation','Interpreter','latex','FontSize',16);
+
+% plot(a.pressure_points_complete_partial);
+% axis([0 1001 min(a.pressure_points_complete_partial) max(a.pressure_points_complete_partial)]);
+% title( ... 
+% 'Time histories of the fluctuation pressure', ... 
+% 'Interpreter','latex','FontSize',16);
+% xlabel('Time step [Lattice unit]','Interpreter','latex','FontSize',16); 
+% ylabel('Pressure variation','Interpreter','latex','FontSize',16);
+
+% frequencies =  linspace(0,1,length(a.pressure_points_complete_partial));
+% a.pressure_points_complete_partial = a.pressure_points_complete_partial - mean(a.pressure_points_complete_partial);
+% figure; plot(frequencies, abs(fft(a.pressure_points_complete_partial))/max(abs(fft(a.pressure_points_complete_partial)))); 
+% axis([0 0.06 0 1.2]);
+% title( ... 
+% 'Spectrum of Frequencies', ... 
+% 'Interpreter','latex','FontSize',16);
+% xlabel('Frequencies [Lattice Unit]','Interpreter','latex','FontSize',16); 
+% ylabel('Normalized Magnitude','Interpreter','latex','FontSize',16);
