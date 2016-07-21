@@ -77,16 +77,12 @@ void writeGifs(BlockLatticeT& lattice,
     Box3D slice(0, nx-1, 0, ny-1, nz/2, nz/2);
     ImageWriter<T> imageWriter("leeloo");
 
-    imageWriter.writeScaledGif( createFileName("uz", iter, 6),
-                                *computeVelocityComponent (lattice, slice, zComponent),
+    imageWriter.writeScaledGif( createFileName("Density", iter, 6),
+                                *computeDensity(lattice, slice),
                                 imSize, imSize );
 
-    imageWriter.writeScaledGif( createFileName("uNorm", iter, 6),
+    imageWriter.writeScaledGif( createFileName("velocity", iter, 6),
                                 *computeVelocityNorm (lattice, slice),
-                                imSize, imSize );
-    imageWriter.writeScaledGif( createFileName("omega", iter, 6),
-                                *computeNorm(*computeVorticity (
-                                        *computeVelocity(lattice) ), slice ),
                                 imSize, imSize );
 }
 
@@ -115,7 +111,7 @@ int main(int argc, char* argv[]) {
     IncomprFlowParam<T> parameters(
             (T) 1e-2,  // uMax
             (T) 10.,   // Re
-            100,        // N
+            50,        // N
             1.,        // lx
             1.,        // ly
             1.         // lz
@@ -151,10 +147,10 @@ int main(int argc, char* argv[]) {
             writeGifs(lattice, parameters, iT);
         }
 
-        if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
+        /*if (iT%parameters.nStep(vtkSave)==0 && iT>0) {
             pcout << "Saving VTK file ..." << endl;
             writeVTK(lattice, parameters, iT);
-        }
+        }*/
 
         if (iT%parameters.nStep(logT)==0) {
             pcout << "step " << iT
