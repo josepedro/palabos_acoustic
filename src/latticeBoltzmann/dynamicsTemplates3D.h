@@ -582,6 +582,16 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f *= one_m_omega;
     f += fEq*omega;
 
+    // Parameters of Anechoic Condition
+    T total_distance = 30;
+    T sigma_m = 0.3;
+    // Targets values to anechoic dynamics
+    T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
+    Array<T,D::q> f_target;
+    T jSqr_target = j_target[0]*j_target[0]+j_target[1]*j_target[1]+j_target[2]*j[2];
+    complete_bgk_ma2_equilibria( rhoBar_target, invRho, j_target, jSqr_target, f_target );
+    f += -sigma_target*(fEq - f_target);
+
     return invRho*invRho*jSqr;
 }
 

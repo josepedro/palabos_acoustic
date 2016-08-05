@@ -63,7 +63,7 @@ int main(int argc, char **argv){
 
     AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
     new AnechoicDynamics<T,DESCRIPTOR>(omega);
-    T delta_efective = 30 - 20;
+    T delta_efective = 30;
     anechoicDynamics->setDelta(delta_efective);
     anechoicDynamics->setRhoBar_target(rho0);
     anechoicDynamics->setJ_target(u0);
