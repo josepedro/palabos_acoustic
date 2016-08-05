@@ -84,11 +84,11 @@ static T bgk_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar, Array<T,Descripto
 static T anechoic_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar, 
     Array<T,Descriptor<T>::d> const& j, T omega, T delta, T rhoBar_target, Array<T,Descriptor<T>::d> j_target)
 {
-    //return dynamicsTemplatesImpl<T,typename Descriptor<T>::BaseDescriptor>
-      //  ::anechoic_ma2_collision(cell.getRawPopulations(), rhoBar, j, omega, delta, rhoBar_target, j_target);
-    // Aqui tenho que arrumar, tive que mudar para o codigo rodar
     return dynamicsTemplatesImpl<T,typename Descriptor<T>::BaseDescriptor>
-         ::complete_bgk_ma2_collision(cell.getRawPopulations(), rhoBar, 1, j, omega);
+        ::anechoic_ma2_collision(cell.getRawPopulations(), rhoBar, j, omega, delta, rhoBar_target, j_target);
+    // Aqui tenho que arrumar, tive que mudar para o codigo rodar
+    //return dynamicsTemplatesImpl<T,typename Descriptor<T>::BaseDescriptor>
+      //   ::complete_bgk_ma2_collision(cell.getRawPopulations(), rhoBar, 1, j, omega);
 }
 
 static T complete_bgk_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar, T invRho, Array<T,Descriptor<T>::d> const& j, T omega)
@@ -266,7 +266,8 @@ static T bgk_ma2_collision(Array<T,Descriptor::q>& f, T rhoBar, Array<T,Descript
     return jSqr*invRho*invRho;
 }
 
-static T anechoic_ma2_collision(Array<T,Descriptor::q>& f, T rhoBar, Array<T,Descriptor::d> const& j, T omega) {
+static T anechoic_ma2_collision(Array<T,Descriptor::q>& f, T rhoBar, Array<T,Descriptor::d> const& j, T omega, 
+    T delta, T rhoBar_target, Array<T,Descriptor::d> j_target) {
     T invRho = Descriptor::invRho(rhoBar);
     const T jSqr = VectorTemplateImpl<T,Descriptor::d>::normSqr(j);
     for (plint iPop=0; iPop < Descriptor::q; ++iPop) {

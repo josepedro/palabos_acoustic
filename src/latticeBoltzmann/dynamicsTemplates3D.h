@@ -571,7 +571,7 @@ static T bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j,
 }
 
 static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, 
-    Array<T,2> const& j, T omega, T invRho, T delta, T rhoBar_target ,Array<T,2> j_target) {
+    Array<T,3> const& j, T omega, T invRho, T delta, T rhoBar_target ,Array<T,3> j_target) {
     T jSqr = j[0]*j[0]+j[1]*j[1]+j[2]*j[2];
     Array<T,D::q> fEq;
     Array<T,3> u0(0, 0, 0);
@@ -1696,7 +1696,7 @@ static T truncated_mrt_smagorinsky_ma2_ext_rhoBar_j_collision(Array<T,D::q>& f, 
 }
 
 static T anechoic_ma2_collision(Array<T,D::q>& f, T rhoBar, 
-    Array<T,2> const& j, T omega, T delta, T rhoBar_target, Array<T,2> j_target) {
+    Array<T,3> const& j, T omega, T delta, T rhoBar_target, Array<T,3> j_target) {
     return anechoic_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar), delta, 
     rhoBar_target, j_target);
 }
