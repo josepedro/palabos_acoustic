@@ -570,12 +570,30 @@ static T bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j,
     return invRho*invRho*jSqr;
 }
 
+static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, 
+    Array<T,2> const& j, T omega, T invRho, T delta, T rhoBar_target ,Array<T,2> j_target) {
+    T jSqr = j[0]*j[0]+j[1]*j[1]+j[2]*j[2];
+    Array<T,D::q> fEq;
+    Array<T,3> u0(0, 0, 0);
+    complete_bgk_ma2_equilibria( rhoBar, invRho, u0, jSqr, fEq );
+
+    std::cout << "Here!!!" << std::endl;
+    
+    T one_m_omega = (T)1 - omega;
+    f *= one_m_omega;
+    f += fEq*omega;
+
+    return invRho*invRho*jSqr;
+}
+
 // because of an huge gain in computational efficiency the rhoBar trick is not used....
 // t[iPop] is removed manually at the end of the computation
 static T complete_bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, T invRho, Array<T,D::d> const& j, T omega ) {
     T jSqr = j[0]*j[0]+j[1]*j[1]+j[2]*j[2];
     Array<T,D::q> fEq;
     complete_bgk_ma2_equilibria( rhoBar, invRho, j, jSqr, fEq );
+
+    std::cout << "Here!!!" << std::endl;
     
     T one_m_omega = (T)1 - omega;
     f *= one_m_omega;
@@ -1675,6 +1693,12 @@ static T truncated_mrt_smagorinsky_ma2_collision(Array<T,D::q>& f, T cSmago, T o
 
 static T truncated_mrt_smagorinsky_ma2_ext_rhoBar_j_collision(Array<T,D::q>& f, T rhoBar, Array<T,D::d> const& j, T cSmago, T omega, T omegaNonPhys, plint iPhys) {
     return truncated_mrt_smagorinsky_ma2_ext_rhoBar_j_collision_base(f, rhoBar, j, cSmago, omega, omegaNonPhys, iPhys);
+}
+
+static T anechoic_ma2_collision(Array<T,D::q>& f, T rhoBar, 
+    Array<T,2> const& j, T omega, T delta, T rhoBar_target, Array<T,2> j_target) {
+    return anechoic_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar), delta, 
+    rhoBar_target, j_target);
 }
 
 static T bgk_inc_collision(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j, T omega, T invRho0=(T)1 ) {

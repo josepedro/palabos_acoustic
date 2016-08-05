@@ -475,12 +475,12 @@ T AnechoicDynamics<T,Descriptor>::getRhoBar_target(){
 
 // J_target is velocity to anechoic
 template<typename T, template<typename U> class Descriptor>
-void AnechoicDynamics<T,Descriptor>::setJ_target(Array<T,2> j_target){
+void AnechoicDynamics<T,Descriptor>::setJ_target(Array<T,Descriptor<T>::d> j_target){
     this->j_target = j_target;
 }
 
 template<typename T, template<typename U> class Descriptor>
-Array<T,2> AnechoicDynamics<T,Descriptor>::getJ_target(){
+Array<T,Descriptor<T>::d> AnechoicDynamics<T,Descriptor>::getJ_target(){
     return this->j_target;
 }
 

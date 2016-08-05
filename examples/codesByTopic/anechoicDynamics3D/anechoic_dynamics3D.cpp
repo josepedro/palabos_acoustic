@@ -9,7 +9,7 @@ using namespace std;
 
 typedef double T;
 typedef Array<T,3> Velocity;
-#define DESCRIPTOR descriptors::D3Q19Descriptor
+#define DESCRIPTOR descriptors::D3Q27Descriptor
 
 void writeGifs(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
     const plint nx = lattice.getNx();
@@ -58,10 +58,19 @@ int main(int argc, char **argv){
 
     global::directories().setOutputDir(fNameOut+"/");
 
-    // DEFINICAO DO LATTICE
-
     pcout << "Creation of the lattice." << endl;
-    MultiBlockLattice3D<T,DESCRIPTOR> lattice(nx,ny,nz, new BGKdynamics<T,DESCRIPTOR>(omega));
+    MultiBlockLattice3D<T,DESCRIPTOR> lattice(nx,ny,nz, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
+
+    AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
+    new AnechoicDynamics<T,DESCRIPTOR>(omega);
+    T delta_efective = 30 - 20;
+    anechoicDynamics->setDelta(delta_efective);
+    anechoicDynamics->setRhoBar_target(rho0);
+    anechoicDynamics->setJ_target(u0);
+    DotList3D points_to_aplly_dynamics;
+    points_to_aplly_dynamics.addDot(Dot3D(100,100,100));
+    defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+
     // Switch off periodicity.
     lattice.periodicity().toggleAll(false);
 
