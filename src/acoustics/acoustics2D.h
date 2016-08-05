@@ -12,7 +12,7 @@
 using namespace plb;
 using namespace std;
 
-namespace plb_acoustics{
+namespace plb_acoustics_2D{
 
 	// Defining Matrix and Row
 	typedef vector<T> Row;
@@ -255,7 +255,6 @@ namespace plb_acoustics{
     	this->matrix_sfwh_velocity_x = matrix_sfwh_velocity_x;
     	Matrix matrix_sfwh_velocity_y(total_points_fwhs, Row(maxIter - start_transient_iteration + 2));
     	this->matrix_sfwh_velocity_y = matrix_sfwh_velocity_y;
-		pcout << "raio dessa parada: " << this->radius << std::endl;
 	}
 
 	void FW_H_Surface_square::import_pressures_velocities(MultiBlockLattice2D<T, DESCRIPTOR> lattice, plint iT){
