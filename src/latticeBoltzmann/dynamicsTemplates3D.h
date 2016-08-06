@@ -575,8 +575,6 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     T jSqr = j[0]*j[0]+j[1]*j[1]+j[2]*j[2];
     Array<T,D::q> fEq;
     complete_bgk_ma2_equilibria( rhoBar, invRho, j, jSqr, fEq );
-
-    std::cout << "Here!!!" << std::endl;
     
     T one_m_omega = (T)1 - omega;
     f *= one_m_omega;
