@@ -11,6 +11,12 @@ typedef double T;
 typedef Array<T,3> Velocity;
 #define DESCRIPTOR descriptors::D3Q27Descriptor
 
+// ---------------------------------------------
+// Includes of acoustics resources
+#include "acoustics/acoustics3D.h"
+using namespace plb_acoustics_3D;
+// ---------------------------------------------
+
 void writeGifs(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
     const plint nx = lattice.getNx();
     const plint ny = lattice.getNy();
@@ -67,16 +73,15 @@ int main(int argc, char **argv){
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium( lattice, lattice.getBoundingBox(), rho0 , u0 );
 
-
-    AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
-    new AnechoicDynamics<T,DESCRIPTOR>(omega);
-    T delta_efective = 30;
-    anechoicDynamics->setDelta(delta_efective);
-    anechoicDynamics->setRhoBar_target(0);
-    anechoicDynamics->setJ_target(Array<T,3>(0, 0, 0));
-    //DotList3D points_to_aplly_dynamics;
-    //points_to_aplly_dynamics.addDot(Dot3D(100,100,100));
-    defineDynamics(lattice, Box3D( 10, 30 , 50, 70 , 40,70), anechoicDynamics);
+    // Anechoic Condition
+    T rhoBar_target = 0;
+    Array<T,3> j_target(0, 0, 0);
+    T size_anechoic_buffer = 30;
+    // Define Anechoic Boards
+    defineAnechoicBoards(nx, ny, nz, lattice, size_anechoic_buffer,
+      omega, j_target, j_target, j_target, j_target, j_target, j_target,
+      rhoBar_target);
+    
 
     lattice.initialize();
 
@@ -93,7 +98,7 @@ int main(int argc, char **argv){
 
         }
 
-        if (iT % 20 == 0 && iT>0) {
+        if (iT % 5 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             writeGifs(lattice,iT);
             writeVTK(lattice, iT);
