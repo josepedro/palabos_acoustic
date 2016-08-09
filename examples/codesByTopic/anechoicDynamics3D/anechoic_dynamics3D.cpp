@@ -18,7 +18,7 @@ using namespace plb_acoustics_3D;
 // ---------------------------------------------
 
 const T rho0 = 1;
-const T drho = rho0*7;
+const T drho = rho0/10;
 
 void writeGifs(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
     const plint nx = lattice.getNx();
@@ -82,9 +82,9 @@ int main(int argc, char **argv){
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
     // Define Anechoic Boards
-    defineAnechoicBoards(nx, ny, nz, lattice, size_anechoic_buffer,
+    /*defineAnechoicBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
-      rhoBar_target);
+      rhoBar_target);*/
     
 
     lattice.initialize();
@@ -93,64 +93,21 @@ int main(int argc, char **argv){
     pcout << std::endl << "dx:" << dx << std::endl;
 
     pcout << "Simulation begins" << endl;
-    for (plint iT=0; iT<maxT; ++iT){
-        T lattice_speed_sound = 1/sqrt(3);
-        T rho_changing = rho0 + drho*sin(2*M_PI*4*(lattice_speed_sound/20)*iT);        
-        Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
-        initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
 
+    plb_ofstream history_pressures("history_pressures.dat");
+    for (plint iT=0; iT<maxT; ++iT){
+        if (iT == 0){
+            Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
+            initializeAtEquilibrium( lattice, impulse, rho0 + drho, u0 );
+        }
 
         if (iT % 5 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             writeGifs(lattice,iT);
-            //writeVTK(lattice, iT);
+            writeVTK(lattice, iT);
         }
 
-        if (iT == 200){
-            plb_ofstream sinusoidal_001_points("tmp/sinusoidal_001_points.dat");
-            plb_ofstream sinusoidal_010_points("tmp/sinusoidal_010_points.dat");
-            plb_ofstream sinusoidal_011_points("tmp/sinusoidal_011_points.dat");
-            plb_ofstream sinusoidal_100_points("tmp/sinusoidal_100_points.dat");
-            plb_ofstream sinusoidal_101_points("tmp/sinusoidal_101_points.dat");
-            plb_ofstream sinusoidal_110_points("tmp/sinusoidal_110_points.dat");
-            plb_ofstream sinusoidal_111_points("tmp/sinusoidal_111_points.dat");
-
-            for (plint z = 0; z < nz; ++z){
-                for (plint y = 0; y < ny; ++y){
-                    for (plint x = 0; x < nx; ++x){
-                        if (x == 0 && y == 0){
-                            sinusoidal_001_points << setprecision(10) <<
-                            lattice.get(x,y,z).computeDensity() - rho0 << endl;
-                        }
-                        if (x == 0 && z == 0){
-                            sinusoidal_010_points << setprecision(10) <<
-                            lattice.get(x,y,z).computeDensity() - rho0 << endl;
-                        }
-                        if (x == 0 && y == z){
-                            sinusoidal_011_points << setprecision(10) <<
-                            lattice.get(x,y,z).computeDensity() - rho0 << endl;
-                        }
-                        if (y == 0 && z == 0){
-                            sinusoidal_100_points << setprecision(10) <<
-                            lattice.get(x,y,z).computeDensity() - rho0 << endl;
-                        }
-                        if (x == z && y == 0){
-                            sinusoidal_101_points << setprecision(10) <<
-                            lattice.get(x,y,z).computeDensity() - rho0 << endl;
-                        }
-                        if (x == y && z == 0){
-                            sinusoidal_110_points << setprecision(10) <<
-                            lattice.get(x,y,z).computeDensity() - rho0 << endl;
-                        }
-                        if (x == y && z == x){
-                            sinusoidal_111_points << setprecision(10) <<
-                            lattice.get(x,y,z).computeDensity() - rho0 << endl;
-                        }
-                    }
-                }                
-            }
-        }
-
+        history_pressures << setprecision(10) << lattice.get(nx/2+30, ny/2+30, nz/2+30).computeDensity() - rho0 << endl;
         lattice.collideAndStream();
 
     }
