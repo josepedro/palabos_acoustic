@@ -4,12 +4,15 @@
 #include <cmath>
 
 using namespace plb;
+using namespace plb::descriptors;
 using namespace std;
 
 
 typedef double T;
 typedef Array<T,3> Velocity;
-#define DESCRIPTOR descriptors::D3Q27Descriptor
+//#define DESCRIPTOR descriptors::D3Q27Descriptor
+#define DESCRIPTOR MRTD3Q19Descriptor
+ typedef MRTdynamics<T,DESCRIPTOR> BackgroundDynamics;
 
 // ---------------------------------------------
 // Includes of acoustics resources
@@ -52,7 +55,7 @@ int main(int argc, char **argv){
     const plint nz = 100;
     const T lattice_speed_sound = 1/sqrt(3);
 
-    const T omega = 1.0;
+    const T omega = 1.9;
     const plint maxT = 210*2;
 
     const T lx =  2.3;
@@ -67,9 +70,9 @@ int main(int argc, char **argv){
 
     global::directories().setOutputDir(fNameOut+"/");
 
+    MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx,ny,nz, new BackgroundDynamics(omega));
+
     pcout << "Creation of the lattice." << endl;
-    MultiBlockLattice3D<T,DESCRIPTOR> lattice(nx,ny,nz, 
-        new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
 
     // Switch off periodicity.
     lattice.periodicity().toggleAll(false);
