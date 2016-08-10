@@ -45,7 +45,7 @@ typedef double T;
 // ---------------------------------------------
 // Includes of acoustics resources
 #include "acoustics/acoustics2D.h"
-using namespace plb_acoustics;
+using namespace plb_acoustics_2D;
 // ---------------------------------------------
 
 const T rho0 = 1.;
@@ -109,8 +109,25 @@ int main(int argc, char* argv[]) {
 
     // parameters to FW-HS - Radius 10
     Array<T, 2> center((plint) nx/2, (plint) ny/2);
-    plint distance_center = 10;
-    FW_H_Surface_square fw_h_surface_square(center, distance_center, maxIter, start_transient_iteration);
+    /*plint distance_center_10 = 10;
+    FW_H_Surface_square fw_h_surface_square_10(center, 
+        distance_center_10, maxIter, start_transient_iteration);
+    plint distance_center_2 = 2;
+    FW_H_Surface_square fw_h_surface_square_2(center, 
+        distance_center_2, maxIter, start_transient_iteration);
+    plint distance_center_50 = 50;
+    FW_H_Surface_square fw_h_surface_square_50(center, 
+        distance_center_50, maxIter, start_transient_iteration);*/
+    /*plint distance_center_100 = 100;
+    FW_H_Surface_square fw_h_surface_square_100(center, 
+        distance_center_100, maxIter, start_transient_iteration);*/
+    /*plint distance_center_300 = 300;
+    FW_H_Surface_square fw_h_surface_square_300(center, 
+        distance_center_300, maxIter, start_transient_iteration);*/
+    plint distance_center_5 = 5;
+    FW_H_Surface_square fw_h_surface_square_5(center, 
+        distance_center_5, maxIter, start_transient_iteration);
+
     // ------------------
 
     // Setting pressure points to calculate FFT
@@ -129,7 +146,12 @@ int main(int argc, char* argv[]) {
             }
         
 
-            fw_h_surface_square.import_pressures_velocities(lattice, iT);
+            /*fw_h_surface_square_10.import_pressures_velocities(lattice, iT);
+            fw_h_surface_square_2.import_pressures_velocities(lattice, iT);
+            fw_h_surface_square_50.import_pressures_velocities(lattice, iT);*/
+            /*fw_h_surface_square_100.import_pressures_velocities(lattice, iT);*/
+            //fw_h_surface_square_300.import_pressures_velocities(lattice, iT);
+            fw_h_surface_square_5.import_pressures_velocities(lattice, iT);
         }
 
        if (iT%100==0) { 
@@ -170,7 +192,12 @@ int main(int argc, char* argv[]) {
         
     }
 
-    fw_h_surface_square.save_data("sfwh_pressure.dat", "sfwh_velocity_x.dat", "sfwh_velocity_y.dat");
+    /*fw_h_surface_square_10.save_data("sfwh_pressure_10.dat", "sfwh_velocity_x_10.dat", "sfwh_velocity_y_10.dat");
+    fw_h_surface_square_2.save_data("sfwh_pressure_2.dat", "sfwh_velocity_x_2.dat", "sfwh_velocity_y_2.dat");
+    fw_h_surface_square_50.save_data("sfwh_pressure_50.dat", "sfwh_velocity_x_50.dat", "sfwh_velocity_y_50.dat");*/
+    /*fw_h_surface_square_100.save_data("sfwh_pressure_100.dat", "sfwh_velocity_x_100.dat", "sfwh_velocity_y_100.dat");*/
+    //fw_h_surface_square_300.save_data("sfwh_pressure_300.dat", "sfwh_velocity_x_300.dat", "sfwh_velocity_y_300.dat");
+    fw_h_surface_square_5.save_data("sfwh_pressure_5.dat", "sfwh_velocity_x_5.dat", "sfwh_velocity_y_5.dat");
 
     plb_ofstream pressure_points_complete_file("pressure_points_complete_file.dat");
     plb_ofstream pressure_points_partial_file("pressure_points_complete_partial.dat");

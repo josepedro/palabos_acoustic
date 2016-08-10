@@ -177,8 +177,8 @@ public:
     virtual T getDelta();
     virtual void setRhoBar_target(T rhoBar_target);
     virtual T getRhoBar_target();
-    virtual void setJ_target(Array<T,2> j_target);
-    virtual Array<T,2> getJ_target();
+    virtual void setJ_target(Array<T,Descriptor<T>::d> j_target);
+    virtual Array<T,Descriptor<T>::d> getJ_target();
 private:
     virtual void decomposeOrder0(Cell<T,Descriptor> const& cell, std::vector<T>& rawData) const;
     virtual void recomposeOrder0(Cell<T,Descriptor>& cell, std::vector<T> const& rawData) const;
@@ -188,7 +188,7 @@ private:
     T delta;
     T omega;
     T rhoBar_target;
-    Array<T,2> j_target;
+    Array<T,Descriptor<T>::d> j_target;
 };
 
 

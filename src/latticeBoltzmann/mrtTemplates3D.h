@@ -238,7 +238,7 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
     static T mrtCollision( Array<T,Descriptor::q>& f, const T &omega )
     {
         Array<T,19> moments, momentsEq;
-        
+        pcout << "MRT HERE!!! Legal!!!" << std::endl;
         computeMoments(moments,f);
         T rhoBar = moments[0];
         Array<T,3> j(moments[MRTDescriptor::momentumIndexes[0]],moments[MRTDescriptor::momentumIndexes[1]],moments[MRTDescriptor::momentumIndexes[2]]);
@@ -257,6 +257,7 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
                            const T &rhoBar, const Array<T,3> & j,
                            const T omega )
     {
+
         Array<T,19> moments, momentsEq;
         
         computeMoments(moments,f);
