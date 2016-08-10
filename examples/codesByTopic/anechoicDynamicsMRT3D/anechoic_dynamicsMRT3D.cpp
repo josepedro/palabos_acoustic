@@ -88,7 +88,7 @@ int main(int argc, char **argv){
     /*defineAnechoicBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);*/
-    
+        
 
     lattice.initialize();
 
