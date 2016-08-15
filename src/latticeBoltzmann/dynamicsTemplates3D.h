@@ -2399,24 +2399,55 @@ static T bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j,
 static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, 
     Array<T,3> const& j, T omega, T invRho, T delta, T rhoBar_target ,Array<T,3> j_target) {
  
+    // Parameters of Anechoic Condition
+    T total_distance = 30;
+    T sigma_m = 0.3;
+    //T delta = total_distance - 1;
+    T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
+    //Array<T,2> j_target; j_target[0] = 0.11/std::sqrt(3); j_target[1] = 0.0/std::sqrt(3);
+    //T rhoBar_target = rhoBar + (T) 1.e-2;
+    T feq, f_target;
+
+    // Constants of BGK D2Q9
     T one_m_omega = (T)1 - omega;
     T t0_omega = D::t[0] * omega;
     T t1_omega = D::t[1] * omega;
     T t4_omega = D::t[4] * omega;
 
     T jSqr   = j[0]*j[0] + j[1]*j[1] + j[2]*j[2];
+    T jSqr_target = j_target[0]*j_target[0] + j_target[1]*j_target[1] + j_target[2]*j_target[2];
+
     T kx     = (T)3 * j[0];
+    T kx_target = (T)3 * j_target[0];
+
     T ky     = (T)3 * j[1];
+    T ky_target = (T)3 * j_target[1];
+
     T kz     = (T)3 * j[2];
+    T kz_target = (T)3 * j_target[2];
+
     T kxSqr_ = invRho / (T)2 * kx*kx;
+    T kxSqr_target = invRho / (T)2 * kx_target*kx_target;
+
     T kySqr_ = invRho / (T)2 * ky*ky;
+    T kySqr_target = invRho / (T)2 * ky_target*ky_target;
+
     T kzSqr_ = invRho / (T)2 * kz*kz;
+    T kzSqr_target = invRho / (T)2 * kz_target*kz_target;
+
     T kxky_  = invRho * kx*ky;
+    T kxky_target  = invRho * kx_target*ky_target;
+
     T kxkz_  = invRho * kx*kz;
+    T kxkz_target  = invRho * kx_target*kz_target;
+
     T kykz_  = invRho * ky*kz;
+    T kykz_target  = invRho * ky_target*kz_target;
 
     T C1 = rhoBar + invRho*(T)3*jSqr;
+    T C1_target = rhoBar_target + invRho*(T)3*jSqr_target;
     T C2, C3;
+    T C2_target, C3_target;
 
     // i=0
     C3 = -kxSqr_ - kySqr_ - kzSqr_;

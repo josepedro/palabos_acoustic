@@ -674,7 +674,7 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     T C1_target = rhoBar_target + invRho*(T)3*jSqr_target;
     // -------
     T C2, C3;
-     // Declaring target values
+    // Declaring target values
     T C2_target, C3_target;
     
     T ux = j[0]*invRho;
