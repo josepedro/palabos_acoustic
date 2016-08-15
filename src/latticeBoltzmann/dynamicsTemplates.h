@@ -86,9 +86,6 @@ static T anechoic_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar,
 {
     return dynamicsTemplatesImpl<T,typename Descriptor<T>::BaseDescriptor>
         ::anechoic_ma2_collision(cell.getRawPopulations(), rhoBar, j, omega, delta, rhoBar_target, j_target);
-    // Aqui tenho que arrumar, tive que mudar para o codigo rodar
-    //return dynamicsTemplatesImpl<T,typename Descriptor<T>::BaseDescriptor>
-      //   ::complete_bgk_ma2_collision(cell.getRawPopulations(), rhoBar, 1, j, omega);
 }
 
 static T complete_bgk_ma2_collision(Cell<T,Descriptor>& cell, T rhoBar, T invRho, Array<T,Descriptor<T>::d> const& j, T omega)
