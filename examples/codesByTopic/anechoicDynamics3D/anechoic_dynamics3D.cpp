@@ -9,7 +9,7 @@ using namespace std;
 
 typedef double T;
 typedef Array<T,3> Velocity;
-#define DESCRIPTOR descriptors::D3Q27Descriptor
+#define DESCRIPTOR descriptors::D3Q19Descriptor
 
 // ---------------------------------------------
 // Includes of acoustics resources
@@ -69,7 +69,7 @@ int main(int argc, char **argv){
 
     pcout << "Creation of the lattice." << endl;
     MultiBlockLattice3D<T,DESCRIPTOR> lattice(nx,ny,nz, 
-        new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
+        new BGKdynamics<T,DESCRIPTOR>(omega));
 
     // Switch off periodicity.
     lattice.periodicity().toggleAll(false);
@@ -105,9 +105,11 @@ int main(int argc, char **argv){
 
     plb_ofstream history_pressures("history_pressures.dat");
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT == 0){
-            //Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
-            //initializeAtEquilibrium( lattice, impulse, rho0 + drho, u0 );
+        if (iT != 0){
+            T lattice_speed_sound = 1/sqrt(3);
+            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            Box3D impulse(nx/2 + 20, nx/2 + 20, ny/2 + 20, ny/2 + 20, nz/2 + 20, nz/2 + 20);
+            initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
         }
 
         if (iT % 100 == 0 && iT>0) {

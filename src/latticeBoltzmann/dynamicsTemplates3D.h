@@ -2396,6 +2396,110 @@ static T bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j,
     return invRho*invRho*jSqr;
 }
 
+static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, 
+    Array<T,3> const& j, T omega, T invRho, T delta, T rhoBar_target ,Array<T,3> j_target) {
+ 
+    T one_m_omega = (T)1 - omega;
+    T t0_omega = D::t[0] * omega;
+    T t1_omega = D::t[1] * omega;
+    T t4_omega = D::t[4] * omega;
+
+    T jSqr   = j[0]*j[0] + j[1]*j[1] + j[2]*j[2];
+    T kx     = (T)3 * j[0];
+    T ky     = (T)3 * j[1];
+    T kz     = (T)3 * j[2];
+    T kxSqr_ = invRho / (T)2 * kx*kx;
+    T kySqr_ = invRho / (T)2 * ky*ky;
+    T kzSqr_ = invRho / (T)2 * kz*kz;
+    T kxky_  = invRho * kx*ky;
+    T kxkz_  = invRho * kx*kz;
+    T kykz_  = invRho * ky*kz;
+
+    T C1 = rhoBar + invRho*(T)3*jSqr;
+    T C2, C3;
+
+    // i=0
+    C3 = -kxSqr_ - kySqr_ - kzSqr_;
+    f[0] *= one_m_omega; f[0] += t0_omega * (C1+C3);
+
+    // i=1 and i=10
+    C2 = -kx;
+    C3 = -kySqr_ - kzSqr_;
+    f[1]  *= one_m_omega; f[1]  += t1_omega * (C1+C2+C3);
+    f[10] *= one_m_omega; f[10] += t1_omega * (C1-C2+C3);
+
+    // i=2 and i=11
+    C2 = -ky;
+    C3 = -kxSqr_ - kzSqr_;
+    f[2]  *= one_m_omega; f[2]  += t1_omega * (C1+C2+C3);
+    f[11] *= one_m_omega; f[11] += t1_omega * (C1-C2+C3);
+
+    // i=3 and i=12
+    C2 = -kz;
+    C3 = -kxSqr_ - kySqr_;
+    f[3]  *= one_m_omega; f[3]  += t1_omega * (C1+C2+C3);
+    f[12] *= one_m_omega; f[12] += t1_omega * (C1-C2+C3);
+
+    // i=4 and i=13
+    C2 = -kx - ky;
+    C3 = kxky_ - kzSqr_;
+    f[4]  *= one_m_omega; f[4]  += t4_omega * (C1+C2+C3);
+    f[13] *= one_m_omega; f[13] += t4_omega * (C1-C2+C3);
+
+    // i=5 and i=14
+    C2 = -kx + ky;
+    C3 = -kxky_ - kzSqr_;
+    f[5]  *= one_m_omega; f[5]  += t4_omega * (C1+C2+C3);
+    f[14] *= one_m_omega; f[14] += t4_omega * (C1-C2+C3);
+
+    // i=6 and i=15
+    C2 = -kx - kz;
+    C3 = kxkz_ - kySqr_;
+    f[6]  *= one_m_omega; f[6]  += t4_omega * (C1+C2+C3);
+    f[15] *= one_m_omega; f[15] += t4_omega * (C1-C2+C3);
+
+    // i=7 and i=16
+    C2 = -kx + kz;
+    C3 = -kxkz_ - kySqr_;
+    f[7]  *= one_m_omega; f[7]  += t4_omega * (C1+C2+C3);
+    f[16] *= one_m_omega; f[16] += t4_omega * (C1-C2+C3);
+
+    // i=8 and i=17
+    C2 = -ky - kz;
+    C3 = kykz_ - kxSqr_;
+    f[8]  *= one_m_omega; f[8]  += t4_omega * (C1+C2+C3);
+    f[17] *= one_m_omega; f[17] += t4_omega * (C1-C2+C3);
+
+    // i=9 and i=18
+    C2 = -ky + kz;
+    C3 = -kykz_ - kxSqr_;
+    f[9]  *= one_m_omega; f[9]  += t4_omega * (C1+C2+C3);
+    f[18] *= one_m_omega; f[18] += t4_omega * (C1-C2+C3);
+
+    return invRho*invRho*jSqr;
+
+
+ /*   T jSqr = j[0]*j[0]+j[1]*j[1]+j[2]*j[2];
+    Array<T,D::q> fEq;
+    complete_bgk_ma2_equilibria( rhoBar, invRho, j, jSqr, fEq );
+    
+    T one_m_omega = (T)1 - omega;
+    f *= one_m_omega;
+    f += fEq*omega;
+
+    // Parameters of Anechoic Condition
+    T total_distance = 30;
+    T sigma_m = 0.3;
+    // Targets values to anechoic dynamics
+    T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
+    Array<T,D::q> f_target;
+    T jSqr_target = j_target[0]*j_target[0]+j_target[1]*j_target[1]+j_target[2]*j[2];
+    complete_bgk_ma2_equilibria( rhoBar_target, invRho, j_target, jSqr_target, f_target );
+    f += -sigma_target*(fEq - f_target);
+
+    return invRho*invRho*jSqr;*/
+}
+
 static T truncated_mrt_ma2_collision_base(Array<T,D::q>& f, T omega, T omegaNonPhys, plint iPhys) {
     Array<T,D::q> mNeq, mEq;
     complete_ma2_moments(f, mNeq);
@@ -2504,6 +2608,12 @@ static T truncated_mrt_smagorinsky_ma2_ext_rhoBar_j_collision_base(Array<T,D::q>
 
 static T bgk_ma2_collision(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j, T omega) {
     return bgk_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar));
+}
+
+static T anechoic_ma2_collision(Array<T,D::q>& f, T rhoBar, 
+    Array<T,3> const& j, T omega, T delta, T rhoBar_target, Array<T,3> j_target) {
+    return anechoic_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar), delta, 
+    rhoBar_target, j_target);
 }
 
 static T bgk_inc_collision(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j, T omega, T invRho0=(T)1 ) {
@@ -3028,6 +3138,7 @@ static Array<T,SymmetricTensorImpl<T,D::d>::n> computeStrainRate(T rhoBar, T inv
 }
 
 static T bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j, T omega, T invRho ) {
+
     T one_m_omega = (T)1 - omega;
     T t0_omega = D::t[0] * omega;
     T t1_omega = D::t[1] * omega;
