@@ -238,12 +238,14 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
     static T mrtCollision( Array<T,Descriptor::q>& f, const T &omega )
     {
         Array<T,19> moments, momentsEq;
-        pcout << "MRT HERE!!! Legal!!!" << std::endl;
+        //pcout << "MRT HERE!!! Legal!!!" << std::endl;
+        // Compute m
         computeMoments(moments,f);
         T rhoBar = moments[0];
         Array<T,3> j(moments[MRTDescriptor::momentumIndexes[0]],moments[MRTDescriptor::momentumIndexes[1]],moments[MRTDescriptor::momentumIndexes[2]]);
         T jSqr = VectorTemplateImpl<T,3>::normSqr(j);
         
+        // Compute meq
         computeEquilibriumMoments(momentsEq,rhoBar,j,jSqr);
         computeMneqInPlace(moments,momentsEq); // moments become mNeq
         computef_InvM_Smoments(f, moments, omega);
