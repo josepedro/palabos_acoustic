@@ -99,6 +99,65 @@ T MRTdynamics<T,Descriptor>::computeEquilibrium(plint iPop, T rhoBar, Array<T,De
     return dynamicsTemplates<T,Descriptor>::bgk_ma2_equilibrium(iPop, rhoBar, invRho, j, jSqr);
 }
 
+/* *************** Class AnechoicMRTdynamics *********************************************** */
+
+template<typename T, template<typename U> class Descriptor>
+int AnechoicMRTdynamics<T,Descriptor>::id =
+    meta::registerOneParamDynamics<T,Descriptor,AnechoicMRTdynamics<T,Descriptor> >("AnechoicMRT");
+
+/** \param omega_ relaxation parameter, related to the dynamic viscosity
+ */
+template<typename T, template<typename U> class Descriptor>
+AnechoicMRTdynamics<T,Descriptor>::AnechoicMRTdynamics(T omega_ )
+    : IsoThermalBulkDynamics<T,Descriptor>(omega_)
+{ }
+
+template<typename T, template<typename U> class Descriptor>
+AnechoicMRTdynamics<T,Descriptor>* AnechoicMRTdynamics<T,Descriptor>::clone() const {
+    return new AnechoicMRTdynamics<T,Descriptor>(*this);
+}
+ 
+template<typename T, template<typename U> class Descriptor>
+int AnechoicMRTdynamics<T,Descriptor>::getId() const {
+    return id;
+}
+
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::collide (
+        Cell<T,Descriptor>& cell, BlockStatistics& statistics )
+{
+    typedef mrtTemplates<T,Descriptor> mrtTemp;
+    
+    T jSqr = mrtTemp::mrtCollision(cell, this->getOmega());
+
+    if (cell.takesStatistics()) {
+        T rhoBar = momentTemplates<T,Descriptor>::get_rhoBar(cell);
+        gatherStatistics(statistics, rhoBar, jSqr * Descriptor<T>::invRho(rhoBar) * Descriptor<T>::invRho(rhoBar) );
+    }
+}
+
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::collideExternal (
+        Cell<T,Descriptor>& cell, T rhoBar, Array<T,Descriptor<T>::d> const& j,
+        T thetaBar, BlockStatistics& statistics )
+{
+    typedef mrtTemplates<T,Descriptor> mrtTemp;
+    
+    T jSqr = mrtTemp::mrtCollision(cell, rhoBar, j, this->getOmega());
+
+    if (cell.takesStatistics()) {
+        gatherStatistics(statistics, rhoBar, jSqr * Descriptor<T>::invRho(rhoBar) * Descriptor<T>::invRho(rhoBar) );
+    }
+}
+
+template<typename T, template<typename U> class Descriptor>
+T AnechoicMRTdynamics<T,Descriptor>::computeEquilibrium(plint iPop, T rhoBar, Array<T,Descriptor<T>::d> const& j,
+                                                T jSqr, T thetaBar) const
+{
+    T invRho = Descriptor<T>::invRho(rhoBar);
+    return dynamicsTemplates<T,Descriptor>::bgk_ma2_equilibrium(iPop, rhoBar, invRho, j, jSqr);
+}
+
 /* *************** Class IncMRTdynamics *********************************************** */
 
 template<typename T, template<typename U> class Descriptor>

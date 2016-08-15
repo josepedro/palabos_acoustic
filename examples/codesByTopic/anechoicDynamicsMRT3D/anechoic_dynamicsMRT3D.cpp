@@ -13,6 +13,7 @@ typedef Array<T,3> Velocity;
 //#define DESCRIPTOR descriptors::D3Q27Descriptor
 #define DESCRIPTOR MRTD3Q19Descriptor
  typedef MRTdynamics<T,DESCRIPTOR> BackgroundDynamics;
+ typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
 
 // ---------------------------------------------
 // Includes of acoustics resources
@@ -85,7 +86,7 @@ int main(int argc, char **argv){
     nx/2 - size_square/2, nx/2 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2, 
     nz/2 - size_square/2, nz/2 + size_square/2);
-    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)0));
+    defineDynamics(lattice, square, new AnechoicBackgroundDynamics(omega));
 
     // Anechoic Condition
     T rhoBar_target = 0;
