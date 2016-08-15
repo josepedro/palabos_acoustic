@@ -642,10 +642,7 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     // Parameters of Anechoic Condition
     T total_distance = 30;
     T sigma_m = 0.3;
-    //T delta = total_distance - 1;
     T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
-    //Array<T,2> j_target; j_target[0] = 0.11/std::sqrt(3); j_target[1] = 0.0/std::sqrt(3);
-    //T rhoBar_target = rhoBar + (T) 1.e-2;
     T feq, f_target;
 
     // Constants of BGK D2Q9
