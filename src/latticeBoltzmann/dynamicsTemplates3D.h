@@ -2451,61 +2451,137 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
 
     // i=0
     C3 = -kxSqr_ - kySqr_ - kzSqr_;
+    C3_target = -kxSqr_target - kySqr_target - kzSqr_target;
     f[0] *= one_m_omega; f[0] += t0_omega * (C1+C3);
+    feq = D::t[0]*(C1+C3);
+    f_target = D::t[0]*(C1_target + C3_target);
+    f[0] += -sigma_target*(feq - f_target);
 
     // i=1 and i=10
-    C2 = -kx;
-    C3 = -kySqr_ - kzSqr_;
+    C2 = -kx; C2_target = -kx_target;
+    C3 = -kySqr_ - kzSqr_; C3_target = -kySqr_target - kzSqr_target; 
+    //-
     f[1]  *= one_m_omega; f[1]  += t1_omega * (C1+C2+C3);
+    feq = D::t[1]*(C1+C2+C3);
+    f_target = D::t[1]*(C1_target + C2_target + C3_target);
+    f[1] += -sigma_target*(feq - f_target);
+    //-
     f[10] *= one_m_omega; f[10] += t1_omega * (C1-C2+C3);
+    feq = D::t[1]*(C1-C2+C3);
+    f_target = D::t[1]*(C1_target - C2_target + C3_target);
+    f[10] += -sigma_target*(feq - f_target);
 
     // i=2 and i=11
-    C2 = -ky;
-    C3 = -kxSqr_ - kzSqr_;
+    C2 = -ky; C2_target = -ky_target;
+    C3 = -kxSqr_ - kzSqr_; C3_target = -kxSqr_target - kzSqr_target;
+    //-
     f[2]  *= one_m_omega; f[2]  += t1_omega * (C1+C2+C3);
+    feq = D::t[1]*(C1+C2+C3);
+    f_target = D::t[1]*(C1_target + C2_target + C3_target);
+    f[2] = -sigma_target*(feq - f_target);
+    //-
     f[11] *= one_m_omega; f[11] += t1_omega * (C1-C2+C3);
+    feq = D::t[1]*(C1-C2+C3);
+    f_target = D::t[1]*(C1_target - C2_target + C3_target);
+    f[11] = -sigma_target*(feq - f_target);
 
     // i=3 and i=12
-    C2 = -kz;
-    C3 = -kxSqr_ - kySqr_;
+    C2 = -kz; C2_target = -kz_target;
+    C3 = -kxSqr_ - kySqr_; C3_target = -kxSqr_target - kySqr_target;
+    //-
     f[3]  *= one_m_omega; f[3]  += t1_omega * (C1+C2+C3);
+    feq = D::t[1]*(C1+C2+C3);
+    f_target = D::t[1]*(C1_target + C2_target + C3_target);
+    f[3] = -sigma_target*(feq - f_target);
+    //-
     f[12] *= one_m_omega; f[12] += t1_omega * (C1-C2+C3);
+    feq = D::t[1]*(C1-C2+C3);
+    f_target = D::t[1]*(C1_target - C2_target + C3_target);
+    f[12] = -sigma_target*(feq - f_target);
 
     // i=4 and i=13
-    C2 = -kx - ky;
-    C3 = kxky_ - kzSqr_;
+    C2 = -kx - ky; C2_target = -kx_target - ky_target;
+    C3 = kxky_ - kzSqr_; C3_target = kxky_target - kzSqr_target;
+    //-
     f[4]  *= one_m_omega; f[4]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[4] = -sigma_target*(feq - f_target);
+    //-
     f[13] *= one_m_omega; f[13] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[13] = -sigma_target*(feq - f_target);
 
     // i=5 and i=14
-    C2 = -kx + ky;
-    C3 = -kxky_ - kzSqr_;
+    C2 = -kx + ky; C2_target = -kx_target + ky_target;
+    C3 = -kxky_ - kzSqr_; C3_target = -kxky_target - kzSqr_target;
+    //-
     f[5]  *= one_m_omega; f[5]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[5] = -sigma_target*(feq - f_target);
+    //-
     f[14] *= one_m_omega; f[14] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[14] = -sigma_target*(feq - f_target);
 
     // i=6 and i=15
-    C2 = -kx - kz;
-    C3 = kxkz_ - kySqr_;
+    C2 = -kx - kz; C2_target = -kx_target - kz_target;
+    C3 = kxkz_ - kySqr_; C3_target = kxkz_target - kySqr_target;
+    //-
     f[6]  *= one_m_omega; f[6]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[6] = -sigma_target*(feq - f_target);
+    //-
     f[15] *= one_m_omega; f[15] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[15] = -sigma_target*(feq - f_target);
 
     // i=7 and i=16
-    C2 = -kx + kz;
-    C3 = -kxkz_ - kySqr_;
+    C2 = -kx + kz; C2_target = -kx_target + kz_target;
+    C3 = -kxkz_ - kySqr_; C3_target = -kxkz_target - kySqr_target;
+    //-
     f[7]  *= one_m_omega; f[7]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[7] = -sigma_target*(feq - f_target);
+    //-
     f[16] *= one_m_omega; f[16] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[16] = -sigma_target*(feq - f_target);
 
     // i=8 and i=17
-    C2 = -ky - kz;
-    C3 = kykz_ - kxSqr_;
+    C2 = -ky - kz; C2_target = -ky_target - kz_target;
+    C3 = kykz_ - kxSqr_; C3_target = kykz_target - kxSqr_target;
+    //-
     f[8]  *= one_m_omega; f[8]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[8] = -sigma_target*(feq - f_target);
+    //-
     f[17] *= one_m_omega; f[17] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[17] = -sigma_target*(feq - f_target);
 
     // i=9 and i=18
-    C2 = -ky + kz;
-    C3 = -kykz_ - kxSqr_;
+    C2 = -ky + kz; C2_target = -ky_target + kz_target;
+    C3 = -kykz_ - kxSqr_; C3_target = -kykz_target - kxSqr_target;
+    //-
     f[9]  *= one_m_omega; f[9]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[9] = -sigma_target*(feq - f_target); 
+    //-
     f[18] *= one_m_omega; f[18] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[18] = -sigma_target*(feq - f_target); 
 
     return invRho*invRho*jSqr;
 
