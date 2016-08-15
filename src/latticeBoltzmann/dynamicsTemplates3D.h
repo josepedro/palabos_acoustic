@@ -2449,19 +2449,28 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     T C2, C3;
     T C2_target, C3_target;
 
+    T ux = j[0]*invRho; T ux_target = j_target[0]*invRho;
+    T uy = j[1]*invRho; T uy_target = j_target[1]*invRho;
+    T uz = j[2]*invRho; T uz_target = j_target[2]*invRho;
+    T ux2 = ux*ux; T ux2_target = ux_target*ux_target;
+    T uy2 = uy*uy; T uy2_target = uy_target*uy_target;
+    T uz2 = uz*uz; T uz2_target = uz_target*uz_target;
+
     // i=0
     C3 = -kxSqr_ - kySqr_ - kzSqr_;
     C3_target = -kxSqr_target - kySqr_target - kzSqr_target;
-    f[0] *= one_m_omega; f[0] += t0_omega * (C1+C3);
-    feq = D::t[0]*(C1+C3);
-    f_target = D::t[0]*(C1_target + C3_target);
+    f[0] *= one_m_omega; f[0] += t0_omega * (C1+C3) + omega*j[0]*ux*uy2*uz2;
+    feq = D::t[0]*(C1+C3) + j[0]*ux*uy2*uz2;
+    f_target = D::t[0]*(C1_target + C3_target) + j_target[0]*ux_target*uy2_target*uz2_target;
     f[0] += -sigma_target*(feq - f_target);
 
     // i=1 and i=10
-    C2 = -kx; C2_target = -kx_target;
-    C3 = -kySqr_ - kzSqr_; C3_target = -kySqr_target - kzSqr_target; 
+    C2 = -kx; 
+    C2_target = -kx_target;
+    C3 = -kySqr_ - kzSqr_; 
+    C3_target = -kySqr_target - kzSqr_target; 
     //-
-    f[1]  *= one_m_omega; f[1]  += t1_omega * (C1+C2+C3);
+    f[1]  *= one_m_omega; f[1]  += t1_omega * (C1+C2+C3) - omega*(T)0.5*j[0]*uy2*(ux-(T)1); 
     feq = D::t[1]*(C1+C2+C3);
     f_target = D::t[1]*(C1_target + C2_target + C3_target);
     f[1] += -sigma_target*(feq - f_target);
@@ -2472,8 +2481,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f[10] += -sigma_target*(feq - f_target);
 
     // i=2 and i=11
-    C2 = -ky; C2_target = -ky_target;
-    C3 = -kxSqr_ - kzSqr_; C3_target = -kxSqr_target - kzSqr_target;
+    C2 = -ky; 
+    C2_target = -ky_target;
+    C3 = -kxSqr_ - kzSqr_; 
+    C3_target = -kxSqr_target - kzSqr_target;
     //-
     f[2]  *= one_m_omega; f[2]  += t1_omega * (C1+C2+C3);
     feq = D::t[1]*(C1+C2+C3);
@@ -2486,8 +2497,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f[11] = -sigma_target*(feq - f_target);
 
     // i=3 and i=12
-    C2 = -kz; C2_target = -kz_target;
-    C3 = -kxSqr_ - kySqr_; C3_target = -kxSqr_target - kySqr_target;
+    C2 = -kz;
+    C2_target = -kz_target;
+    C3 = -kxSqr_ - kySqr_; 
+    C3_target = -kxSqr_target - kySqr_target;
     //-
     f[3]  *= one_m_omega; f[3]  += t1_omega * (C1+C2+C3);
     feq = D::t[1]*(C1+C2+C3);
@@ -2500,8 +2513,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f[12] = -sigma_target*(feq - f_target);
 
     // i=4 and i=13
-    C2 = -kx - ky; C2_target = -kx_target - ky_target;
-    C3 = kxky_ - kzSqr_; C3_target = kxky_target - kzSqr_target;
+    C2 = -kx - ky; 
+    C2_target = -kx_target - ky_target;
+    C3 = kxky_ - kzSqr_; 
+    C3_target = kxky_target - kzSqr_target;
     //-
     f[4]  *= one_m_omega; f[4]  += t4_omega * (C1+C2+C3);
     feq = D::t[4]*(C1+C2+C3);
@@ -2514,8 +2529,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f[13] = -sigma_target*(feq - f_target);
 
     // i=5 and i=14
-    C2 = -kx + ky; C2_target = -kx_target + ky_target;
-    C3 = -kxky_ - kzSqr_; C3_target = -kxky_target - kzSqr_target;
+    C2 = -kx + ky; 
+    C2_target = -kx_target + ky_target;
+    C3 = -kxky_ - kzSqr_; 
+    C3_target = -kxky_target - kzSqr_target;
     //-
     f[5]  *= one_m_omega; f[5]  += t4_omega * (C1+C2+C3);
     feq = D::t[4]*(C1+C2+C3);
@@ -2528,8 +2545,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f[14] = -sigma_target*(feq - f_target);
 
     // i=6 and i=15
-    C2 = -kx - kz; C2_target = -kx_target - kz_target;
-    C3 = kxkz_ - kySqr_; C3_target = kxkz_target - kySqr_target;
+    C2 = -kx - kz; 
+    C2_target = -kx_target - kz_target;
+    C3 = kxkz_ - kySqr_; 
+    C3_target = kxkz_target - kySqr_target;
     //-
     f[6]  *= one_m_omega; f[6]  += t4_omega * (C1+C2+C3);
     feq = D::t[4]*(C1+C2+C3);
@@ -2542,8 +2561,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f[15] = -sigma_target*(feq - f_target);
 
     // i=7 and i=16
-    C2 = -kx + kz; C2_target = -kx_target + kz_target;
-    C3 = -kxkz_ - kySqr_; C3_target = -kxkz_target - kySqr_target;
+    C2 = -kx + kz; 
+    C2_target = -kx_target + kz_target;
+    C3 = -kxkz_ - kySqr_; 
+    C3_target = -kxkz_target - kySqr_target;
     //-
     f[7]  *= one_m_omega; f[7]  += t4_omega * (C1+C2+C3);
     feq = D::t[4]*(C1+C2+C3);
@@ -2556,8 +2577,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f[16] = -sigma_target*(feq - f_target);
 
     // i=8 and i=17
-    C2 = -ky - kz; C2_target = -ky_target - kz_target;
-    C3 = kykz_ - kxSqr_; C3_target = kykz_target - kxSqr_target;
+    C2 = -ky - kz; 
+    C2_target = -ky_target - kz_target;
+    C3 = kykz_ - kxSqr_; 
+    C3_target = kykz_target - kxSqr_target;
     //-
     f[8]  *= one_m_omega; f[8]  += t4_omega * (C1+C2+C3);
     feq = D::t[4]*(C1+C2+C3);
@@ -2570,8 +2593,10 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f[17] = -sigma_target*(feq - f_target);
 
     // i=9 and i=18
-    C2 = -ky + kz; C2_target = -ky_target + kz_target;
-    C3 = -kykz_ - kxSqr_; C3_target = -kykz_target - kxSqr_target;
+    C2 = -ky + kz; 
+    C2_target = -ky_target + kz_target;
+    C3 = -kykz_ - kxSqr_; 
+    C3_target = -kykz_target - kxSqr_target;
     //-
     f[9]  *= one_m_omega; f[9]  += t4_omega * (C1+C2+C3);
     feq = D::t[4]*(C1+C2+C3);

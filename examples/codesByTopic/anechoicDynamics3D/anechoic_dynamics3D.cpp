@@ -82,13 +82,13 @@ int main(int argc, char **argv){
     nx/2 - size_square/2, nx/2 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2, 
     nz/2 - size_square/2, nz/2 + size_square/2);
-    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)0));
+    //defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)0));
 
     // Anechoic Condition
     T rhoBar_target = 0;
     const T mach_number = 0.2;
     const T velocity_flow = mach_number*lattice_speed_sound;
-    Array<T,3> j_target(velocity_flow, 0.0/std::sqrt(3), 0.0/std::sqrt(3));
+    Array<T,3> j_target(0, 0.0/std::sqrt(3), 0.0/std::sqrt(3));
     T size_anechoic_buffer = 30;
     // Define Anechoic Boards
     defineAnechoicBoards(nx, ny, nz, lattice, size_anechoic_buffer,
@@ -108,7 +108,7 @@ int main(int argc, char **argv){
         if (iT != 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            Box3D impulse(nx/2 + 20, nx/2 + 20, ny/2 + 20, ny/2 + 20, nz/2 + 20, nz/2 + 20);
+            Box3D impulse(nx/2 /*+ 20*/, nx/2 /*+ 20*/, ny/2 /*+ 20*/, ny/2 /*+ 20*/, nz/2 /*+ 20*/, nz/2 /*+ 20*/);
             initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
         }
 
