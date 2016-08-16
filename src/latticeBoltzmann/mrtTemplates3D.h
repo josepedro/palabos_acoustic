@@ -256,57 +256,49 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
     /// MRT collision step
     static T anechoicMRTCollision( Array<T,Descriptor::q>& f, const T &omega, T delta, T rhoBar_target, Array<T,3> j_target)
     {
-        Array<T,19> moments, momentsEq;
+        Array<T,19> m, meq, mt;
         //pcout << "MRT HERE!!! Legal!!!" << std::endl;
         // Compute m
-        computeMoments(moments,f);
-        T rhoBar = moments[0];
-        Array<T,3> j(moments[MRTDescriptor::momentumIndexes[0]],moments[MRTDescriptor::momentumIndexes[1]],moments[MRTDescriptor::momentumIndexes[2]]);
+        computeMoments(m,f);
+        T rhoBar = m[0];
+        Array<T,3> j(m[MRTDescriptor::momentumIndexes[0]],m[MRTDescriptor::momentumIndexes[1]],m[MRTDescriptor::momentumIndexes[2]]);
         T jSqr = VectorTemplateImpl<T,3>::normSqr(j);
         
         // Compute meq
-        computeEquilibriumMoments(momentsEq,rhoBar,j,jSqr);
-        computeMneqInPlace(moments,momentsEq); // moments become mNeq
-        computef_InvM_Smoments(f, moments, omega);
+        computeEquilibriumMoments(meq,rhoBar,j,jSqr);
+        // Compute mt
+        T jSqr_target = VectorTemplateImpl<T,3>::normSqr(j_target);
+        computeEquilibriumMoments(mt, rhoBar_target, j_target, jSqr_target);
 
         // Parameters of Anechoic Condition
         T total_distance = 30;
         T sigma_m = 0.3;
         // Targets values to anechoic dynamics
         T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
-        // Moments to target values
-        Array<T,19> moments_target; 
-        Array<T,19> f_eq;
-        Array<T,19> f_target;
-        T jSqr_target = VectorTemplateImpl<T,3>::normSqr(j_target);
-        // Compute m_target
-        computeEquilibriumMoments(moments_target, rhoBar_target, j_target, jSqr_target);
-        // Compute f_eq
-        computef_InvM_Smoments(f_eq, momentsEq, omega);
-        // Compute f_target
-        computef_InvM_Smoments(f_target, moments_target, omega);
 
-        //f -= sigma_target*f_neq_target; 
+        // Collide in moments
+        m[0] = m[0] + sigma_target*mt[0] - meq[0]*(1 - sigma_target);
+        m[1] = m[1] + sigma_target*mt[1] - meq[1]*(1 - sigma_target);
+        m[2] = m[2] + sigma_target*mt[2] - meq[2]*(1 - sigma_target);
+        m[3] = m[3] + sigma_target*mt[3] - meq[3]*(1 - sigma_target);
+        m[4] = m[4] + sigma_target*mt[4] - meq[4]*(1 - sigma_target);
+        m[5] = m[5] + sigma_target*mt[5] - meq[5]*(1 - sigma_target);
+        m[6] = m[6] + sigma_target*mt[6] - meq[6]*(1 - sigma_target);
+        m[7] = m[7] + sigma_target*mt[7] - meq[7]*(1 - sigma_target);
+        m[8] = m[8] + sigma_target*mt[8] - meq[8]*(1 - sigma_target);
+        m[9] = m[9] + sigma_target*mt[9] - meq[9]*(1 - sigma_target);
+        m[10] = m[10] + sigma_target*mt[10] - meq[10]*(1 - sigma_target);
+        m[11] = m[11] + sigma_target*mt[11] - meq[11]*(1 - sigma_target);
+        m[12] = m[12] + sigma_target*mt[12] - meq[12]*(1 - sigma_target);
+        m[13] = m[13] + sigma_target*mt[13] - meq[13]*(1 - sigma_target);
+        m[14] = m[14] + sigma_target*mt[14] - meq[14]*(1 - sigma_target);
+        m[15] = m[15] + sigma_target*mt[15] - meq[15]*(1 - sigma_target);
+        m[16] = m[16] + sigma_target*mt[16] - meq[16]*(1 - sigma_target);
+        m[17] = m[17] + sigma_target*mt[17] - meq[17]*(1 - sigma_target);
+        m[18] = m[18] + sigma_target*mt[18] - meq[18]*(1 - sigma_target);
 
-        f[0] -= sigma_target*(f_eq - f_target)[0];
-        f[1] -= sigma_target*(f_eq - f_target)[1];
-        f[2] -= sigma_target*(f_eq - f_target)[2];
-        f[3] -= sigma_target*(f_eq - f_target)[3];
-        f[4] -= sigma_target*(f_eq - f_target)[4];
-        f[5] -= sigma_target*(f_eq - f_target)[5];
-        f[6] -= sigma_target*(f_eq - f_target)[6];
-        f[7] -= sigma_target*(f_eq - f_target)[7];
-        f[8] -= sigma_target*(f_eq - f_target)[8];
-        f[9] -= sigma_target*(f_eq - f_target)[9];
-        f[10] -= sigma_target*(f_eq - f_target)[10];
-        f[11] -= sigma_target*(f_eq - f_target)[11];
-        f[12] -= sigma_target*(f_eq - f_target)[12];
-        f[13] -= sigma_target*(f_eq - f_target)[13];
-        f[14] -= sigma_target*(f_eq - f_target)[14];
-        f[15] -= sigma_target*(f_eq - f_target)[15];
-        f[16] -= sigma_target*(f_eq - f_target)[16];
-        f[17] -= sigma_target*(f_eq - f_target)[17];
-        f[18] -= sigma_target*(f_eq - f_target)[18];
+
+        computef_InvM_Smoments(f, m, omega);
 
         return jSqr;
         

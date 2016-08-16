@@ -73,7 +73,7 @@ int main(int argc, char **argv){
 
     T rhoBar_target = 0;
     Array<T,3> j_target(0, 0, 0);
-    T delta = 30;
+    T delta = 40;
     AnechoicBackgroundDynamics *anechoicDynamics = 
                 new AnechoicBackgroundDynamics(omega);
     anechoicDynamics->setDelta((T) delta);
@@ -91,7 +91,7 @@ int main(int argc, char **argv){
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium( lattice, lattice.getBoundingBox(), rho0 , u0 );
 
-    plint size_square = 5;
+    plint size_square = 20;
     Box3D square(
     nx/2 - size_square/2, nx/2 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2, 
