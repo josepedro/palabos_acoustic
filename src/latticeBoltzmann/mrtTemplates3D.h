@@ -238,7 +238,6 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
     static T mrtCollision( Array<T,Descriptor::q>& f, const T &omega )
     {
         Array<T,19> moments, momentsEq;
-        //pcout << "MRT HERE!!! Legal!!!" << std::endl;
         // Compute m
         computeMoments(moments,f);
         T rhoBar = moments[0];
@@ -258,6 +257,7 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
     static T anechoicMRTCollision( Array<T,Descriptor::q>& f, const T &omega, T delta, T rhoBar_target, Array<T,3> j_target)
     {
         Array<T,19> moments, momentsEq;
+        //pcout << "MRT HERE!!! Legal!!!" << std::endl;
         // Compute m
         computeMoments(moments,f);
         T rhoBar = moments[0];
@@ -267,8 +267,38 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
         // Compute meq
         computeEquilibriumMoments(momentsEq,rhoBar,j,jSqr);
         computeMneqInPlace(moments,momentsEq); // moments become mNeq
+
+        // Parameters of Anechoic Condition
+        T total_distance = 30;
+        T sigma_m = 0.3;
+        // Targets values to anechoic dynamics
+        T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
+        // Moments to target values
+        Array<T,19> moments_target;
+        T jSqr_target = VectorTemplateImpl<T,3>::normSqr(j_target);
+        computeEquilibriumMoments(moments_target,rhoBar_target,j_target,jSqr_target);
+        moments[0] -= sigma_target*(momentsEq[0] - moments_target[0]);
+        moments[1] -= sigma_target*(momentsEq[1] - moments_target[1]);
+        moments[2] -= sigma_target*(momentsEq[2] - moments_target[2]);
+        moments[3] -= sigma_target*(momentsEq[3] - moments_target[3]);
+        moments[4] -= sigma_target*(momentsEq[4] - moments_target[4]);
+        moments[5] -= sigma_target*(momentsEq[5] - moments_target[5]);
+        moments[6] -= sigma_target*(momentsEq[6] - moments_target[6]);
+        moments[7] -= sigma_target*(momentsEq[7] - moments_target[7]);
+        moments[8] -= sigma_target*(momentsEq[8] - moments_target[8]);
+        moments[9] -= sigma_target*(momentsEq[9] - moments_target[9]);
+        moments[10] -= sigma_target*(momentsEq[10] - moments_target[10]);
+        moments[11] -= sigma_target*(momentsEq[11] - moments_target[11]);
+        moments[12] -= sigma_target*(momentsEq[12] - moments_target[12]);
+        moments[13] -= sigma_target*(momentsEq[13] - moments_target[13]);
+        moments[14] -= sigma_target*(momentsEq[14] - moments_target[14]);
+        moments[15] -= sigma_target*(momentsEq[15] - moments_target[15]);
+        moments[16] -= sigma_target*(momentsEq[16] - moments_target[16]);
+        moments[17] -= sigma_target*(momentsEq[17] - moments_target[17]);
+        moments[18] -= sigma_target*(momentsEq[18] - moments_target[18]);
+
         computef_InvM_Smoments(f, moments, omega);
-        
+            
         return jSqr;
         
     }
