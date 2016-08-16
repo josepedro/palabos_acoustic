@@ -86,14 +86,23 @@ int main(int argc, char **argv){
     nx/2 - size_square/2, nx/2 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2, 
     nz/2 - size_square/2, nz/2 + size_square/2);
-    defineDynamics(lattice, square, new AnechoicBackgroundDynamics(omega));
+    T rhoBar_target = 0;
+    Array<T,3> j_target(0, 0, 0);
+    T delta = 30;
+    AnechoicBackgroundDynamics *anechoicDynamics = 
+                new AnechoicBackgroundDynamics(omega);
+    anechoicDynamics->setDelta((T) delta);
+    anechoicDynamics->setRhoBar_target(rhoBar_target);
+    //j_target[0] = -j_target[0];  
+    anechoicDynamics->setJ_target(j_target);
+    defineDynamics(lattice, square, anechoicDynamics);
 
     // Anechoic Condition
-    T rhoBar_target = 0;
+    /*T rhoBar_target = 0;
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
     // Define Anechoic Boards
-    /*defineAnechoicBoards(nx, ny, nz, lattice, size_anechoic_buffer,
+    defineAnechoicBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);*/
         

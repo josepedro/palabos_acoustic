@@ -158,6 +158,39 @@ T AnechoicMRTdynamics<T,Descriptor>::computeEquilibrium(plint iPop, T rhoBar, Ar
     return dynamicsTemplates<T,Descriptor>::bgk_ma2_equilibrium(iPop, rhoBar, invRho, j, jSqr);
 }
 
+// Delta distance because anechoic condition have a buffer
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::setDelta(T delta){
+    this->delta = delta;
+}
+
+template<typename T, template<typename U> class Descriptor>
+T AnechoicMRTdynamics<T,Descriptor>::getDelta(){
+    return this->delta;
+}
+
+// RhoBar_target to develop outflow
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::setRhoBar_target(T rhoBar_target){
+    this->rhoBar_target = rhoBar_target;
+}
+
+template<typename T, template<typename U> class Descriptor>
+T AnechoicMRTdynamics<T,Descriptor>::getRhoBar_target(){
+    return this->rhoBar_target;
+}
+
+// J_target is velocity to anechoic
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::setJ_target(Array<T,Descriptor<T>::d> j_target){
+    this->j_target = j_target;
+}
+
+template<typename T, template<typename U> class Descriptor>
+Array<T,Descriptor<T>::d> AnechoicMRTdynamics<T,Descriptor>::getJ_target(){
+    return this->j_target;
+}
+
 /* *************** Class IncMRTdynamics *********************************************** */
 
 template<typename T, template<typename U> class Descriptor>

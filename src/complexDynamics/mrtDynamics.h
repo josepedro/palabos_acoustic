@@ -118,8 +118,19 @@ public:
     /// Compute equilibrium distribution function
     virtual T computeEquilibrium(plint iPop, T rhoBar, Array<T,Descriptor<T>::d> const& j,
                                  T jSqr, T thetaBar=T()) const;
+    virtual void setDelta(T delta);
+    virtual T getDelta();
+    virtual void setRhoBar_target(T rhoBar_target);
+    virtual T getRhoBar_target();
+    virtual void setJ_target(Array<T,Descriptor<T>::d> j_target);
+    virtual Array<T,Descriptor<T>::d> getJ_target();
 private:
     static int id;
+private:
+    T delta;
+    T omega;
+    T rhoBar_target;
+    Array<T,Descriptor<T>::d> j_target;
 };
 
 /// Implementation of incompressible MRT dynamics.
