@@ -68,7 +68,7 @@ void MRTdynamics<T,Descriptor>::collide (
         Cell<T,Descriptor>& cell, BlockStatistics& statistics )
 {
     typedef mrtTemplates<T,Descriptor> mrtTemp;
-    
+    //std::cout << "CAI AQUI" << std::endl;
     T jSqr = mrtTemp::mrtCollision(cell, this->getOmega());
 
     if (cell.takesStatistics()) {
@@ -127,8 +127,8 @@ void AnechoicMRTdynamics<T,Descriptor>::collide (
         Cell<T,Descriptor>& cell, BlockStatistics& statistics )
 {
     typedef mrtTemplates<T,Descriptor> mrtTemp;
-    
-    T jSqr = mrtTemp::mrtCollision(cell, this->getOmega());
+    pcout << "MRT HERE!!! Legal!!!" << std::endl;
+    T jSqr = mrtTemp::anechoicMRTCollision(cell, this->getOmega());
 
     if (cell.takesStatistics()) {
         T rhoBar = momentTemplates<T,Descriptor>::get_rhoBar(cell);

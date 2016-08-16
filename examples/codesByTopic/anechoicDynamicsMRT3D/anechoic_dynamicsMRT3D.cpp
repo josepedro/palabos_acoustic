@@ -71,21 +71,6 @@ int main(int argc, char **argv){
 
     global::directories().setOutputDir(fNameOut+"/");
 
-    MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx,ny,nz, new BackgroundDynamics(omega));
-
-    pcout << "Creation of the lattice." << endl;
-
-    // Switch off periodicity.
-    lattice.periodicity().toggleAll(false);
-
-    pcout << "Initilization of rho and u." << endl;
-    initializeAtEquilibrium( lattice, lattice.getBoundingBox(), rho0 , u0 );
-
-    plint size_square = 4;
-    Box3D square(
-    nx/2 - size_square/2, nx/2 + size_square/2,
-    ny/2 - size_square/2, ny/2 + size_square/2, 
-    nz/2 - size_square/2, nz/2 + size_square/2);
     T rhoBar_target = 0;
     Array<T,3> j_target(0, 0, 0);
     T delta = 30;
@@ -95,7 +80,22 @@ int main(int argc, char **argv){
     anechoicDynamics->setRhoBar_target(rhoBar_target);
     //j_target[0] = -j_target[0];  
     anechoicDynamics->setJ_target(j_target);
-    defineDynamics(lattice, square, anechoicDynamics);
+    MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx,ny,nz, anechoicDynamics);
+
+    pcout << "Creation of the lattice." << endl;
+
+    // Switch off periodicity.
+    lattice.periodicity().toggleAll(false);
+
+    pcout << "Initilization of rho and u." << endl;
+    initializeAtEquilibrium( lattice, lattice.getBoundingBox(), rho0 , u0 );
+
+    plint size_square = 80;
+    Box3D square(
+    nx/2 - size_square/2, nx/2 + size_square/2,
+    ny/2 - size_square/2, ny/2 + size_square/2, 
+    nz/2 - size_square/2, nz/2 + size_square/2);
+    defineDynamics(lattice, square, new BackgroundDynamics(omega));
 
     // Anechoic Condition
     /*T rhoBar_target = 0;
