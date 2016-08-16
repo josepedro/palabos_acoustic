@@ -64,11 +64,6 @@ int main(int argc, char **argv){
 
     Array<T,3> u0(0, 0, 0);
 
-    plint cx = util::roundToInt(nx/2);
-    plint cy = util::roundToInt(ny/2);
-    plint cz = util::roundToInt(nz/2);
-    Array<T,3> centerLB(cx , cy, cz);
-
     global::directories().setOutputDir(fNameOut+"/");
 
     T rhoBar_target = 0;
@@ -104,12 +99,15 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     plb_ofstream history_pressures("history_pressures.dat");
+    plb_ofstream history_velocities_x("history_velocities_x.dat");
+    plb_ofstream history_velocities_y("history_velocities_y.dat");
+    plb_ofstream history_velocities_z("history_velocities_z.dat");
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT != 0){
+        if (iT == 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
-            initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
+            initializeAtEquilibrium( lattice, impulse, rho0 + drho, u0 );
         }
 
         if (iT % 1 == 0 && iT>0) {
@@ -119,6 +117,10 @@ int main(int argc, char **argv){
         }
 
         history_pressures << setprecision(10) << lattice.get(nx/2+30, ny/2+30, nz/2+30).computeDensity() - rho0 << endl;
+        lattice.get(nx/2+30, ny/2+30, nz/2+30).computeVelocity(velocities);
+        history_velocities_x << setprecision(10) << velocities[0] << endl;
+        history_velocities_y << setprecision(10) << velocities[1] << endl;
+        history_velocities_z << setprecision(10) << velocities[2] << endl;
         lattice.collideAndStream();
 
     }
