@@ -255,7 +255,7 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
     }
 
     /// MRT collision step
-    static T anechoicMRTCollision( Array<T,Descriptor::q>& f, const T &omega )
+    static T anechoicMRTCollision( Array<T,Descriptor::q>& f, const T &omega, T delta, T rhoBar_target, Array<T,3> j_target)
     {
         Array<T,19> moments, momentsEq;
         // Compute m

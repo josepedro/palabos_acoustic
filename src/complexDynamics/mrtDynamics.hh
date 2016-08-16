@@ -127,7 +127,8 @@ void AnechoicMRTdynamics<T,Descriptor>::collide (
         Cell<T,Descriptor>& cell, BlockStatistics& statistics )
 {
     typedef mrtTemplates<T,Descriptor> mrtTemp;
-    T jSqr = mrtTemp::anechoicMRTCollision(cell, this->getOmega());
+    T jSqr = mrtTemp::anechoicMRTCollision(cell, this->getOmega(),
+        this->getDelta(), this->getRhoBar_target(), this->getJ_target());
 
     if (cell.takesStatistics()) {
         T rhoBar = momentTemplates<T,Descriptor>::get_rhoBar(cell);
