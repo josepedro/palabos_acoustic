@@ -73,14 +73,8 @@ int main(int argc, char **argv){
 
     T rhoBar_target = 0;
     Array<T,3> j_target(0, 0, 0);
-    T delta = 40;
-    AnechoicBackgroundDynamics *anechoicDynamics = 
-                new AnechoicBackgroundDynamics(omega);
-    anechoicDynamics->setDelta((T) delta);
-    anechoicDynamics->setRhoBar_target(rhoBar_target);
-    //j_target[0] = -j_target[0];  
-    anechoicDynamics->setJ_target(j_target);
-    MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx, ny, nz, anechoicDynamics);
+    T size_anechoic_buffer = 30;
+    MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx, ny, nz,  new AnechoicBackgroundDynamics(omega));
     defineDynamics(lattice, lattice.getBoundingBox(), new BackgroundDynamics(omega));
 
     pcout << "Creation of the lattice." << endl;
@@ -96,17 +90,11 @@ int main(int argc, char **argv){
     nx/2 - size_square/2, nx/2 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2, 
     nz/2 - size_square/2, nz/2 + size_square/2);
-    defineDynamics(lattice, square, anechoicDynamics);
-
-    // Anechoic Condition
-    /*T rhoBar_target = 0;
-    Array<T,3> j_target(0, 0, 0);
-    T size_anechoic_buffer = 30;
-    // Define Anechoic Boards
-    defineAnechoicBoards(nx, ny, nz, lattice, size_anechoic_buffer,
+    //defineDynamics(lattice, square, anechoicDynamics);
+    
+    defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
-      rhoBar_target);*/
-        
+      rhoBar_target);
 
     lattice.initialize();
 
@@ -120,7 +108,7 @@ int main(int argc, char **argv){
         if (iT != 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            Box3D impulse(nx/2 + 20, nx/2 + 20, ny/2 + 20, ny/2 + 20, nz/2 + 20, nz/2 + 20);
+            Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
             initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
         }
 

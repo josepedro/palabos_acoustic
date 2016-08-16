@@ -232,4 +232,131 @@ namespace plb_acoustics_3D{
 			}
 		}
 	}
+
+	template<typename T, template<typename U> class Descriptor>
+	void defineAnechoicMRTBoards(plint nx, plint ny, plint nz,
+	 MultiBlockLattice3D<T,Descriptor>& lattice,
+	  T size_anechoic_buffer, T omega, 
+	  Array<T,3> j_target_normal_z_positive,
+	  Array<T,3> j_target_normal_z_negative,
+	  Array<T,3> j_target_normal_y_positive,
+	  Array<T,3> j_target_normal_y_negative,
+	  Array<T,3> j_target_normal_x_positive,
+	  Array<T,3> j_target_normal_x_negative,
+	  T rhoBar_target){
+	  	typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
+	  	/* if size_anechoic_buffer is not equal 30, we have to change 
+	  	total_distance in file dynamicsTemplates3D.h too*/
+	 	for(T delta = 0; delta <= size_anechoic_buffer; delta++){
+			// for in all points-cell lattice
+	 		for(plint z = 0; z < nz; z++){
+				for(plint y = 0; y < ny; y++){
+					for(plint x = 0; x < nx; x++){
+						// condition to right (1)
+                        if(x == (nx-delta) &&
+                          y >= (delta-1) && 
+                          y < (ny-delta) &&
+                          z >= (delta-1) && 
+                          z < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = 30 - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setJ_target(j_target_normal_x_positive);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to bottom (2)
+                        else if(x >= (delta-1) &&
+                          x < (nx-delta) &&
+                          y == delta &&
+                          z >= (delta-1) && 
+                          z < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = 30 - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setJ_target(j_target_normal_y_negative);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to left (3)
+                        else if(x == delta &&
+                          y >= (delta-1) &&
+                          y < (ny-delta) &&
+                          z >= (delta-1) && 
+                          z < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = 30 - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setJ_target(j_target_normal_x_negative);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to top (4)
+                        else if(x >= (delta-1) &&
+                          x < (nx-delta) &&
+                          y == (ny-delta) &&
+                          z >= (delta-1) && 
+                          z < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = 30 - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setJ_target(j_target_normal_y_positive);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to front (5)
+                        else if(x >= (delta-1) &&
+                          x < (nx-delta) &&
+                          z == (nz-delta) &&
+                          y >= (delta-1) && 
+                          y < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = 30 - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setJ_target(j_target_normal_z_positive);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to back (6)
+                        else if(x >= (delta-1) &&
+                          x < (nx-delta) &&
+                          z == delta &&
+                          y >= (delta-1) && 
+                          y < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = 30 - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setJ_target(j_target_normal_z_negative);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+					}
+				}
+			}
+		}
+	}
 }

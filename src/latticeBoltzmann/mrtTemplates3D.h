@@ -297,7 +297,6 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
         m[17] = m[17] + sigma_target*mt[17] - meq[17]*(1 - sigma_target);
         m[18] = m[18] + sigma_target*mt[18] - meq[18]*(1 - sigma_target);
 
-
         computef_InvM_Smoments(f, m, omega);
 
         return jSqr;
