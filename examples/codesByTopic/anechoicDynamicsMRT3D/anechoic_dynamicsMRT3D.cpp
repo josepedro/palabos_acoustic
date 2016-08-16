@@ -56,16 +56,14 @@ int main(int argc, char **argv){
     const plint nz = 100;
     const T lattice_speed_sound = 1/sqrt(3);
 
-    const T omega = 1.9;
-    const plint maxT = 4000;
-
-    const T lx =  2.3;
-    const T dx =lx/nx;
+    const T omega = 1.98;
+    const plint maxT = 120000;
 
     Array<T,3> u0(0, 0, 0);
 
     global::directories().setOutputDir(fNameOut+"/");
 
+    // Setting anechoic dynamics like this way
     MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx, ny, nz,  new AnechoicBackgroundDynamics(omega));
     defineDynamics(lattice, lattice.getBoundingBox(), new BackgroundDynamics(omega));
 
@@ -77,17 +75,17 @@ int main(int argc, char **argv){
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium( lattice, lattice.getBoundingBox(), rho0 , u0 );
 
-    plint size_square = 20;
+    plint size_square = 10;
     Box3D square(
     nx/2 - size_square/2, nx/2 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2, 
     nz/2 - size_square/2, nz/2 + size_square/2);
-    //defineDynamics(lattice, square, anechoicDynamics);
+    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)0));
     
     T rhoBar_target = 0;
     const T mach_number = 0.2;
     const T velocity_flow = mach_number*lattice_speed_sound;
-    Array<T,3> j_target(0, 0, velocity_flow);
+    Array<T,3> j_target(velocity_flow, 0, 0);
     T size_anechoic_buffer = 30;
     defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
@@ -96,7 +94,6 @@ int main(int argc, char **argv){
     lattice.initialize();
 
     pcout << std::endl << "Voxelizing the domain." << std::endl;
-    pcout << std::endl << "dx:" << dx << std::endl;
 
     pcout << "Simulation begins" << endl;
 
@@ -105,17 +102,17 @@ int main(int argc, char **argv){
     plb_ofstream history_velocities_y("tmp/history_velocities_y.dat");
     plb_ofstream history_velocities_z("tmp/history_velocities_z.dat");
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT == 0){
+        if (iT != 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
-            //initializeAtEquilibrium( lattice, impulse, rho0 + drho, u0 );
+            Box3D impulse(nx/2 + 20, nx/2 + 20, ny/2 + 20, ny/2 + 20, nz/2 + 20, nz/2 + 20);
+            //initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
         }
 
         if (iT % 100 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
-            //writeVTK(lattice, iT);
+            writeVTK(lattice, iT);
         }
 
         history_pressures << setprecision(10) << lattice.get(nx/2+30, ny/2+30, nz/2+30).computeDensity() - rho0 << endl;
