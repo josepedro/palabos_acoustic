@@ -91,7 +91,7 @@ int main(int argc, char **argv){
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium( lattice, lattice.getBoundingBox(), rho0 , u0 );
 
-    plint size_square = 20;
+    plint size_square = 5;
     Box3D square(
     nx/2 - size_square/2, nx/2 + size_square/2,
     ny/2 - size_square/2, ny/2 + size_square/2, 
@@ -120,11 +120,11 @@ int main(int argc, char **argv){
         if (iT != 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            Box3D impulse(nx/2 + 40, nx/2 + 40, ny/2 + 40, ny/2 + 40, nz/2 + 40, nz/2 + 40);
+            Box3D impulse(nx/2 + 20, nx/2 + 20, ny/2 + 20, ny/2 + 20, nz/2 + 20, nz/2 + 20);
             initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
         }
 
-        if (iT % 100 == 0 && iT>0) {
+        if (iT % 1 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             writeGifs(lattice,iT);
             //writeVTK(lattice, iT);
