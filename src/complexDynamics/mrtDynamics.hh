@@ -127,7 +127,6 @@ void AnechoicMRTdynamics<T,Descriptor>::collide (
         Cell<T,Descriptor>& cell, BlockStatistics& statistics )
 {
     typedef mrtTemplates<T,Descriptor> mrtTemp;
-    pcout << "MRT HERE!!! Legal!!!" << std::endl;
     T jSqr = mrtTemp::anechoicMRTCollision(cell, this->getOmega());
 
     if (cell.takesStatistics()) {

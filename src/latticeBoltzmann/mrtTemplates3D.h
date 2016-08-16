@@ -258,7 +258,6 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD3Q19DescriptorB
     static T anechoicMRTCollision( Array<T,Descriptor::q>& f, const T &omega )
     {
         Array<T,19> moments, momentsEq;
-        pcout << "MRT HERE!!! Legal!!!" << std::endl;
         // Compute m
         computeMoments(moments,f);
         T rhoBar = moments[0];
