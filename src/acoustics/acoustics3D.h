@@ -244,6 +244,14 @@ namespace plb_acoustics_3D{
 	  Array<T,3> j_target_normal_x_positive,
 	  Array<T,3> j_target_normal_x_negative,
 	  T rhoBar_target){
+
+		j_target_normal_z_positive = -j_target_normal_z_positive;
+	  	j_target_normal_z_negative = -j_target_normal_z_negative;
+	  	j_target_normal_y_positive = -j_target_normal_y_positive;
+	  	j_target_normal_y_negative = -j_target_normal_y_negative;
+	  	j_target_normal_x_positive = -j_target_normal_x_positive;
+	  	j_target_normal_x_negative = -j_target_normal_x_negative;
+
 	  	typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
 	  	/* if size_anechoic_buffer is not equal 30, we have to change 
 	  	total_distance in file dynamicsTemplates3D.h too*/

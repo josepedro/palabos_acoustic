@@ -66,9 +66,6 @@ int main(int argc, char **argv){
 
     global::directories().setOutputDir(fNameOut+"/");
 
-    T rhoBar_target = 0;
-    Array<T,3> j_target(0, 0, 0);
-    T size_anechoic_buffer = 30;
     MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx, ny, nz,  new AnechoicBackgroundDynamics(omega));
     defineDynamics(lattice, lattice.getBoundingBox(), new BackgroundDynamics(omega));
 
@@ -87,6 +84,11 @@ int main(int argc, char **argv){
     nz/2 - size_square/2, nz/2 + size_square/2);
     //defineDynamics(lattice, square, anechoicDynamics);
     
+    T rhoBar_target = 0;
+    const T mach_number = 0.2;
+    const T velocity_flow = mach_number*lattice_speed_sound;
+    Array<T,3> j_target(0, 0, velocity_flow);
+    T size_anechoic_buffer = 30;
     defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);
@@ -98,29 +100,30 @@ int main(int argc, char **argv){
 
     pcout << "Simulation begins" << endl;
 
-    plb_ofstream history_pressures("history_pressures.dat");
-    plb_ofstream history_velocities_x("history_velocities_x.dat");
-    plb_ofstream history_velocities_y("history_velocities_y.dat");
-    plb_ofstream history_velocities_z("history_velocities_z.dat");
+    plb_ofstream history_pressures("tmp/history_pressures.dat");
+    plb_ofstream history_velocities_x("tmp/history_velocities_x.dat");
+    plb_ofstream history_velocities_y("tmp/history_velocities_y.dat");
+    plb_ofstream history_velocities_z("tmp/history_velocities_z.dat");
     for (plint iT=0; iT<maxT; ++iT){
         if (iT == 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
-            initializeAtEquilibrium( lattice, impulse, rho0 + drho, u0 );
+            //initializeAtEquilibrium( lattice, impulse, rho0 + drho, u0 );
         }
 
-        if (iT % 1 == 0 && iT>0) {
+        if (iT % 100 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
-            writeGifs(lattice,iT);
+            //writeGifs(lattice,iT);
             //writeVTK(lattice, iT);
         }
 
         history_pressures << setprecision(10) << lattice.get(nx/2+30, ny/2+30, nz/2+30).computeDensity() - rho0 << endl;
+        Array<T,3> velocities;
         lattice.get(nx/2+30, ny/2+30, nz/2+30).computeVelocity(velocities);
-        history_velocities_x << setprecision(10) << velocities[0] << endl;
-        history_velocities_y << setprecision(10) << velocities[1] << endl;
-        history_velocities_z << setprecision(10) << velocities[2] << endl;
+        history_velocities_x << setprecision(10) << velocities[0]/lattice_speed_sound << endl;
+        history_velocities_y << setprecision(10) << velocities[1]/lattice_speed_sound << endl;
+        history_velocities_z << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
         lattice.collideAndStream();
 
     }
