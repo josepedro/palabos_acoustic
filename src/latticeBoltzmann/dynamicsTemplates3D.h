@@ -581,7 +581,7 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f += fEq*omega;
 
     // Parameters of Anechoic Condition
-    T total_distance = 30;
+    T total_distance = 20;
     T sigma_m = 0.3;
     // Targets values to anechoic dynamics
     T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));

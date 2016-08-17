@@ -51,7 +51,7 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const plint nx = 100;
+    const plint nx = 150;
     const plint ny = 100;
     const plint nz = 100;
     const T lattice_speed_sound = 1/sqrt(3);
@@ -77,7 +77,7 @@ int main(int argc, char **argv){
 
     plint size_square = 10;
     Box3D square(
-    nx/2 - size_square/2, nx/2 + size_square/2,
+    35, 35 + size_square,
     ny/2 - size_square/2, ny/2 + size_square/2, 
     nz/2 - size_square/2, nz/2 + size_square/2);
     defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)0));
@@ -86,7 +86,7 @@ int main(int argc, char **argv){
     const T mach_number = 0.2;
     const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(velocity_flow, 0, 0);
-    T size_anechoic_buffer = 30;
+    T size_anechoic_buffer = 20;
     defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);
@@ -109,7 +109,7 @@ int main(int argc, char **argv){
             //initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
         }
 
-        if (iT % 100 == 0 && iT>0) {
+        if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
