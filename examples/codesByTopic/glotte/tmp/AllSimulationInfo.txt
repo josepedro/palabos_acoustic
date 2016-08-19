@@ -1,0 +1,16 @@
+
+Dados da simulação
+Lattice:
+
+nx: 704 ny: 517 nz: 8
+dx: 3.33333e-05 dt: 5.83182e-08
+tau: 0.500455 omega: 1.9
+
+Tempos: 
+Time-steps: 20000
+Tempo simulado: 0.00116636 s 
+
+Dados do fluido [SI]
+rho: 1.2
+viscosidade cin.: 1.5e-05
+Velocidade do som:330
