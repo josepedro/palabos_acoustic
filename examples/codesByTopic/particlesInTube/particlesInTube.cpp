@@ -108,7 +108,7 @@ void iniLattice( MultiBlockLattice3D<T,DESCRIPTOR>& lattice,
 int main(int argc, char* argv[])
 {
     plbInit(&argc, &argv);
-    global::directories().setOutputDir("./");
+    global::directories().setOutputDir("tmp/");
 
     // Create the cylinder surface as a set of triangles.
     TriangleSet<T> triangleSet;
@@ -155,9 +155,7 @@ int main(int argc, char* argv[])
     pcout << "Creating boundary condition." << std::endl;
     BoundaryProfiles3D<T,Velocity> profiles;
     profiles.defineInletOutletTags(boundary, xDirection);
-    profiles.setInletOutlet (
-            new PoiseuilleProfile3D<T>(uAverage),
-            new PoiseuilleProfile3D<T>(-uAverage) );
+    
     GuoOffLatticeModel3D<T,DESCRIPTOR>* model =
             new GuoOffLatticeModel3D<T,DESCRIPTOR> (
                 new TriangleFlowShape3D<T,Array<T,3> > (
@@ -171,93 +169,42 @@ int main(int argc, char* argv[])
     pcout << std::endl << "Initializing lattice." << std::endl;
     iniLattice(*lattice, voxelizedDomain);
 
-    // Particles
-
-    // Definition of a particle field.
-    MultiParticleField3D<DenseParticleField3D<T,DESCRIPTOR> >* particles=0;
-    particles = new MultiParticleField3D<DenseParticleField3D<T,DESCRIPTOR> > (
-        lattice->getMultiBlockManagement(),
-        defaultMultiBlockPolicy3D().getCombinedStatistics() );
-
-    std::vector<MultiBlock3D*> particleArg;
-    particleArg.push_back(particles);
-
-    std::vector<MultiBlock3D*> particleFluidArg;
-    particleFluidArg.push_back(particles);
-    particleFluidArg.push_back(lattice.get());
-
-    // Functional that advances the particles to their new position at each
-    //   predefined time step.
-    integrateProcessingFunctional (
-            new AdvanceParticlesFunctional3D<T,DESCRIPTOR>(cutOffSpeedSqr),
-            lattice->getBoundingBox(), particleArg, 0);
-    // Functional that assigns the particle velocity according to the particle's
-    //   position in the fluid.
-    integrateProcessingFunctional (
-            new FluidToParticleCoupling3D<T,DESCRIPTOR>((T)particleTimeFactor),
-            lattice->getBoundingBox(), particleFluidArg, 1 );
-
-    // Definition of a domain from which particles will be injected in the flow field.
-    //   The specific domain is close to the inlet of the tube.
-    Box3D injectionDomain(lattice->getBoundingBox());
-    injectionDomain.x0 = inletCenter[0] +2;
-    injectionDomain.x1 = inletCenter[0] +4;
-
-    // Definition of simple mass-less particles.
-    Particle3D<T,DESCRIPTOR>* particleTemplate=0;
-    particleTemplate = new PointParticle3D<T,DESCRIPTOR>(0, Array<T,3>(0.,0.,0.), Array<T,3>(0.,0.,0.));
-
-    // For the sake of illustration, particles are being injected in an area close to the
-    // center of the tube.
-    T injectionRadius = radius/4.;
-    // Functional which injects particles with predefined probability from the specified injection domain.
-    integrateProcessingFunctional (
-            new AnalyticalInjectRandomParticlesFunctional3D<T,DESCRIPTOR,CircularInjection> (
-                particleTemplate, particleProbabilityPerCell, CircularInjection(injectionRadius, inletCenter) ),
-            injectionDomain, particleArg, 0 );
-
-    // Definition of an absorbtion domain for the particles. The specific domain is very close to the
-    //   exit of the tube.
-    Box3D absorbtionDomain(lattice->getBoundingBox());
-    absorbtionDomain.x0 = outletCenter[0] -2;
-    absorbtionDomain.x1 = outletCenter[0] -2;
-
-    // Functional which absorbs the particles which reach the specified absorbtion domain.
-    integrateProcessingFunctional (
-            new AbsorbParticlesFunctional3D<T,DESCRIPTOR>,
-            absorbtionDomain, particleArg, 0 );
-
-    particles->executeInternalProcessors();
-
     pcout << std::endl << "Starting simulation." << std::endl;
     for (plint i=0; i<maxIter; ++i) {
+
+        if (i == 0){
+            //T lattice_speed_sound = 1/sqrt(3);
+            //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
+            initializeAtEquilibrium( *lattice, impulse, (T) 1.1*1., Array<T,3>((T)0.,(T)0.,(T)0.));
+        }
+
+
         if (i%outIter==0) {
             pcout << "Iteration= " << i << "; "
                   << "Average energy: "
                   << boundaryCondition.computeAverageEnergy() << std::endl;
-            pcout << "Number of particles in the tube: "
-                  << countParticles(*particles, particles->getBoundingBox()) << std::endl;
-                  
         }
-        if (i%saveIter==0 && i>0) {
-            pcout << "Write visualization files." << std::endl;
-            VtkImageOutput3D<T> vtkOut("volume", 1.); 
-            vtkOut.writeData<float>(*boundaryCondition.computePressure(), "p", 1.);
-            vtkOut.writeData<float>(*boundaryCondition.computeVelocityNorm(), "u", 1.);
 
-            pcout << "Write particle output file." << std::endl;
-            writeAsciiParticlePos(*particles, "particle_positions.dat");
-            writeParticleVtk(*particles, "particles.vtk");
+        if (i>=0) {
+            pcout << "Write visualization files." << std::endl;
+
+            VtkImageOutput3D<T> vtkOut(createFileName("vtk", i, 6), 1.);
+            vtkOut.writeData<float>(*computeDensity(*lattice), "density", 1.);
+            vtkOut.writeData<3,float>(*computeVelocity(*lattice), "velocity", 1.);
+
+            //VtkImageOutput3D<T> vtkOut("volume", 1.); 
+            //vtkOut.writeData<float>(*boundaryCondition.computePressure(), "p", 1.);
+            //vtkOut.writeData<float>(*boundaryCondition.computeVelocityNorm(), "u", 1.);
+
+            //pcout << "Write particle output file." << std::endl;
+            //writeAsciiParticlePos(*particles, "particle_positions.dat");
+            //writeParticleVtk(*particles, "particles.vtk");
         }
 
         lattice->collideAndStream();
 
-        if (i%particleTimeFactor==0) {
-            particles->executeInternalProcessors();
-        }
     }
 
-    delete particles;
-    delete particleTemplate;
     return 0;
 }
