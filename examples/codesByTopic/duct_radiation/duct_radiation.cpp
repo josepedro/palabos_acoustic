@@ -63,9 +63,72 @@ int main(int argc, char **argv){
 
     global::directories().setOutputDir(fNameOut+"/");
 
+    //Build geometry
+    // Create the cylinder surface as a set of triangles.
+    T radius = 20.;
+    Array<T,3> originalCenter(0, 0, 0);
+    TriangleSet<T> triangleSet;
+    triangleSet = constructSphere<T>(originalCenter, radius, (plint)40);
+
+    //   tube to more efficient data structures that are internally used by palabos.
+    //   The TriangleBoundary3D structure will be later used to assign proper boundary conditions.
+    plint borderWidth = 1;  // Because the Guo boundary condition acts in a one-cell layer.
+                        // Requirement: margin>=borderWidth.
+    plint margin      = 1 + borderWidth;  // Extra margin of allocated cells around the obstacle.
+    plint extraLayer  = 0;  // Make the bounding box larger; for visualization purposes
+                        //   only. For the simulation, it is OK to have extraLayer=0.
+    DEFscaledMesh<T> defMesh(triangleSet, 40, 1, margin, extraLayer);
+    pcout << "Valor do Dx: " << defMesh.getDx() << std::endl;
+    Array<T, 3> physical_position = defMesh.getPhysicalLocation();
+    pcout << "posicao fisica em x: " << physical_position[0] << std::endl;
+    pcout << "posicao fisica em y: " << physical_position[1] << std::endl;
+    pcout << "posicao fisica em z: " << physical_position[2] << std::endl;
+    Array< T, 3 > position_lattice(50, ny/2, nz/2);
+    defMesh.setPhysicalLocation(position_lattice);
+    Array<T, 3> physical_position_c = defMesh.getPhysicalLocation();
+    pcout << "posicao fisica em x_c: " << physical_position_c[0] << std::endl;
+    pcout << "posicao fisica em y_c: " << physical_position_c[1] << std::endl;
+    pcout << "posicao fisica em z_c: " << physical_position_c[2] << std::endl;
+    defMesh.getMesh().inflate();
+    TriangleBoundary3D<T> boundary(defMesh);
+
+    boundary.getMesh().writeBinarySTL("cylinder.stl");
+    pcout << "Number of triangles: " << boundary.getMesh().getNumTriangles() << std::endl;
+    //   handled by the following voxelization process.
+    pcout << std::endl << "Voxelizing the domain." << std::endl;
+    const int flowType = voxelFlag::outside;
+    const plint extendedEnvelopeWidth = 2;
+    const plint blockSize = 20; // Zero means: no sparse representation.
+     // Because the Guo boundary condition needs 2-cell neighbor access.
+    VoxelizedDomain3D<T> voxelizedDomain (
+            boundary, flowType, extraLayer, borderWidth, extendedEnvelopeWidth, blockSize);
+    pcout << getMultiBlockInfo(voxelizedDomain.getVoxelMatrix()) << std::endl;
+    //-------------------------------------
+
+    //Set geometry in lattice
+     // The Guo off *lattice boundary condition is set up.
+    pcout << "Creating boundary condition." << std::endl;
+    BoundaryProfiles3D<T,Velocity> profiles;
+    
+    bool useAllDirections = true; // Extrapolation scheme for the off *lattice boundary condition.
+    GuoOffLatticeModel3D<T,DESCRIPTOR>* model =
+            new GuoOffLatticeModel3D<T,DESCRIPTOR> (
+                new TriangleFlowShape3D<T,Array<T,3> > (
+                    voxelizedDomain.getBoundary(), profiles),
+                flowType, useAllDirections );
+    bool useRegularized = true;
+    // Use an off *lattice boundary condition which is closer in spirit to
+    //   regularized boundary conditions.
+    model->selectUseRegularizedModel(useRegularized);
     // Setting anechoic dynamics like this way
     MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx, ny, nz,  new AnechoicBackgroundDynamics(omega));
     defineDynamics(lattice, lattice.getBoundingBox(), new BackgroundDynamics(omega));
+
+    OffLatticeBoundaryCondition3D<T,DESCRIPTOR,Velocity> boundaryCondition (
+            model, voxelizedDomain, lattice);
+    boundaryCondition.insert();
+    defineDynamics(lattice, voxelizedDomain.getVoxelMatrix(),
+     lattice.getBoundingBox(), new NoDynamics<T,DESCRIPTOR>(), voxelFlag::inside);
 
     pcout << "Creation of the lattice." << endl;
 
@@ -81,9 +144,9 @@ int main(int argc, char **argv){
     const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(velocity_flow, 0, 0);
     T size_anechoic_buffer = 20;
-    defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
+    /*defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
-      rhoBar_target);
+      rhoBar_target);*/
 
     lattice.initialize();
 
