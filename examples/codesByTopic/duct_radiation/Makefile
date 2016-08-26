@@ -14,7 +14,7 @@
 #   For example: projectFiles = file1.cpp file2.cpp
 #                optimFlags   = -O -finline-functions
 
-# Leading directory of the Palabos source code
+# Leading directory of the Palabos Acoustics source code
 palabosRoot  = ../../..
 # Name of source files in current directory to compile and link with Palabos
 projectFiles = duct_radiation.cpp
