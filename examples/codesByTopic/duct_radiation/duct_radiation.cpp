@@ -51,9 +51,9 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const plint nx = 150;
-    const plint ny = 100;
-    const plint nz = 100;
+    const plint nx = 200;
+    const plint ny = 200;
+    const plint nz = 200;
     const T lattice_speed_sound = 1/sqrt(3);
 
     const T omega = 1.985;
@@ -64,27 +64,39 @@ int main(int argc, char **argv){
     global::directories().setOutputDir(fNameOut+"/");
 
     //Build geometry
-    // Create the cylinder surface as a set of triangles.
-    T radius = 20.;
-    Array<T,3> originalCenter(0, 0, 0);
+    Array<T,3> centerLB(nx/2, ny/2, nz/2);
+    //TriangleSet<T> triangleSet("Duto_Fechado.STL");
+    //Array<T,3> center(param.cx, param.cy, param.cz);
+    /*Array<T,3> centerLB(nx/2, ny/2, nz/2);
     TriangleSet<T> triangleSet;
-    triangleSet = constructSphere<T>(originalCenter, radius, (plint)40);
+
+    triangleSet = constructCylinder(centerLB, (T) 20, (T) 15, (T) 50, (plint) 100, (plint) 100);*/
+
+    //triangleSet = constructSphere<T>(centerLB, (T) 10, (plint)40);
+    TriangleSet<T> triangleSet("duto_fechado.STL");
+    triangleSet.translate(centerLB);
+    // rotate: Z, X, Y in radians
+    //triangleSet.rotate((T) 0, (T) 0, (T) 0);       
+    //triangleSet.scale((T) 3.95253e+2);
 
     //   tube to more efficient data structures that are internally used by palabos.
     //   The TriangleBoundary3D structure will be later used to assign proper boundary conditions.
     plint borderWidth = 1;  // Because the Guo boundary condition acts in a one-cell layer.
                         // Requirement: margin>=borderWidth.
-    plint margin      = 1 + borderWidth;  // Extra margin of allocated cells around the obstacle.
+    plint margin      = 1;  // Extra margin of allocated cells around the obstacle.
     plint extraLayer  = 0;  // Make the bounding box larger; for visualization purposes
                         //   only. For the simulation, it is OK to have extraLayer=0.
-    DEFscaledMesh<T> defMesh(triangleSet, 40, 1, margin, extraLayer);
+    plint xDirection = 0;
+    DEFscaledMesh<T> defMesh(triangleSet, 0, xDirection, margin, Dot3D(0, 0, 0));
+    defMesh.setDx((T) 1.);
+
     pcout << "Valor do Dx: " << defMesh.getDx() << std::endl;
     Array<T, 3> physical_position = defMesh.getPhysicalLocation();
     pcout << "posicao fisica em x: " << physical_position[0] << std::endl;
     pcout << "posicao fisica em y: " << physical_position[1] << std::endl;
     pcout << "posicao fisica em z: " << physical_position[2] << std::endl;
-    Array< T, 3 > position_lattice(50, ny/2, nz/2);
-    defMesh.setPhysicalLocation(position_lattice);
+    //Array< T, 3 > position_lattice(50, ny/2, nz/2);
+    //defMesh.setPhysicalLocation(position_lattice);
     Array<T, 3> physical_position_c = defMesh.getPhysicalLocation();
     pcout << "posicao fisica em x_c: " << physical_position_c[0] << std::endl;
     pcout << "posicao fisica em y_c: " << physical_position_c[1] << std::endl;
@@ -92,23 +104,71 @@ int main(int argc, char **argv){
     defMesh.getMesh().inflate();
     TriangleBoundary3D<T> boundary(defMesh);
 
-    boundary.getMesh().writeBinarySTL("cylinder.stl");
+    boundary.getMesh().writeBinarySTL("duct.stl");
     pcout << "Number of triangles: " << boundary.getMesh().getNumTriangles() << std::endl;
     //   handled by the following voxelization process.
     pcout << std::endl << "Voxelizing the domain." << std::endl;
     const int flowType = voxelFlag::outside;
     const plint extendedEnvelopeWidth = 2;
-    const plint blockSize = 20; // Zero means: no sparse representation.
+    const plint blockSize = 0; // Zero means: no sparse representation.
      // Because the Guo boundary condition needs 2-cell neighbor access.
+    Box3D full_domain(0, nx-1, 0, ny-1, 0, nz-1);
     VoxelizedDomain3D<T> voxelizedDomain (
-            boundary, flowType, extraLayer, borderWidth, extendedEnvelopeWidth, blockSize);
+            boundary, flowType, full_domain, borderWidth, extendedEnvelopeWidth, blockSize);
     pcout << getMultiBlockInfo(voxelizedDomain.getVoxelMatrix()) << std::endl;
+
+    // Build lattice and set default dynamics
+    //-------------------------------------
+    MultiBlockLattice3D<T,DESCRIPTOR> *lattice = 
+    new MultiBlockLattice3D<T,DESCRIPTOR>(voxelizedDomain.getVoxelMatrix());
+
+    // Setting anechoic dynamics like this way
+    defineDynamics(*lattice, lattice->getBoundingBox(),
+                new AnechoicBackgroundDynamics(omega));
+    defineDynamics(*lattice, lattice->getBoundingBox(),
+                new BackgroundDynamics(omega));
     //-------------------------------------
 
     //Set geometry in lattice
      // The Guo off *lattice boundary condition is set up.
     pcout << "Creating boundary condition." << std::endl;
+    /*BoundaryProfiles3D<T,Velocity> profiles;
+    
+    bool useAllDirections = true; // Extrapolation scheme for the off *lattice boundary condition.
+    GuoOffLatticeModel3D<T,DESCRIPTOR>* model =
+            new GuoOffLatticeModel3D<T,DESCRIPTOR> (
+                new TriangleFlowShape3D<T,Array<T,3> > (
+                    voxelizedDomain.getBoundary(), profiles),
+                flowType, useAllDirections );
+    bool useRegularized = true;
+    // Use an off *lattice boundary condition which is closer in spirit to
+    //   regularized boundary conditions.
+    model->selectUseRegularizedModel(useRegularized);*/
+
+   /* BoundaryProfiles3D<T,Velocity> profiles;
+    bool useAllDirections=true;
+    OffLatticeModel3D<T,Velocity>* offLatticeModel=0;
+    profiles.setWallProfile(new NoSlipProfile3D<T>);
+    offLatticeModel =
+         new GuoOffLatticeModel3D<T,DESCRIPTOR> (
+            new TriangleFlowShape3D<T,Array<T,3> >(voxelizedDomain.getBoundary(), profiles),
+            flowType, useAllDirections );
+    offLatticeModel->setVelIsJ(false);
+    OffLatticeBoundaryCondition3D<T,DESCRIPTOR,Velocity> *boundaryCondition;
+    boundaryCondition = new OffLatticeBoundaryCondition3D<T,DESCRIPTOR,Velocity>(
+            offLatticeModel, voxelizedDomain, *lattice);
+    boundaryCondition->insert();*/
+
+
+
+
+
+
+    //Set geometry in lattice
+     // The Guo off *lattice boundary condition is set up.
+    pcout << "Creating boundary condition." << std::endl;
     BoundaryProfiles3D<T,Velocity> profiles;
+    //profiles.setWallProfile(new NoSlipProfile3D<T>);
     
     bool useAllDirections = true; // Extrapolation scheme for the off *lattice boundary condition.
     GuoOffLatticeModel3D<T,DESCRIPTOR>* model =
@@ -120,24 +180,20 @@ int main(int argc, char **argv){
     // Use an off *lattice boundary condition which is closer in spirit to
     //   regularized boundary conditions.
     model->selectUseRegularizedModel(useRegularized);
-    // Setting anechoic dynamics like this way
-    MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx, ny, nz,  new AnechoicBackgroundDynamics(omega));
-    defineDynamics(lattice, lattice.getBoundingBox(), new BackgroundDynamics(omega));
-
+    // ---
     OffLatticeBoundaryCondition3D<T,DESCRIPTOR,Velocity> boundaryCondition (
-            model, voxelizedDomain, lattice);
+            model, voxelizedDomain, *lattice);
     boundaryCondition.insert();
-    defineDynamics(lattice, voxelizedDomain.getVoxelMatrix(),
-     lattice.getBoundingBox(), new NoDynamics<T,DESCRIPTOR>(), voxelFlag::inside);
+    defineDynamics(*lattice, voxelizedDomain.getVoxelMatrix(),
+     lattice->getBoundingBox(), new NoDynamics<T,DESCRIPTOR>(-999), voxelFlag::inside);
 
     pcout << "Creation of the lattice." << endl;
 
     // Switch off periodicity.
-    lattice.periodicity().toggleAll(false);
+    lattice->periodicity().toggleAll(false);
 
     pcout << "Initilization of rho and u." << endl;
-    initializeAtEquilibrium( lattice, lattice.getBoundingBox(), rho0 , u0 );
-
+    initializeAtEquilibrium( *lattice, lattice->getBoundingBox(), rho0 , u0 );
     
     T rhoBar_target = 0;
     const T mach_number = 0.2;
@@ -148,7 +204,7 @@ int main(int argc, char **argv){
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);*/
 
-    lattice.initialize();
+    lattice->initialize();
 
     pcout << std::endl << "Voxelizing the domain." << std::endl;
 
@@ -159,26 +215,26 @@ int main(int argc, char **argv){
     plb_ofstream history_velocities_y("tmp/history_velocities_y.dat");
     plb_ofstream history_velocities_z("tmp/history_velocities_z.dat");
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT == 0){
-            //T lattice_speed_sound = 1/sqrt(3);
-            //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
-            initializeAtEquilibrium( lattice, impulse, rho0 + drho, u0);
+        if (iT != 0){
+            T lattice_speed_sound = 1/sqrt(3);
+            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
+            initializeAtEquilibrium( *lattice, impulse, rho_changing, u0);
         }
 
         if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
-            writeVTK(lattice, iT);
+            writeVTK(*lattice, iT);
         }
 
-        history_pressures << setprecision(10) << lattice.get(nx/2+30, ny/2+30, nz/2+30).computeDensity() - rho0 << endl;
+        history_pressures << setprecision(10) << lattice->get(nx/2+30, ny/2+30, nz/2+30).computeDensity() - rho0 << endl;
         Array<T,3> velocities;
-        lattice.get(nx/2+30, ny/2+30, nz/2+30).computeVelocity(velocities);
+        lattice->get(nx/2+30, ny/2+30, nz/2+30).computeVelocity(velocities);
         history_velocities_x << setprecision(10) << velocities[0]/lattice_speed_sound << endl;
         history_velocities_y << setprecision(10) << velocities[1]/lattice_speed_sound << endl;
         history_velocities_z << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
-        lattice.collideAndStream();
+        lattice->collideAndStream();
 
     }
 
