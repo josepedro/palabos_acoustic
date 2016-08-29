@@ -538,20 +538,22 @@ TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T in
         point_a[0] = x0; point_a[1] = y0; point_a[2] = z0; 
         tmp[0] = point_a;
         point_b[0] = x0; 
-        point_b[1] = externRadius - externRadius*cos(theta) + y0; 
-        point_b[2] = externRadius - externRadius*sin(theta) + z0; 
+        point_b[1] =  externRadius*cos(theta) + y0; 
+        point_b[2] =  externRadius*sin(theta) + z0; 
         tmp[1] = point_b;
         point_c[0] = x0; 
-        point_c[1] = externRadius - externRadius*cos(theta + dtheta) + y0;
-        point_c[2] = externRadius - externRadius*sin(theta + dtheta) + z0;
+        point_c[1] =  externRadius*cos(theta + dtheta) + y0;
+        point_c[2] =  externRadius*sin(theta + dtheta) + z0;
         tmp[2] = point_c;
 
         triangles.push_back(tmp);
+
+        
     }
 
-    
 
-    
+
+
     return TriangleSet<T>(triangles);
 }
 
