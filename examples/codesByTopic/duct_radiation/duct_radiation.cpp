@@ -67,14 +67,15 @@ int main(int argc, char **argv){
     Array<T,3> centerLB(nx/2, ny/2, nz/2);
     //TriangleSet<T> triangleSet("Duto_Fechado.STL");
     //Array<T,3> center(param.cx, param.cy, param.cz);
-    /*Array<T,3> centerLB(nx/2, ny/2, nz/2);
     TriangleSet<T> triangleSet;
-
-    triangleSet = constructCylinder(centerLB, (T) 20, (T) 15, (T) 50, (plint) 100, (plint) 100);*/
+    pcout << "construindo o duto" << std::endl;
+    /*Array<T,3> const& inletCenter, T inletRadius, T outletRadius,
+                                 T length, plint nAxial, plint nCirc*/
+    triangleSet = constructDuct(centerLB, (T) 20, (T) 30, (T) 50, (plint) 10, (plint) 10);
 
     //triangleSet = constructSphere<T>(centerLB, (T) 10, (plint)40);
-    TriangleSet<T> triangleSet("duto_fechado.STL");
-    triangleSet.translate(centerLB);
+    /*TriangleSet<T> triangleSet("duto_fechado.STL");
+    triangleSet.translate(centerLB);*/
     // rotate: Z, X, Y in radians
     //triangleSet.rotate((T) 0, (T) 0, (T) 0);       
     //triangleSet.scale((T) 3.95253e+2);

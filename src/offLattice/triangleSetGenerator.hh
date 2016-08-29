@@ -414,6 +414,183 @@ TriangleSet<T> constructCylinder(Array<T,3> const& inletCenter, T inletRadius, T
 }
 
 template<typename T>
+TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T internRadius,
+                                 T length, plint nAxial, plint nCirc)
+{
+    static const T eps = std::numeric_limits<T>::epsilon();
+    std::vector<typename TriangleSet<T>::Triangle> triangles;
+    PLB_ASSERT( externRadius > (T) 0.0 && !util::fpequal( externRadius, (T) 0.0, eps) &&
+               internRadius > (T) 0.0 && !util::fpequal(internRadius, (T) 0.0, eps) &&
+                     length > (T) 0.0 && !util::fpequal(      length, (T) 0.0, eps) &&
+               nAxial >= 2 && nCirc >= 2);
+
+    triangles.resize(0);
+
+    // Construction of the cylindrical grid and triangulation
+
+    T pi = std::acos((T) -1.0);
+
+    T dtheta = (T) 2.0*pi / nCirc;
+
+    T x0 = inletCenter[0];
+    T y0 = inletCenter[1];
+    T z0 = inletCenter[2];
+
+    /*for (plint i = 0; i < nAxial-1; i++) {
+        T x = x0 + i*dx;
+        T r = (internRadius-externRadius) * (x-x0) / length + externRadius;
+        for (plint j = 0; j < nCirc; j++) {
+            T theta = j * dtheta;
+
+            Array<Array<T,3>, 4> v;
+
+            v[0][0] = x;
+            v[0][1] = y0 + r * std::cos(theta);
+            v[0][2] = z0 + r * std::sin(theta);
+
+            v[1][0] = x;
+            v[1][1] = y0 + r * std::cos(theta + dtheta);
+            v[1][2] = z0 + r * std::sin(theta + dtheta);
+
+            v[2][0] = x + dx;
+            v[2][1] = y0 + (r + dr) * std::cos(theta + dtheta);
+            v[2][2] = z0 + (r + dr) * std::sin(theta + dtheta);
+
+            v[3][0] = x + dx;
+            v[3][1] = y0 + (r + dr) * std::cos(theta);
+            v[3][2] = z0 + (r + dr) * std::sin(theta);
+
+            Array<T,3> vc;
+
+            vc[0] = x + (T) 0.5 * dx;
+            vc[1] = y0 + (r + (T) 0.5 * dr) * std::cos(theta + (T) 0.5 * dtheta);
+            vc[2] = z0 + (r + (T) 0.5 * dr) * std::sin(theta + (T) 0.5 * dtheta);
+
+            Array<Array<T,3>, 4> vce;
+
+            vce[0][0] = x;
+            vce[0][1] = y0 + r * std::cos(theta + (T) 0.5 * dtheta);
+            vce[0][2] = z0 + r * std::sin(theta + (T) 0.5 * dtheta);
+
+            vce[1][0] = x + (T) 0.5 * dx;
+            vce[1][1] = y0 + (r + (T) 0.5 * dr) * std::cos(theta + dtheta);
+            vce[1][2] = z0 + (r + (T) 0.5 * dr) * std::sin(theta + dtheta);
+
+            vce[2][0] = x + dx;
+            vce[2][1] = y0 + (r + dr) * std::cos(theta + (T) 0.5 * dtheta);
+            vce[2][2] = z0 + (r + dr) * std::sin(theta + (T) 0.5 * dtheta);
+
+            vce[3][0] = x + (T) 0.5 * dx;
+            vce[3][1] = y0 + (r + (T) 0.5 * dr) * std::cos(theta);
+            vce[3][2] = z0 + (r + (T) 0.5 * dr) * std::sin(theta);
+
+            typename TriangleSet<T>::Triangle tmp;
+
+            tmp[0] = vc;
+            tmp[1] = v[0];
+            tmp[2] = vce[0];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = vce[0];
+            tmp[2] = v[1];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = v[1];
+            tmp[2] = vce[1];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = vce[1];
+            tmp[2] = v[2];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = v[2];
+            tmp[2] = vce[2];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = vce[2];
+            tmp[2] = v[3];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = v[3];
+            tmp[2] = vce[3];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = vce[3];
+            tmp[2] = v[0];
+            triangles.push_back(tmp);
+        }
+    }*/
+
+    typename TriangleSet<T>::Triangle tmp;
+    Array<T,3> point_a;
+    Array<T,3> point_b;
+    Array<T,3> point_c;
+    //for (plint j = 0; j < nCirc; j++) {
+        plint j = 0;
+        T theta = j*dtheta;
+
+        point_a[0] = x0; point_a[1] = y0; point_a[2] = z0; 
+        tmp[0] = point_a;
+        point_b[0] = x0; 
+        point_b[1] = externRadius - externRadius*cos(theta); 
+        point_b[2] = externRadius - externRadius*sin(theta); 
+        tmp[1] = point_b;
+        point_c[0] = x0; 
+        point_c[1] = externRadius - externRadius*cos(theta + dtheta);
+        point_c[2] = externRadius - externRadius*sin(theta + dtheta);
+        tmp[2] = point_c;
+
+        triangles.push_back(tmp);
+
+        j = 1;
+        theta = j*dtheta;
+        point_b[0] = x0; 
+        point_b[1] = externRadius - externRadius*cos(theta); 
+        point_b[2] = externRadius - externRadius*sin(theta); 
+        tmp[1] = point_b;
+        point_c[0] = x0; 
+        point_c[1] = externRadius - externRadius*cos(theta + dtheta);
+        point_c[2] = externRadius - externRadius*sin(theta + dtheta);
+        tmp[2] = point_c;
+
+        triangles.push_back(tmp);
+
+        j = 2;
+        theta = j*dtheta;
+        point_b[0] = x0; 
+        point_b[1] = externRadius - externRadius*cos(theta); 
+        point_b[2] = externRadius - externRadius*sin(theta); 
+        tmp[1] = point_b;
+        point_c[0] = x0; 
+        point_c[1] = externRadius - externRadius*cos(theta + dtheta);
+        point_c[2] = externRadius - externRadius*sin(theta + dtheta);
+        tmp[2] = point_c;
+
+        triangles.push_back(tmp);
+
+
+        /*Array<T,3> point_d(length, externRadius*cos(1.5*dtheta), externRadius*sin(1.5*dtheta));
+        tmp[0] = point_d;
+        triangles.push_back(tmp);
+
+        Array<T,3> point_e(length, internRadius*cos(dtheta), internRadius*sin(dtheta));
+        tmp[1] = point_e;
+        Array<T,3> point_f(length, internRadius*cos(2*dtheta), internRadius*sin(2*dtheta));
+        tmp[2] = point_f;
+        triangles.push_back(tmp);*/
+
+    //}
+    return TriangleSet<T>(triangles);
+}
+
+template<typename T>
 void addSurface (
         Array<T,3> const& lowerCorner,
         Array<T,3> const& delta1, plint n1, Array<T,3> const& delta2, plint n2,

@@ -65,6 +65,10 @@ TriangleSet<T> constructCylinder( Array<T,3> const& inletCenter, Array<T,3> cons
                                   std::vector<Array<T,3> >& inletPoints );
 
 template<typename T>
+TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T inletRadius, T outletRadius,
+                                 T length, plint nAxial, plint nCirc);
+
+template<typename T>
 TriangleSet<T> constructCuboid (
         Array<T,3> const& lowerCorner, Array<T,3> const& upperCorner,
         Array<plint,3> const& nSegments );
