@@ -532,61 +532,26 @@ TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T in
     Array<T,3> point_a;
     Array<T,3> point_b;
     Array<T,3> point_c;
-    //for (plint j = 0; j < nCirc; j++) {
-        plint j = 0;
+    for (plint j = 0; j < nCirc; j++) {
         T theta = j*dtheta;
 
         point_a[0] = x0; point_a[1] = y0; point_a[2] = z0; 
         tmp[0] = point_a;
         point_b[0] = x0; 
-        point_b[1] = externRadius - externRadius*cos(theta); 
-        point_b[2] = externRadius - externRadius*sin(theta); 
+        point_b[1] = externRadius - externRadius*cos(theta) + y0; 
+        point_b[2] = externRadius - externRadius*sin(theta) + z0; 
         tmp[1] = point_b;
         point_c[0] = x0; 
-        point_c[1] = externRadius - externRadius*cos(theta + dtheta);
-        point_c[2] = externRadius - externRadius*sin(theta + dtheta);
+        point_c[1] = externRadius - externRadius*cos(theta + dtheta) + y0;
+        point_c[2] = externRadius - externRadius*sin(theta + dtheta) + z0;
         tmp[2] = point_c;
 
         triangles.push_back(tmp);
+    }
 
-        j = 1;
-        theta = j*dtheta;
-        point_b[0] = x0; 
-        point_b[1] = externRadius - externRadius*cos(theta); 
-        point_b[2] = externRadius - externRadius*sin(theta); 
-        tmp[1] = point_b;
-        point_c[0] = x0; 
-        point_c[1] = externRadius - externRadius*cos(theta + dtheta);
-        point_c[2] = externRadius - externRadius*sin(theta + dtheta);
-        tmp[2] = point_c;
+    
 
-        triangles.push_back(tmp);
-
-        j = 2;
-        theta = j*dtheta;
-        point_b[0] = x0; 
-        point_b[1] = externRadius - externRadius*cos(theta); 
-        point_b[2] = externRadius - externRadius*sin(theta); 
-        tmp[1] = point_b;
-        point_c[0] = x0; 
-        point_c[1] = externRadius - externRadius*cos(theta + dtheta);
-        point_c[2] = externRadius - externRadius*sin(theta + dtheta);
-        tmp[2] = point_c;
-
-        triangles.push_back(tmp);
-
-
-        /*Array<T,3> point_d(length, externRadius*cos(1.5*dtheta), externRadius*sin(1.5*dtheta));
-        tmp[0] = point_d;
-        triangles.push_back(tmp);
-
-        Array<T,3> point_e(length, internRadius*cos(dtheta), internRadius*sin(dtheta));
-        tmp[1] = point_e;
-        Array<T,3> point_f(length, internRadius*cos(2*dtheta), internRadius*sin(2*dtheta));
-        tmp[2] = point_f;
-        triangles.push_back(tmp);*/
-
-    //}
+    
     return TriangleSet<T>(triangles);
 }
 
