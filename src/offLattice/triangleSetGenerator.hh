@@ -532,9 +532,12 @@ TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T in
     Array<T,3> point_a;
     Array<T,3> point_b;
     Array<T,3> point_c;
+    Array<T,3> point_d;
+    Array<T,3> point_e;
     for (plint j = 0; j < nCirc; j++) {
         T theta = j*dtheta;
 
+        // fist triangle
         point_a[0] = x0; point_a[1] = y0; point_a[2] = z0; 
         tmp[0] = point_a;
         point_b[0] = x0; 
@@ -545,10 +548,21 @@ TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T in
         point_c[1] =  externRadius*cos(theta + dtheta) + y0;
         point_c[2] =  externRadius*sin(theta + dtheta) + z0;
         tmp[2] = point_c;
-
         triangles.push_back(tmp);
 
-        
+        // second triangle
+        point_d[0] = point_b[0] + length;
+        point_d[1] = point_b[1];
+        point_d[2] = point_b[2];
+        tmp[0] = point_d;
+        triangles.push_back(tmp);
+
+        // third triangle
+        point_e[0] = point_c[0] + length;
+        point_e[1] = point_c[1];
+        point_e[2] = point_c[2];
+        tmp[1] = point_e;
+        triangles.push_back(tmp);        
     }
 
 
