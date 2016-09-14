@@ -69,9 +69,11 @@ int main(int argc, char **argv){
     //Array<T,3> center(param.cx, param.cy, param.cz);
     TriangleSet<T> triangleSet;
     pcout << "construindo o duto" << std::endl;
-    /*Array<T,3> const& inletCenter, T inletRadius, T outletRadius,
-                                 T length, plint nAxial, plint nCirc*/
-    triangleSet = constructDuct(centerLB, (T) 20, (T) 30, (T) 50, (plint) 10, (plint) 50);
+    /*
+    (Array<T,3> const& inletCenter, T externRadius, T internRadius,
+                                 T length, plint nAxial, plint nCirc)
+                                 */
+    triangleSet = constructDuct(centerLB, (T) 30, (T) 20, (T) 50, (plint) 10, (plint) 50);
 
     //triangleSet = constructSphere<T>(centerLB, (T) 10, (plint)40);
     /*TriangleSet<T> triangleSet("duto_fechado.STL");

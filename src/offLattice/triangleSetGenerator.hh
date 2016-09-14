@@ -534,10 +534,15 @@ TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T in
     Array<T,3> point_c;
     Array<T,3> point_d;
     Array<T,3> point_e;
+    Array<T,3> point_f;
+    Array<T,3> point_g;
+    Array<T,3> point_h;
+    Array<T,3> point_i;
+    Array<T,3> point_j;
     for (plint j = 0; j < nCirc; j++) {
         T theta = j*dtheta;
 
-        // fist triangle
+        // first triangle
         point_a[0] = x0; point_a[1] = y0; point_a[2] = z0; 
         tmp[0] = point_a;
         point_b[0] = x0; 
@@ -562,7 +567,43 @@ TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T in
         point_e[1] = point_c[1];
         point_e[2] = point_c[2];
         tmp[1] = point_e;
+        triangles.push_back(tmp);
+
+        // fourth triangle
+        point_f[0] = point_e[0];
+        point_f[1] = internRadius*cos(theta + dtheta) + y0;
+        point_f[2] = internRadius*sin(theta + dtheta) + z0;
+        tmp[2] = point_f;
         triangles.push_back(tmp);        
+
+        // fifth triangle
+        point_g[0] = point_d[0];
+        point_g[1] = internRadius*cos(theta) + y0;
+        point_g[2] = internRadius*sin(theta) + z0;
+        tmp[1] = point_g;
+        triangles.push_back(tmp);        
+
+        // sixth triangle
+        point_h[0] = x0 + externRadius - internRadius;
+        point_h[1] = point_f[1];
+        point_h[2] = point_f[2];
+        tmp[0] = point_h;
+        triangles.push_back(tmp);
+
+        // seventh triangle
+        point_i[0] = x0 + externRadius - internRadius;
+        point_i[1] = point_g[1];
+        point_i[2] = point_g[2];
+        tmp[2] = point_i;
+        triangles.push_back(tmp);
+
+        // eighth triangle
+        point_j[0] = x0 + externRadius - internRadius;
+        point_j[1] = point_a[1];
+        point_j[2] = point_a[2];
+        tmp[1] = point_j;
+        triangles.push_back(tmp);        
+
     }
 
 
