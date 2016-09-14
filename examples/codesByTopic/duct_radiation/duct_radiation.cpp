@@ -167,8 +167,7 @@ int main(int argc, char **argv){
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium( *lattice, lattice->getBoundingBox(), rho0 , u0 );
 
-
-    
+    // Set anechoic condition on boundaries
     T rhoBar_target = 0;
     const T mach_number = 0.2;
     const T velocity_flow = mach_number*lattice_speed_sound;
@@ -189,12 +188,49 @@ int main(int argc, char **argv){
     plb_ofstream history_velocities_y("tmp/history_velocities_y.dat");
     plb_ofstream history_velocities_z("tmp/history_velocities_z.dat");
     for (plint iT=0; iT<maxT; ++iT){
+        
         if (iT != 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+
+            // Set source sound
+            T rhoBar_target_source = rho_changing - 1;
+            plint source_begin = centerLB[0] + 10;
+            plint source_thickness = 30;
+            plint center_z = centerLB[2];
+            plint center_y = centerLB[1];
+            plint source_radius = radius;
+            for(plint x = source_begin; x <= source_begin + source_thickness; ++x){
+                DotList3D points_to_aplly_dynamics;
+                AnechoicBackgroundDynamics *anechoicDynamics = 
+                new AnechoicBackgroundDynamics(omega);
+                T delta_efective = 30 - x;
+                anechoicDynamics->setDelta(delta_efective);
+                anechoicDynamics->setRhoBar_target(rhoBar_target_source);
+                anechoicDynamics->setJ_target(j_target);
+
+                for (plint z = center_z - source_radius; 
+                    z <= center_z + source_radius; ++z){
+                    for (plint y = center_y - source_radius; 
+                        y <= center_y + source_radius; ++y){
+                        if (plb::util::sqr(y) + plb::util::sqr(z)
+                         <= plb::util::sqr(source_radius)){
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                        }
+                    }
+                }
+                Box3D test_source(centerLB[0] + 10, centerLB[0] + 40, 
+                    ny/2 - source_radius/sqrt(2), 
+                    ny/2 + source_radius/sqrt(2), 
+                    nz/2 - source_radius/sqrt(2), 
+                    nz/2 + source_radius/sqrt(2));
+                defineDynamics(*lattice, test_source, anechoicDynamics);
+            }
+
+
             //Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
-            Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
-            initializeAtEquilibrium( *lattice, impulse, rho_changing, u0);
+            Box3D impulse(centerLB[0] + 70, centerLB[0] + 70, ny/2, ny/2, nz/2, nz/2);
+            //initializeAtEquilibrium( *lattice, impulse, rho_changing, u0);
         }
 
         if (iT % 10 == 0 && iT>0) {
