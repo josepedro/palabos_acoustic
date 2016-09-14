@@ -51,9 +51,9 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const plint nx = 300;
-    const plint ny = 200;
-    const plint nz = 200;
+    const plint nx = 350;
+    const plint ny = 160;
+    const plint nz = 160;
     const T lattice_speed_sound = 1/sqrt(3);
 
     const T omega = 1.985;
@@ -64,7 +64,7 @@ int main(int argc, char **argv){
     global::directories().setOutputDir(fNameOut+"/");
 
     //Build geometry
-    Array<T,3> centerLB(10, ny/2, nz/2);
+    Array<T,3> centerLB(30, ny/2, nz/2);
     //TriangleSet<T> triangleSet("Duto_Fechado.STL");
     //Array<T,3> center(param.cx, param.cy, param.cz);
     TriangleSet<T> triangleSet;
@@ -135,40 +135,6 @@ int main(int argc, char **argv){
                 new BackgroundDynamics(omega));
     //-------------------------------------
 
-    //Set geometry in lattice
-     // The Guo off *lattice boundary condition is set up.
-    pcout << "Creating boundary condition." << std::endl;
-    /*BoundaryProfiles3D<T,Velocity> profiles;
-    
-    bool useAllDirections = true; // Extrapolation scheme for the off *lattice boundary condition.
-    GuoOffLatticeModel3D<T,DESCRIPTOR>* model =
-            new GuoOffLatticeModel3D<T,DESCRIPTOR> (
-                new TriangleFlowShape3D<T,Array<T,3> > (
-                    voxelizedDomain.getBoundary(), profiles),
-                flowType, useAllDirections );
-    bool useRegularized = true;
-    // Use an off *lattice boundary condition which is closer in spirit to
-    //   regularized boundary conditions.
-    model->selectUseRegularizedModel(useRegularized);*/
-
-   /* BoundaryProfiles3D<T,Velocity> profiles;
-    bool useAllDirections=true;
-    OffLatticeModel3D<T,Velocity>* offLatticeModel=0;
-    profiles.setWallProfile(new NoSlipProfile3D<T>);
-    offLatticeModel =
-         new GuoOffLatticeModel3D<T,DESCRIPTOR> (
-            new TriangleFlowShape3D<T,Array<T,3> >(voxelizedDomain.getBoundary(), profiles),
-            flowType, useAllDirections );
-    offLatticeModel->setVelIsJ(false);
-    OffLatticeBoundaryCondition3D<T,DESCRIPTOR,Velocity> *boundaryCondition;
-    boundaryCondition = new OffLatticeBoundaryCondition3D<T,DESCRIPTOR,Velocity>(
-            offLatticeModel, voxelizedDomain, *lattice);
-    boundaryCondition->insert();*/
-
-
-
-
-
 
     //Set geometry in lattice
      // The Guo off *lattice boundary condition is set up.
@@ -200,15 +166,17 @@ int main(int argc, char **argv){
 
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium( *lattice, lattice->getBoundingBox(), rho0 , u0 );
+
+
     
     T rhoBar_target = 0;
     const T mach_number = 0.2;
     const T velocity_flow = mach_number*lattice_speed_sound;
-    Array<T,3> j_target(velocity_flow, 0, 0);
-    T size_anechoic_buffer = 20;
-    /*defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
+    Array<T,3> j_target(0, 0, 0);
+    T size_anechoic_buffer = 30;
+    defineAnechoicMRTBoards(nx, ny, nz, *lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
-      rhoBar_target);*/
+      rhoBar_target);
 
     lattice->initialize();
 
@@ -225,7 +193,7 @@ int main(int argc, char **argv){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             //Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
-            Box3D impulse(30, 30, ny/2, ny/2, nz/2, nz/2);
+            Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
             initializeAtEquilibrium( *lattice, impulse, rho_changing, u0);
         }
 
