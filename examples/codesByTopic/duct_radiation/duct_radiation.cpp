@@ -51,7 +51,7 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const plint nx = 200;
+    const plint nx = 300;
     const plint ny = 200;
     const plint nz = 200;
     const T lattice_speed_sound = 1/sqrt(3);
@@ -64,7 +64,7 @@ int main(int argc, char **argv){
     global::directories().setOutputDir(fNameOut+"/");
 
     //Build geometry
-    Array<T,3> centerLB(nx/2, ny/2, nz/2);
+    Array<T,3> centerLB(10, ny/2, nz/2);
     //TriangleSet<T> triangleSet("Duto_Fechado.STL");
     //Array<T,3> center(param.cx, param.cy, param.cz);
     TriangleSet<T> triangleSet;
@@ -73,7 +73,10 @@ int main(int argc, char **argv){
     (Array<T,3> const& inletCenter, T externRadius, T internRadius,
                                  T length, plint nAxial, plint nCirc)
                                  */
-    triangleSet = constructDuct(centerLB, (T) 30, (T) 26, (T) 50, (plint) 10, (plint) 50);
+    T thickness_duct = 4;
+    T radius = 20;
+    triangleSet = constructDuct(centerLB, radius + thickness_duct, radius
+    , (T) 250, (plint) 10, (plint) 50);
 
     //triangleSet = constructSphere<T>(centerLB, (T) 10, (plint)40);
     /*TriangleSet<T> triangleSet("duto_fechado.STL");
@@ -221,7 +224,8 @@ int main(int argc, char **argv){
         if (iT != 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
+            //Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
+            Box3D impulse(30, 30, ny/2, ny/2, nz/2, nz/2);
             initializeAtEquilibrium( *lattice, impulse, rho_changing, u0);
         }
 
