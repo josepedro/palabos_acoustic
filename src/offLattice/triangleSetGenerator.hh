@@ -584,21 +584,21 @@ TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T in
         triangles.push_back(tmp);        
 
         // sixth triangle
-        point_h[0] = x0 + externRadius - internRadius;
+        point_h[0] = x0 + 2*(externRadius - internRadius);
         point_h[1] = point_f[1];
         point_h[2] = point_f[2];
         tmp[0] = point_h;
         triangles.push_back(tmp);
 
         // seventh triangle
-        point_i[0] = x0 + externRadius - internRadius;
+        point_i[0] = x0 + 2*(externRadius - internRadius);
         point_i[1] = point_g[1];
         point_i[2] = point_g[2];
         tmp[2] = point_i;
         triangles.push_back(tmp);
 
         // eighth triangle
-        point_j[0] = x0 + externRadius - internRadius;
+        point_j[0] = x0 + 2*(externRadius - internRadius);
         point_j[1] = point_a[1];
         point_j[2] = point_a[2];
         tmp[1] = point_j;
