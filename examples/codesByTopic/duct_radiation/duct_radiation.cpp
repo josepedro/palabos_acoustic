@@ -55,6 +55,7 @@ int main(int argc, char **argv){
     const plint ny = 160;
     const plint nz = 160;
     const T lattice_speed_sound = 1/sqrt(3);
+    const T cs2 = lattice_speed_sound*lattice_speed_sound;
 
     const T omega = 1.985;
     const plint maxT = 120000;
@@ -195,56 +196,48 @@ int main(int argc, char **argv){
 
             // Set source sound
             T rhoBar_target_source = rho_changing - 1;
-            plint source_begin = centerLB[0] + 10;
-            plint source_thickness = 30;
-            plint center_z = centerLB[2];
-            plint center_y = centerLB[1];
             plint source_radius = radius;
-            for(plint x = source_begin; x <= source_begin + source_thickness; ++x){
-                DotList3D points_to_aplly_dynamics;
-                AnechoicBackgroundDynamics *anechoicDynamics = 
-                new AnechoicBackgroundDynamics(omega);
-                T delta_efective = 30 - x;
-                anechoicDynamics->setDelta(delta_efective);
-                anechoicDynamics->setRhoBar_target(rhoBar_target_source);
-                anechoicDynamics->setJ_target(j_target);
-
-                for (plint z = center_z - source_radius; 
-                    z <= center_z + source_radius; ++z){
-                    for (plint y = center_y - source_radius; 
-                        y <= center_y + source_radius; ++y){
-                        if (plb::util::sqr(y) + plb::util::sqr(z)
-                         <= plb::util::sqr(source_radius)){
-                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
-                        }
-                    }
-                }
-                Box3D test_source(centerLB[0] + 10, centerLB[0] + 40, 
-                    ny/2 - source_radius/sqrt(2), 
-                    ny/2 + source_radius/sqrt(2), 
-                    nz/2 - source_radius/sqrt(2), 
-                    nz/2 + source_radius/sqrt(2));
-                defineDynamics(*lattice, test_source, anechoicDynamics);
-            }
-
+            AnechoicBackgroundDynamics *anechoicDynamics = 
+            new AnechoicBackgroundDynamics(omega);
+            T delta_efective = 30;
+            anechoicDynamics->setDelta(delta_efective);
+            anechoicDynamics->setRhoBar_target(rhoBar_target_source);
+            anechoicDynamics->setJ_target(j_target);
+            Box3D test_source(centerLB[0] + 10, centerLB[0] + 40, 
+                ny/2 - source_radius/sqrt(2), 
+                ny/2 + source_radius/sqrt(2), 
+                nz/2 - source_radius/sqrt(2), 
+                nz/2 + source_radius/sqrt(2));
+            defineDynamics(*lattice, test_source, anechoicDynamics);
 
             //Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
-            Box3D impulse(centerLB[0] + 70, centerLB[0] + 70, ny/2, ny/2, nz/2, nz/2);
+            //Box3D impulse(centerLB[0] + 70, centerLB[0] + 70, ny/2, ny/2, nz/2, nz/2);
             //initializeAtEquilibrium( *lattice, impulse, rho_changing, u0);
         }
 
         if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
-            writeVTK(*lattice, iT);
+            //writeVTK(*lattice, iT);
         }
 
-        history_pressures << setprecision(10) << lattice->get(nx/2+30, ny/2+30, nz/2+30).computeDensity() - rho0 << endl;
-        Array<T,3> velocities;
-        lattice->get(nx/2+30, ny/2+30, nz/2+30).computeVelocity(velocities);
-        history_velocities_x << setprecision(10) << velocities[0]/lattice_speed_sound << endl;
-        history_velocities_y << setprecision(10) << velocities[1]/lattice_speed_sound << endl;
-        history_velocities_z << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
+        // extract values of pressure and velocities
+        Box3D surface_probe(6*radius, 6*radius, ny/2 - radius/sqrt(2), 
+                ny/2 + radius/sqrt(2), 
+                nz/2 - radius/sqrt(2), 
+                nz/2 + radius/sqrt(2));
+
+        history_pressures << setprecision(10) << (computeAverageDensity(*lattice, surface_probe) - rho0)*cs2 << endl;
+
+        history_velocities_x << setprecision(10) << 
+        boundaryCondition.computeAverageVelocityComponent(surface_probe, 0)/lattice_speed_sound << endl;
+
+        history_velocities_y << setprecision(10) << 
+        boundaryCondition.computeAverageVelocityComponent(surface_probe, 1)/lattice_speed_sound << endl;
+
+        history_velocities_z << setprecision(10) << 
+        boundaryCondition.computeAverageVelocityComponent(surface_probe, 2)/lattice_speed_sound << endl;
+
         lattice->collideAndStream();
 
     }
