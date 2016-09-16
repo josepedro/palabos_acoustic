@@ -58,7 +58,9 @@ int main(int argc, char **argv){
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
 
     const T omega = 1.985;
-    const plint maxT = 120000;
+    const plint maxT = 10000;
+    const plint maxT_final_source = maxT - 1000;
+    const T ka_max = 1.82;
 
     Array<T,3> u0(0, 0, 0);
 
@@ -190,35 +192,26 @@ int main(int argc, char **argv){
     plb_ofstream history_velocities_z("tmp/history_velocities_z.dat");
     for (plint iT=0; iT<maxT; ++iT){
         
-        if (iT != 0){
+          if (iT != 0){
             T lattice_speed_sound = 1/sqrt(3);
+            //drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            //drho*cos((lattice_speed_sound/radius)*(ka_max*((maxT-iT)/maxT)));
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-
-            // Set source sound
-            T rhoBar_target_source = rho_changing - 1;
+            //Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
             plint source_radius = radius;
-            AnechoicBackgroundDynamics *anechoicDynamics = 
-            new AnechoicBackgroundDynamics(omega);
-            T delta_efective = 30;
-            anechoicDynamics->setDelta(delta_efective);
-            anechoicDynamics->setRhoBar_target(rhoBar_target_source);
-            anechoicDynamics->setJ_target(j_target);
-            Box3D test_source(centerLB[0] + 10, centerLB[0] + 40, 
+             Box3D test_source(centerLB[0] + 10, centerLB[0] + 15, 
                 ny/2 - source_radius/sqrt(2), 
                 ny/2 + source_radius/sqrt(2), 
                 nz/2 - source_radius/sqrt(2), 
                 nz/2 + source_radius/sqrt(2));
-            defineDynamics(*lattice, test_source, anechoicDynamics);
-
-            //Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
-            //Box3D impulse(centerLB[0] + 70, centerLB[0] + 70, ny/2, ny/2, nz/2, nz/2);
-            //initializeAtEquilibrium( *lattice, impulse, rho_changing, u0);
+            //Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
+            initializeAtEquilibrium( *lattice, test_source, rho_changing, u0);
         }
 
         if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
-            //writeVTK(*lattice, iT);
+            writeVTK(*lattice, iT);
         }
 
         // extract values of pressure and velocities
