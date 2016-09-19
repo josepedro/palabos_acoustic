@@ -61,6 +61,7 @@ int main(int argc, char **argv){
     const plint maxT = 10000;
     const plint maxT_final_source = maxT - 1000;
     const T ka_max = 1.82;
+    const T ka_min = 0;
 
     Array<T,3> u0(0, 0, 0);
 
@@ -192,10 +193,17 @@ int main(int argc, char **argv){
     plb_ofstream history_velocities_z("tmp/history_velocities_z.dat");
     for (plint iT=0; iT<maxT; ++iT){
         
-          if (iT != 0){
-            T lattice_speed_sound = 1/sqrt(3);
+          if (iT <= maxT_final_source){
             //drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             //drho*cos((lattice_speed_sound/radius)*(ka_max*((maxT-iT)/maxT)));
+            
+            T initial_frequency = ka_min*lattice_speed_sound/(2*M_PI*radius);
+            T frequency_max_lattice = ka_max*lattice_speed_sound/(2*M_PI*radius);
+            T variation_frequency = (frequency_max_lattice - initial_frequency)/maxT_final_source;
+            T frequency_function = initial_frequency*iT + (variation_frequency*iT*iT)/2;
+            T phase = 2*M_PI*frequency_function;
+            T chirp_hand = 1. + drho*sin(phase);
+
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             //Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
             plint source_radius = radius;
@@ -205,13 +213,21 @@ int main(int argc, char **argv){
                 nz/2 - source_radius/sqrt(2), 
                 nz/2 + source_radius/sqrt(2));
             //Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
-            initializeAtEquilibrium( *lattice, test_source, rho_changing, u0);
+            initializeAtEquilibrium( *lattice, test_source, chirp_hand, u0);
+        }else{
+            plint source_radius = radius;
+             Box3D test_source(centerLB[0] + 10, centerLB[0] + 15, 
+                ny/2 - source_radius/sqrt(2), 
+                ny/2 + source_radius/sqrt(2), 
+                nz/2 - source_radius/sqrt(2), 
+                nz/2 + source_radius/sqrt(2));
+            initializeAtEquilibrium( *lattice, test_source, rho0, u0);
         }
 
         if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
-            writeVTK(*lattice, iT);
+            //writeVTK(*lattice, iT);
         }
 
         // extract values of pressure and velocities
@@ -220,7 +236,7 @@ int main(int argc, char **argv){
                 nz/2 - radius/sqrt(2), 
                 nz/2 + radius/sqrt(2));
 
-        history_pressures << setprecision(10) << (computeAverageDensity(*lattice, surface_probe) - rho0)*cs2 << endl;
+        //history_pressures << setprecision(10) << (computeAverageDensity(*lattice, surface_probe) - rho0)*cs2 << endl;
 
         history_velocities_x << setprecision(10) << 
         boundaryCondition.computeAverageVelocityComponent(surface_probe, 0)/lattice_speed_sound << endl;
