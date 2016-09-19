@@ -236,7 +236,7 @@ int main(int argc, char **argv){
                 nz/2 - radius/sqrt(2), 
                 nz/2 + radius/sqrt(2));
 
-        //history_pressures << setprecision(10) << (computeAverageDensity(*lattice, surface_probe) - rho0)*cs2 << endl;
+        history_pressures << setprecision(10) << (computeAverageDensity(*lattice, surface_probe) - rho0)*cs2 << endl;
 
         history_velocities_x << setprecision(10) << 
         boundaryCondition.computeAverageVelocityComponent(surface_probe, 0)/lattice_speed_sound << endl;
