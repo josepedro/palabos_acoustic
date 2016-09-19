@@ -51,9 +51,12 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const plint nx = 350;
-    const plint ny = 160;
-    const plint nz = 160;
+    const T radius = 11;
+    const T diameter = 2*radius;
+
+    const plint nx = 23*diameter;
+    const plint ny = 20*diameter;
+    const plint nz = 20*diameter;
     const T lattice_speed_sound = 1/sqrt(3);
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
 
@@ -78,9 +81,9 @@ int main(int argc, char **argv){
                                  T length, plint nAxial, plint nCirc)
                                  */
     T thickness_duct = 4;
-    T radius = 20;
+    T size_duct = 11*diameter;
     triangleSet = constructDuct(centerLB, radius + thickness_duct, radius
-    , (T) 250, (plint) 10, (plint) 50);
+    , (T) size_duct, (plint) 10, (plint) 50);
 
     //triangleSet = constructSphere<T>(centerLB, (T) 10, (plint)40);
     /*TriangleSet<T> triangleSet("duto_fechado.STL");
@@ -187,10 +190,30 @@ int main(int argc, char **argv){
 
     pcout << "Simulation begins" << endl;
 
-    plb_ofstream history_pressures("tmp/history_pressures.dat");
-    plb_ofstream history_velocities_x("tmp/history_velocities_x.dat");
-    plb_ofstream history_velocities_y("tmp/history_velocities_y.dat");
-    plb_ofstream history_velocities_z("tmp/history_velocities_z.dat");
+    // Setting probes
+    plint position_x_3r = centerLB[0] + size_duct - 3*radius;
+    Box3D surface_probe_3r(position_x_3r, position_x_3r, ny/2 - radius/sqrt(2), 
+            ny/2 + radius/sqrt(2), 
+            nz/2 - radius/sqrt(2), 
+            nz/2 + radius/sqrt(2));
+
+    plint position_x_4r = centerLB[0] + size_duct - 4*radius;
+    Box3D surface_probe_4r(position_x_4r, position_x_4r, ny/2 - radius/sqrt(2), 
+            ny/2 + radius/sqrt(2), 
+            nz/2 - radius/sqrt(2), 
+            nz/2 + radius/sqrt(2));
+
+    plint position_x_6r = centerLB[0] + size_duct - 6*radius;
+    Box3D surface_probe_6r(position_x_6r, position_x_6r, ny/2 - radius/sqrt(2), 
+            ny/2 + radius/sqrt(2), 
+            nz/2 - radius/sqrt(2), 
+            nz/2 + radius/sqrt(2));
+    plb_ofstream history_pressures_3r("tmp/history_pressures_3r.dat");
+    plb_ofstream history_pressures_4r("tmp/history_pressures_4r.dat");
+    plb_ofstream history_pressures_6r("tmp/history_pressures_6r.dat");
+    plb_ofstream history_velocities_3r("tmp/history_velocities_3r.dat");
+    plb_ofstream history_velocities_4r("tmp/history_velocities_4r.dat");
+    plb_ofstream history_velocities_6r("tmp/history_velocities_6r.dat");
     for (plint iT=0; iT<maxT; ++iT){
         
           if (iT <= maxT_final_source){
@@ -227,25 +250,22 @@ int main(int argc, char **argv){
         if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
-            //writeVTK(*lattice, iT);
+            writeVTK(*lattice, iT);
         }
 
         // extract values of pressure and velocities
-        Box3D surface_probe(6*radius, 6*radius, ny/2 - radius/sqrt(2), 
-                ny/2 + radius/sqrt(2), 
-                nz/2 - radius/sqrt(2), 
-                nz/2 + radius/sqrt(2));
+        history_pressures_3r << setprecision(10) << (computeAverageDensity(*lattice, surface_probe_3r) - rho0)*cs2 << endl;
+        history_pressures_4r << setprecision(10) << (computeAverageDensity(*lattice, surface_probe_4r) - rho0)*cs2 << endl;
+        history_pressures_6r << setprecision(10) << (computeAverageDensity(*lattice, surface_probe_6r) - rho0)*cs2 << endl;
 
-        history_pressures << setprecision(10) << (computeAverageDensity(*lattice, surface_probe) - rho0)*cs2 << endl;
+        history_velocities_3r << setprecision(10) << 
+        boundaryCondition.computeAverageVelocityComponent(surface_probe_3r, 0)/lattice_speed_sound << endl;
 
-        history_velocities_x << setprecision(10) << 
-        boundaryCondition.computeAverageVelocityComponent(surface_probe, 0)/lattice_speed_sound << endl;
+        history_velocities_4r << setprecision(10) << 
+        boundaryCondition.computeAverageVelocityComponent(surface_probe_4r, 1)/lattice_speed_sound << endl;
 
-        history_velocities_y << setprecision(10) << 
-        boundaryCondition.computeAverageVelocityComponent(surface_probe, 1)/lattice_speed_sound << endl;
-
-        history_velocities_z << setprecision(10) << 
-        boundaryCondition.computeAverageVelocityComponent(surface_probe, 2)/lattice_speed_sound << endl;
+        history_velocities_6r << setprecision(10) << 
+        boundaryCondition.computeAverageVelocityComponent(surface_probe_6r, 2)/lattice_speed_sound << endl;
 
         lattice->collideAndStream();
 
