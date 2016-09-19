@@ -250,7 +250,7 @@ int main(int argc, char **argv){
         if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
-            writeVTK(*lattice, iT);
+            //writeVTK(*lattice, iT);
         }
 
         // extract values of pressure and velocities
