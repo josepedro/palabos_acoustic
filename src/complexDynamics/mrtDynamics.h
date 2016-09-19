@@ -92,6 +92,47 @@ private:
     static int id;
 };
 
+/// Implementation of the Anechoic MRT collision step
+template<typename T, template<typename U> class Descriptor>
+class AnechoicMRTdynamics : public IsoThermalBulkDynamics<T,Descriptor> {
+public:
+    /* *************** Construction / Destruction ************************ */
+    AnechoicMRTdynamics(T omega_);
+    
+    /// Clone the object on its dynamic type.
+    virtual AnechoicMRTdynamics<T,Descriptor>* clone() const;
+    
+    /// Return a unique ID for this class.
+    virtual int getId() const;
+    
+    /* *************** Collision and Equilibrium ************************* */
+    
+    /// Implementation of the collision step
+    virtual void collide(Cell<T,Descriptor>& cell,
+                         BlockStatistics& statistics_);
+    
+    /// Implementation of the collision step, with imposed macroscopic variables
+    virtual void collideExternal(Cell<T,Descriptor>& cell, T rhoBar,
+                                 Array<T,Descriptor<T>::d> const& j, T thetaBar, BlockStatistics& stat);
+    
+    /// Compute equilibrium distribution function
+    virtual T computeEquilibrium(plint iPop, T rhoBar, Array<T,Descriptor<T>::d> const& j,
+                                 T jSqr, T thetaBar=T()) const;
+    virtual void setDelta(T delta);
+    virtual T getDelta();
+    virtual void setRhoBar_target(T rhoBar_target);
+    virtual T getRhoBar_target();
+    virtual void setJ_target(Array<T,Descriptor<T>::d> j_target);
+    virtual Array<T,Descriptor<T>::d> getJ_target();
+private:
+    static int id;
+private:
+    T delta;
+    T omega;
+    T rhoBar_target;
+    Array<T,Descriptor<T>::d> j_target;
+};
+
 /// Implementation of incompressible MRT dynamics.
 /** This is the MRT equivalent of IncBGKdynamics: the "rho" moment of the
  *  populations appears only as a pressure term in the equilibrium, while

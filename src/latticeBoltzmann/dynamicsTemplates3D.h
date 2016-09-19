@@ -581,7 +581,7 @@ static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar,
     f += fEq*omega;
 
     // Parameters of Anechoic Condition
-    T total_distance = 30;
+    T total_distance = 20;
     T sigma_m = 0.3;
     // Targets values to anechoic dynamics
     T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
@@ -2396,6 +2396,242 @@ static T bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j,
     return invRho*invRho*jSqr;
 }
 
+static T anechoic_ma2_collision_base(Array<T,D::q>& f, T rhoBar, 
+    Array<T,3> const& j, T omega, T invRho, T delta, T rhoBar_target ,Array<T,3> j_target) {
+ 
+    // Parameters of Anechoic Condition
+    T total_distance = 30;
+    T sigma_m = 0.3;
+    //T delta = total_distance - 1;
+    T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
+    //Array<T,2> j_target; j_target[0] = 0.11/std::sqrt(3); j_target[1] = 0.0/std::sqrt(3);
+    //T rhoBar_target = rhoBar + (T) 1.e-2;
+    T feq, f_target;
+
+    // Constants of BGK D2Q9
+    T one_m_omega = (T)1 - omega;
+    T t0_omega = D::t[0] * omega;
+    T t1_omega = D::t[1] * omega;
+    T t4_omega = D::t[4] * omega;
+
+    T jSqr   = j[0]*j[0] + j[1]*j[1] + j[2]*j[2];
+    T jSqr_target = j_target[0]*j_target[0] + j_target[1]*j_target[1] + j_target[2]*j_target[2];
+
+    T kx     = (T)3 * j[0];
+    T kx_target = (T)3 * j_target[0];
+
+    T ky     = (T)3 * j[1];
+    T ky_target = (T)3 * j_target[1];
+
+    T kz     = (T)3 * j[2];
+    T kz_target = (T)3 * j_target[2];
+
+    T kxSqr_ = invRho / (T)2 * kx*kx;
+    T kxSqr_target = invRho / (T)2 * kx_target*kx_target;
+
+    T kySqr_ = invRho / (T)2 * ky*ky;
+    T kySqr_target = invRho / (T)2 * ky_target*ky_target;
+
+    T kzSqr_ = invRho / (T)2 * kz*kz;
+    T kzSqr_target = invRho / (T)2 * kz_target*kz_target;
+
+    T kxky_  = invRho * kx*ky;
+    T kxky_target  = invRho * kx_target*ky_target;
+
+    T kxkz_  = invRho * kx*kz;
+    T kxkz_target  = invRho * kx_target*kz_target;
+
+    T kykz_  = invRho * ky*kz;
+    T kykz_target  = invRho * ky_target*kz_target;
+
+    T C1 = rhoBar + invRho*(T)3*jSqr;
+    T C1_target = rhoBar_target + invRho*(T)3*jSqr_target;
+    T C2, C3;
+    T C2_target, C3_target;
+
+    T ux = j[0]*invRho; T ux_target = j_target[0]*invRho;
+    T uy = j[1]*invRho; T uy_target = j_target[1]*invRho;
+    T uz = j[2]*invRho; T uz_target = j_target[2]*invRho;
+    T ux2 = ux*ux; T ux2_target = ux_target*ux_target;
+    T uy2 = uy*uy; T uy2_target = uy_target*uy_target;
+    T uz2 = uz*uz; T uz2_target = uz_target*uz_target;
+
+    // i=0
+    C3 = -kxSqr_ - kySqr_ - kzSqr_;
+    C3_target = -kxSqr_target - kySqr_target - kzSqr_target;
+    f[0] *= one_m_omega; f[0] += t0_omega * (C1+C3) + omega*j[0]*ux*uy2*uz2;
+    feq = D::t[0]*(C1+C3) + j[0]*ux*uy2*uz2;
+    f_target = D::t[0]*(C1_target + C3_target) + j_target[0]*ux_target*uy2_target*uz2_target;
+    f[0] += -sigma_target*(feq - f_target);
+
+    // i=1 and i=10
+    C2 = -kx; 
+    C2_target = -kx_target;
+    C3 = -kySqr_ - kzSqr_; 
+    C3_target = -kySqr_target - kzSqr_target; 
+    //-
+    f[1]  *= one_m_omega; f[1]  += t1_omega * (C1+C2+C3) - omega*(T)0.5*j[0]*uy2*(ux-(T)1); 
+    feq = D::t[1]*(C1+C2+C3);
+    f_target = D::t[1]*(C1_target + C2_target + C3_target);
+    f[1] += -sigma_target*(feq - f_target);
+    //-
+    f[10] *= one_m_omega; f[10] += t1_omega * (C1-C2+C3);
+    feq = D::t[1]*(C1-C2+C3);
+    f_target = D::t[1]*(C1_target - C2_target + C3_target);
+    f[10] += -sigma_target*(feq - f_target);
+
+    // i=2 and i=11
+    C2 = -ky; 
+    C2_target = -ky_target;
+    C3 = -kxSqr_ - kzSqr_; 
+    C3_target = -kxSqr_target - kzSqr_target;
+    //-
+    f[2]  *= one_m_omega; f[2]  += t1_omega * (C1+C2+C3);
+    feq = D::t[1]*(C1+C2+C3);
+    f_target = D::t[1]*(C1_target + C2_target + C3_target);
+    f[2] = -sigma_target*(feq - f_target);
+    //-
+    f[11] *= one_m_omega; f[11] += t1_omega * (C1-C2+C3);
+    feq = D::t[1]*(C1-C2+C3);
+    f_target = D::t[1]*(C1_target - C2_target + C3_target);
+    f[11] = -sigma_target*(feq - f_target);
+
+    // i=3 and i=12
+    C2 = -kz;
+    C2_target = -kz_target;
+    C3 = -kxSqr_ - kySqr_; 
+    C3_target = -kxSqr_target - kySqr_target;
+    //-
+    f[3]  *= one_m_omega; f[3]  += t1_omega * (C1+C2+C3);
+    feq = D::t[1]*(C1+C2+C3);
+    f_target = D::t[1]*(C1_target + C2_target + C3_target);
+    f[3] = -sigma_target*(feq - f_target);
+    //-
+    f[12] *= one_m_omega; f[12] += t1_omega * (C1-C2+C3);
+    feq = D::t[1]*(C1-C2+C3);
+    f_target = D::t[1]*(C1_target - C2_target + C3_target);
+    f[12] = -sigma_target*(feq - f_target);
+
+    // i=4 and i=13
+    C2 = -kx - ky; 
+    C2_target = -kx_target - ky_target;
+    C3 = kxky_ - kzSqr_; 
+    C3_target = kxky_target - kzSqr_target;
+    //-
+    f[4]  *= one_m_omega; f[4]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[4] = -sigma_target*(feq - f_target);
+    //-
+    f[13] *= one_m_omega; f[13] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[13] = -sigma_target*(feq - f_target);
+
+    // i=5 and i=14
+    C2 = -kx + ky; 
+    C2_target = -kx_target + ky_target;
+    C3 = -kxky_ - kzSqr_; 
+    C3_target = -kxky_target - kzSqr_target;
+    //-
+    f[5]  *= one_m_omega; f[5]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[5] = -sigma_target*(feq - f_target);
+    //-
+    f[14] *= one_m_omega; f[14] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[14] = -sigma_target*(feq - f_target);
+
+    // i=6 and i=15
+    C2 = -kx - kz; 
+    C2_target = -kx_target - kz_target;
+    C3 = kxkz_ - kySqr_; 
+    C3_target = kxkz_target - kySqr_target;
+    //-
+    f[6]  *= one_m_omega; f[6]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[6] = -sigma_target*(feq - f_target);
+    //-
+    f[15] *= one_m_omega; f[15] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[15] = -sigma_target*(feq - f_target);
+
+    // i=7 and i=16
+    C2 = -kx + kz; 
+    C2_target = -kx_target + kz_target;
+    C3 = -kxkz_ - kySqr_; 
+    C3_target = -kxkz_target - kySqr_target;
+    //-
+    f[7]  *= one_m_omega; f[7]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[7] = -sigma_target*(feq - f_target);
+    //-
+    f[16] *= one_m_omega; f[16] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[16] = -sigma_target*(feq - f_target);
+
+    // i=8 and i=17
+    C2 = -ky - kz; 
+    C2_target = -ky_target - kz_target;
+    C3 = kykz_ - kxSqr_; 
+    C3_target = kykz_target - kxSqr_target;
+    //-
+    f[8]  *= one_m_omega; f[8]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[8] = -sigma_target*(feq - f_target);
+    //-
+    f[17] *= one_m_omega; f[17] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[17] = -sigma_target*(feq - f_target);
+
+    // i=9 and i=18
+    C2 = -ky + kz; 
+    C2_target = -ky_target + kz_target;
+    C3 = -kykz_ - kxSqr_; 
+    C3_target = -kykz_target - kxSqr_target;
+    //-
+    f[9]  *= one_m_omega; f[9]  += t4_omega * (C1+C2+C3);
+    feq = D::t[4]*(C1+C2+C3);
+    f_target = D::t[4]*(C1_target + C2_target + C3_target);
+    f[9] = -sigma_target*(feq - f_target); 
+    //-
+    f[18] *= one_m_omega; f[18] += t4_omega * (C1-C2+C3);
+    feq = D::t[4]*(C1-C2+C3);
+    f_target = D::t[4]*(C1_target - C2_target + C3_target);
+    f[18] = -sigma_target*(feq - f_target); 
+
+    return invRho*invRho*jSqr;
+
+
+ /*   T jSqr = j[0]*j[0]+j[1]*j[1]+j[2]*j[2];
+    Array<T,D::q> fEq;
+    complete_bgk_ma2_equilibria( rhoBar, invRho, j, jSqr, fEq );
+    
+    T one_m_omega = (T)1 - omega;
+    f *= one_m_omega;
+    f += fEq*omega;
+
+    // Parameters of Anechoic Condition
+    T total_distance = 30;
+    T sigma_m = 0.3;
+    // Targets values to anechoic dynamics
+    T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
+    Array<T,D::q> f_target;
+    T jSqr_target = j_target[0]*j_target[0]+j_target[1]*j_target[1]+j_target[2]*j[2];
+    complete_bgk_ma2_equilibria( rhoBar_target, invRho, j_target, jSqr_target, f_target );
+    f += -sigma_target*(fEq - f_target);
+
+    return invRho*invRho*jSqr;*/
+}
+
 static T truncated_mrt_ma2_collision_base(Array<T,D::q>& f, T omega, T omegaNonPhys, plint iPhys) {
     Array<T,D::q> mNeq, mEq;
     complete_ma2_moments(f, mNeq);
@@ -2504,6 +2740,12 @@ static T truncated_mrt_smagorinsky_ma2_ext_rhoBar_j_collision_base(Array<T,D::q>
 
 static T bgk_ma2_collision(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j, T omega) {
     return bgk_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar));
+}
+
+static T anechoic_ma2_collision(Array<T,D::q>& f, T rhoBar, 
+    Array<T,3> const& j, T omega, T delta, T rhoBar_target, Array<T,3> j_target) {
+    return anechoic_ma2_collision_base(f, rhoBar, j, omega, D::invRho(rhoBar), delta, 
+    rhoBar_target, j_target);
 }
 
 static T bgk_inc_collision(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j, T omega, T invRho0=(T)1 ) {
@@ -3028,6 +3270,7 @@ static Array<T,SymmetricTensorImpl<T,D::d>::n> computeStrainRate(T rhoBar, T inv
 }
 
 static T bgk_ma2_collision_base(Array<T,D::q>& f, T rhoBar, Array<T,3> const& j, T omega, T invRho ) {
+
     T one_m_omega = (T)1 - omega;
     T t0_omega = D::t[0] * omega;
     T t1_omega = D::t[1] * omega;

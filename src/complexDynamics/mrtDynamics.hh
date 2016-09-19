@@ -68,7 +68,7 @@ void MRTdynamics<T,Descriptor>::collide (
         Cell<T,Descriptor>& cell, BlockStatistics& statistics )
 {
     typedef mrtTemplates<T,Descriptor> mrtTemp;
-    
+    //std::cout << "CAI AQUI" << std::endl;
     T jSqr = mrtTemp::mrtCollision(cell, this->getOmega());
 
     if (cell.takesStatistics()) {
@@ -97,6 +97,98 @@ T MRTdynamics<T,Descriptor>::computeEquilibrium(plint iPop, T rhoBar, Array<T,De
 {
     T invRho = Descriptor<T>::invRho(rhoBar);
     return dynamicsTemplates<T,Descriptor>::bgk_ma2_equilibrium(iPop, rhoBar, invRho, j, jSqr);
+}
+
+/* *************** Class AnechoicMRTdynamics *********************************************** */
+
+template<typename T, template<typename U> class Descriptor>
+int AnechoicMRTdynamics<T,Descriptor>::id =
+    meta::registerOneParamDynamics<T,Descriptor,AnechoicMRTdynamics<T,Descriptor> >("AnechoicMRT");
+
+/** \param omega_ relaxation parameter, related to the dynamic viscosity
+ */
+template<typename T, template<typename U> class Descriptor>
+AnechoicMRTdynamics<T,Descriptor>::AnechoicMRTdynamics(T omega_ )
+    : IsoThermalBulkDynamics<T,Descriptor>(omega_)
+{ }
+
+template<typename T, template<typename U> class Descriptor>
+AnechoicMRTdynamics<T,Descriptor>* AnechoicMRTdynamics<T,Descriptor>::clone() const {
+    return new AnechoicMRTdynamics<T,Descriptor>(*this);
+}
+ 
+template<typename T, template<typename U> class Descriptor>
+int AnechoicMRTdynamics<T,Descriptor>::getId() const {
+    return id;
+}
+
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::collide (
+        Cell<T,Descriptor>& cell, BlockStatistics& statistics )
+{
+    typedef mrtTemplates<T,Descriptor> mrtTemp;
+    T jSqr = mrtTemp::anechoicMRTCollision(cell, this->getOmega(),
+        this->getDelta(), this->getRhoBar_target(), this->getJ_target());
+
+    if (cell.takesStatistics()) {
+        T rhoBar = momentTemplates<T,Descriptor>::get_rhoBar(cell);
+        gatherStatistics(statistics, rhoBar, jSqr * Descriptor<T>::invRho(rhoBar) * Descriptor<T>::invRho(rhoBar) );
+    }
+}
+
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::collideExternal (
+        Cell<T,Descriptor>& cell, T rhoBar, Array<T,Descriptor<T>::d> const& j,
+        T thetaBar, BlockStatistics& statistics )
+{
+    typedef mrtTemplates<T,Descriptor> mrtTemp;
+    
+    T jSqr = mrtTemp::mrtCollision(cell, rhoBar, j, this->getOmega());
+
+    if (cell.takesStatistics()) {
+        gatherStatistics(statistics, rhoBar, jSqr * Descriptor<T>::invRho(rhoBar) * Descriptor<T>::invRho(rhoBar) );
+    }
+}
+
+template<typename T, template<typename U> class Descriptor>
+T AnechoicMRTdynamics<T,Descriptor>::computeEquilibrium(plint iPop, T rhoBar, Array<T,Descriptor<T>::d> const& j,
+                                                T jSqr, T thetaBar) const
+{
+    T invRho = Descriptor<T>::invRho(rhoBar);
+    return dynamicsTemplates<T,Descriptor>::bgk_ma2_equilibrium(iPop, rhoBar, invRho, j, jSqr);
+}
+
+// Delta distance because anechoic condition have a buffer
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::setDelta(T delta){
+    this->delta = delta;
+}
+
+template<typename T, template<typename U> class Descriptor>
+T AnechoicMRTdynamics<T,Descriptor>::getDelta(){
+    return this->delta;
+}
+
+// RhoBar_target to develop outflow
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::setRhoBar_target(T rhoBar_target){
+    this->rhoBar_target = rhoBar_target;
+}
+
+template<typename T, template<typename U> class Descriptor>
+T AnechoicMRTdynamics<T,Descriptor>::getRhoBar_target(){
+    return this->rhoBar_target;
+}
+
+// J_target is velocity to anechoic
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::setJ_target(Array<T,Descriptor<T>::d> j_target){
+    this->j_target = j_target;
+}
+
+template<typename T, template<typename U> class Descriptor>
+Array<T,Descriptor<T>::d> AnechoicMRTdynamics<T,Descriptor>::getJ_target(){
+    return this->j_target;
 }
 
 /* *************** Class IncMRTdynamics *********************************************** */

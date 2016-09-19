@@ -414,6 +414,205 @@ TriangleSet<T> constructCylinder(Array<T,3> const& inletCenter, T inletRadius, T
 }
 
 template<typename T>
+TriangleSet<T> constructDuct(Array<T,3> const& inletCenter, T externRadius, T internRadius,
+                                 T length, plint nAxial, plint nCirc)
+{
+    static const T eps = std::numeric_limits<T>::epsilon();
+    std::vector<typename TriangleSet<T>::Triangle> triangles;
+    PLB_ASSERT( externRadius > (T) 0.0 && !util::fpequal( externRadius, (T) 0.0, eps) &&
+               internRadius > (T) 0.0 && !util::fpequal(internRadius, (T) 0.0, eps) &&
+                     length > (T) 0.0 && !util::fpequal(      length, (T) 0.0, eps) &&
+               nAxial >= 2 && nCirc >= 2);
+
+    triangles.resize(0);
+
+    // Construction of the cylindrical grid and triangulation
+
+    T pi = std::acos((T) -1.0);
+
+    T dtheta = (T) 2.0*pi / nCirc;
+
+    T x0 = inletCenter[0];
+    T y0 = inletCenter[1];
+    T z0 = inletCenter[2];
+
+    /*for (plint i = 0; i < nAxial-1; i++) {
+        T x = x0 + i*dx;
+        T r = (internRadius-externRadius) * (x-x0) / length + externRadius;
+        for (plint j = 0; j < nCirc; j++) {
+            T theta = j * dtheta;
+
+            Array<Array<T,3>, 4> v;
+
+            v[0][0] = x;
+            v[0][1] = y0 + r * std::cos(theta);
+            v[0][2] = z0 + r * std::sin(theta);
+
+            v[1][0] = x;
+            v[1][1] = y0 + r * std::cos(theta + dtheta);
+            v[1][2] = z0 + r * std::sin(theta + dtheta);
+
+            v[2][0] = x + dx;
+            v[2][1] = y0 + (r + dr) * std::cos(theta + dtheta);
+            v[2][2] = z0 + (r + dr) * std::sin(theta + dtheta);
+
+            v[3][0] = x + dx;
+            v[3][1] = y0 + (r + dr) * std::cos(theta);
+            v[3][2] = z0 + (r + dr) * std::sin(theta);
+
+            Array<T,3> vc;
+
+            vc[0] = x + (T) 0.5 * dx;
+            vc[1] = y0 + (r + (T) 0.5 * dr) * std::cos(theta + (T) 0.5 * dtheta);
+            vc[2] = z0 + (r + (T) 0.5 * dr) * std::sin(theta + (T) 0.5 * dtheta);
+
+            Array<Array<T,3>, 4> vce;
+
+            vce[0][0] = x;
+            vce[0][1] = y0 + r * std::cos(theta + (T) 0.5 * dtheta);
+            vce[0][2] = z0 + r * std::sin(theta + (T) 0.5 * dtheta);
+
+            vce[1][0] = x + (T) 0.5 * dx;
+            vce[1][1] = y0 + (r + (T) 0.5 * dr) * std::cos(theta + dtheta);
+            vce[1][2] = z0 + (r + (T) 0.5 * dr) * std::sin(theta + dtheta);
+
+            vce[2][0] = x + dx;
+            vce[2][1] = y0 + (r + dr) * std::cos(theta + (T) 0.5 * dtheta);
+            vce[2][2] = z0 + (r + dr) * std::sin(theta + (T) 0.5 * dtheta);
+
+            vce[3][0] = x + (T) 0.5 * dx;
+            vce[3][1] = y0 + (r + (T) 0.5 * dr) * std::cos(theta);
+            vce[3][2] = z0 + (r + (T) 0.5 * dr) * std::sin(theta);
+
+            typename TriangleSet<T>::Triangle tmp;
+
+            tmp[0] = vc;
+            tmp[1] = v[0];
+            tmp[2] = vce[0];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = vce[0];
+            tmp[2] = v[1];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = v[1];
+            tmp[2] = vce[1];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = vce[1];
+            tmp[2] = v[2];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = v[2];
+            tmp[2] = vce[2];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = vce[2];
+            tmp[2] = v[3];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = v[3];
+            tmp[2] = vce[3];
+            triangles.push_back(tmp);
+
+            tmp[0] = vc;
+            tmp[1] = vce[3];
+            tmp[2] = v[0];
+            triangles.push_back(tmp);
+        }
+    }*/
+
+    typename TriangleSet<T>::Triangle tmp;
+    Array<T,3> point_a;
+    Array<T,3> point_b;
+    Array<T,3> point_c;
+    Array<T,3> point_d;
+    Array<T,3> point_e;
+    Array<T,3> point_f;
+    Array<T,3> point_g;
+    Array<T,3> point_h;
+    Array<T,3> point_i;
+    Array<T,3> point_j;
+    for (plint j = 0; j < nCirc; j++) {
+        T theta = j*dtheta;
+
+        // first triangle
+        point_a[0] = x0; point_a[1] = y0; point_a[2] = z0; 
+        tmp[0] = point_a;
+        point_b[0] = x0; 
+        point_b[1] =  externRadius*cos(theta) + y0; 
+        point_b[2] =  externRadius*sin(theta) + z0; 
+        tmp[1] = point_b;
+        point_c[0] = x0; 
+        point_c[1] =  externRadius*cos(theta + dtheta) + y0;
+        point_c[2] =  externRadius*sin(theta + dtheta) + z0;
+        tmp[2] = point_c;
+        triangles.push_back(tmp);
+
+        // second triangle
+        point_d[0] = point_b[0] + length;
+        point_d[1] = point_b[1];
+        point_d[2] = point_b[2];
+        tmp[0] = point_d;
+        triangles.push_back(tmp);
+
+        // third triangle
+        point_e[0] = point_c[0] + length;
+        point_e[1] = point_c[1];
+        point_e[2] = point_c[2];
+        tmp[1] = point_e;
+        triangles.push_back(tmp);
+
+        // fourth triangle
+        point_f[0] = point_e[0];
+        point_f[1] = internRadius*cos(theta + dtheta) + y0;
+        point_f[2] = internRadius*sin(theta + dtheta) + z0;
+        tmp[2] = point_f;
+        triangles.push_back(tmp);        
+
+        // fifth triangle
+        point_g[0] = point_d[0];
+        point_g[1] = internRadius*cos(theta) + y0;
+        point_g[2] = internRadius*sin(theta) + z0;
+        tmp[1] = point_g;
+        triangles.push_back(tmp);        
+
+        // sixth triangle
+        point_h[0] = x0 + 2*(externRadius - internRadius);
+        point_h[1] = point_f[1];
+        point_h[2] = point_f[2];
+        tmp[0] = point_h;
+        triangles.push_back(tmp);
+
+        // seventh triangle
+        point_i[0] = x0 + 2*(externRadius - internRadius);
+        point_i[1] = point_g[1];
+        point_i[2] = point_g[2];
+        tmp[2] = point_i;
+        triangles.push_back(tmp);
+
+        // eighth triangle
+        point_j[0] = x0 + 2*(externRadius - internRadius);
+        point_j[1] = point_a[1];
+        point_j[2] = point_a[2];
+        tmp[1] = point_j;
+        triangles.push_back(tmp);        
+
+    }
+
+
+
+
+    return TriangleSet<T>(triangles);
+}
+
+template<typename T>
 void addSurface (
         Array<T,3> const& lowerCorner,
         Array<T,3> const& delta1, plint n1, Array<T,3> const& delta2, plint n2,
