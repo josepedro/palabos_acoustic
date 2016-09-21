@@ -51,7 +51,7 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const T radius = 11;
+    const T radius = 6;
     const T diameter = 2*radius;
 
     const plint nx = 23*diameter;
@@ -203,7 +203,7 @@ int main(int argc, char **argv){
             nz/2 - radius/sqrt(2), 
             nz/2 + radius/sqrt(2));
 
-    plint position_x_6r = centerLB[0] + size_duct - 6*radius;
+    plint position_x_6r = centerLB[0] + size_duct - 0*radius;
     Box3D surface_probe_6r(position_x_6r, position_x_6r, ny/2 - radius/sqrt(2), 
             ny/2 + radius/sqrt(2), 
             nz/2 - radius/sqrt(2), 
@@ -213,7 +213,7 @@ int main(int argc, char **argv){
     plb_ofstream history_pressures_6r("tmp/history_pressures_6r.dat");
     plb_ofstream history_velocities_3r("tmp/history_velocities_3r.dat");
     plb_ofstream history_velocities_4r("tmp/history_velocities_4r.dat");
-    plb_ofstream history_velocities_6r("tmp/history_velocities_6r.dat");
+    plb_ofstream history_velocities_6r("tmp/history_velocities_boca.dat");
     for (plint iT=0; iT<maxT; ++iT){
         
           if (iT <= maxT_final_source){
@@ -247,7 +247,7 @@ int main(int argc, char **argv){
             initializeAtEquilibrium( *lattice, test_source, rho0, u0);
         }
 
-        if (iT % 10 == 0 && iT>0) {
+        if (iT % 100 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
             //writeVTK(*lattice, iT);
