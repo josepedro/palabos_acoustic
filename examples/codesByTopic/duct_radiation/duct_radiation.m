@@ -18,8 +18,8 @@ phase = 2*pi*frequency_function;
 chirp_hand = sin(phase);
 %figure; plot(source_chirp); hold on; plot(chirp_hand);
 
-pressures = textread('tmp/history_pressures.dat');
-particle_velocity = textread('tmp/history_velocities_x.dat');
+pressures = textread('tmp/history_pressures_3r.dat');
+particle_velocity = textread('tmp/history_velocities_3r.dat');
 fft_pressure = fft(pressures);
 fft_particle_velocity = fft(particle_velocity);
 ZL = fft_pressure./fft_particle_velocity;
@@ -27,7 +27,7 @@ ZL = fft_pressure./fft_particle_velocity;
 ka = linspace(0, ka_max, length(fft_pressure));
 ka = ka';
 k=ka/a;
-L = 125; 
+L = 5*6; 
 %Zo = rms(dens_filter)*cs;
 Zo = 1*cs;
 Zr = Zo*1i*tan(atan(ZL./(1i*Zo))-(ka/a)*L);
@@ -60,6 +60,9 @@ axis([0 1.5 -1 1]);
 %legend('Analitico','LBM');
 hold off
 
+figure;
+plot(ka, real(ZL)); hold on; plot(ka, imag(ZL), 'r');
+legend('Impedance real part','Impedance imaginary part');
 
 %cd ~/palabos_acoustic/examples/codesByTopic/duct_radiation/
 %system('rm tmp/*');
