@@ -51,9 +51,10 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const plint nx = 500;
-    const plint ny = 500;
-    const plint nz = 500;
+    const plint length_domain = 420;
+    const plint nx = length_domain;
+    const plint ny = length_domain;
+    const plint nz = length_domain;
     const T lattice_speed_sound = 1/sqrt(3);
 
     const T omega = 1.985;
@@ -68,6 +69,8 @@ int main(int argc, char **argv){
     defineDynamics(lattice, lattice.getBoundingBox(), new BackgroundDynamics(omega));
 
     pcout << "Creation of the lattice." << endl;
+
+    pcout << getMultiBlockInfo(lattice) << std::endl;
 
     // Switch off periodicity.
     lattice.periodicity().toggleAll(false);
