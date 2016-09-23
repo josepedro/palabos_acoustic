@@ -51,14 +51,15 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const plint length_domain = 420;
+    //const plint length_domain = 420;
+    const plint length_domain = 150;
     const plint nx = length_domain;
     const plint ny = length_domain;
     const plint nz = length_domain;
     const T lattice_speed_sound = 1/sqrt(3);
 
     const T omega = 1.985;
-    const plint maxT = 120000;
+    const plint maxT = 1000;
 
     Array<T,3> u0(0, 0, 0);
 
@@ -78,21 +79,70 @@ int main(int argc, char **argv){
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium( lattice, lattice.getBoundingBox(), rho0 , u0 );
 
-    plint size_square = 10;
+    /*plint size_square = 10;
     Box3D square(
     35, 35 + size_square,
     ny/2 - size_square/2, ny/2 + size_square/2, 
     nz/2 - size_square/2, nz/2 + size_square/2);
-    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)0));
+    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)0));*/
+
+    // DOING WALLS TO TEST
+    plint size_square = 50;
+    plint radius = size_square/2;
+    plint radius_intern = radius - 2;
+    for (plint x = nx/2 - size_square/2; x < nx/2 + size_square/2; ++x){
+        for (plint y = ny/2 - size_square/2; y < ny/2 + size_square/2; ++y){
+            for (plint z = 0; z < nz; ++z){
+
+                if (radius*radius > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
+                    //pcout << "passou" << endl;
+                    DotList3D points_to_aplly_dynamics;
+                    points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                    defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(-999));
+                }
+                if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2) && z > 2 && z < nz-2){
+                    //pcout << "passou" << endl;
+                    DotList3D points_to_aplly_dynamics;
+                    points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                    defineDynamics(lattice, points_to_aplly_dynamics, new BackgroundDynamics(omega));
+                }
+
+                /*if (y == x - 25){
+                    DotList3D points_to_aplly_dynamics;
+                    points_to_aplly_dynamics.addDot(Dot3D(x,y,50));
+                    defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(-999));
+                }
+                if (y == - x + 25){
+                    DotList3D points_to_aplly_dynamics;
+                    points_to_aplly_dynamics.addDot(Dot3D(x,y,50));
+                    defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(-999));
+                }
+                if (y == - x + 75){
+                    DotList3D points_to_aplly_dynamics;
+                    points_to_aplly_dynamics.addDot(Dot3D(x,y,50));
+                    defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(-999));
+                }
+                if (y == x + 25){
+                    DotList3D points_to_aplly_dynamics;
+                    points_to_aplly_dynamics.addDot(Dot3D(x,y,50));
+                    defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(-999));
+                }*/
+                
+            }
+        }
+    }
+
+    
+
     
     T rhoBar_target = 0;
     const T mach_number = 0.2;
     const T velocity_flow = mach_number*lattice_speed_sound;
-    Array<T,3> j_target(velocity_flow, 0, 0);
+    Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 20;
-    defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
+    /*defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
-      rhoBar_target);
+      rhoBar_target);*/
 
     lattice.initialize();
 
@@ -105,11 +155,12 @@ int main(int argc, char **argv){
     plb_ofstream history_velocities_y("tmp/history_velocities_y.dat");
     plb_ofstream history_velocities_z("tmp/history_velocities_z.dat");
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT != 0){
+        if (iT >= 0){
             T lattice_speed_sound = 1/sqrt(3);
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            Box3D impulse(nx/2 + 20, nx/2 + 20, ny/2 + 20, ny/2 + 20, nz/2 + 20, nz/2 + 20);
-            //initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
+            rho_changing = rho_changing*rho_changing;
+            Box3D impulse(nx/2, nx/2, ny/2, ny/2, nz/2, nz/2);
+            initializeAtEquilibrium( lattice, impulse, rho_changing, u0 );
         }
 
         if (iT % 10 == 0 && iT>0) {
@@ -118,7 +169,7 @@ int main(int argc, char **argv){
             writeVTK(lattice, iT);
         }
 
-        history_pressures << setprecision(10) << lattice.get(nx/2+30, ny/2+30, nz/2+30).computeDensity() - rho0 << endl;
+        history_pressures << setprecision(10) << lattice.get(5, 5, 5).computeDensity() - rho0 << endl;
         Array<T,3> velocities;
         lattice.get(nx/2+30, ny/2+30, nz/2+30).computeVelocity(velocities);
         history_velocities_x << setprecision(10) << velocities[0]/lattice_speed_sound << endl;
