@@ -111,7 +111,7 @@ int main(int argc, char **argv){
     const plint nz = 350;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 10000;
+    const plint maxT = 10000/2;
     const plint maxT_final_source = maxT - 0.1*maxT;
     const T ka_max = 1.82;
     const T ka_min = 0;
@@ -165,21 +165,21 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes
-    plint position_z_3r = position[0] + length_duct - 3*radius;
+    plint position_z_3r = position[2] + length_duct - 3*radius;
     Box3D surface_probe_3r(nx/2 - radius/sqrt(2), 
             nx/2 + radius/sqrt(2), 
             ny/2 - radius/sqrt(2), 
             ny/2 + radius/sqrt(2),
             position_z_3r, position_z_3r);
 
-    plint position_z_4r = position[0] + length_duct - 4*radius;
+    plint position_z_4r = position[2] + length_duct - 4*radius;
     Box3D surface_probe_4r(nx/2 - radius/sqrt(2), 
             nx/2 + radius/sqrt(2), 
             ny/2 - radius/sqrt(2), 
             ny/2 + radius/sqrt(2),
             position_z_4r, position_z_4r);
 
-    plint position_z_6r = position[0] + length_duct - 0*radius;
+    plint position_z_6r = position[2] + length_duct - 0*radius;
     Box3D surface_probe_6r(nx/2 - radius/sqrt(2), 
             nx/2 + radius/sqrt(2), 
             ny/2 - radius/sqrt(2), 
