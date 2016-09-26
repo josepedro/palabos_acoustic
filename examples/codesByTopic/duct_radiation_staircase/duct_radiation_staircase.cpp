@@ -111,7 +111,7 @@ int main(int argc, char **argv){
     const plint nz = 350;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 10000/2;
+    const plint maxT = 10000/5;
     const plint maxT_final_source = maxT - 0.1*maxT;
     const T ka_max = 1.82;
     const T ka_min = 0;
@@ -165,14 +165,15 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes
-    plint position_z_3r = position[2] + length_duct - 3*radius;
+    plint position_z_3r = 100;
     Box3D surface_probe_3r(nx/2 - radius/sqrt(2), 
             nx/2 + radius/sqrt(2), 
             ny/2 - radius/sqrt(2), 
             ny/2 + radius/sqrt(2),
             position_z_3r, position_z_3r);
 
-    plint position_z_4r = position[2] + length_duct - 4*radius;
+    //plint position_z_4r = position[2] + length_duct - 4*radius;
+    plint position_z_4r = 120;
     Box3D surface_probe_4r(nx/2 - radius/sqrt(2), 
             nx/2 + radius/sqrt(2), 
             ny/2 - radius/sqrt(2), 
@@ -191,6 +192,13 @@ int main(int argc, char **argv){
     plb_ofstream history_velocities_3r("tmp/history_velocities_3r.dat");
     plb_ofstream history_velocities_4r("tmp/history_velocities_4r.dat");
     plb_ofstream history_velocities_6r("tmp/history_velocities_boca.dat");
+
+    plb_ofstream history_pressures_3r_point("tmp/history_pressures_3r_point.dat");
+    plb_ofstream history_pressures_4r_point("tmp/history_pressures_4r_point.dat");
+    plb_ofstream history_pressures_6r_point("tmp/history_pressures_boca_point.dat");
+    plb_ofstream history_velocities_3r_point("tmp/history_velocities_3r_point.dat");
+    plb_ofstream history_velocities_4r_point("tmp/history_velocities_4r_point.dat");
+    plb_ofstream history_velocities_6r_point("tmp/history_velocities_boca_point.dat");
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source){
             //drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
@@ -240,13 +248,27 @@ int main(int argc, char **argv){
 
 
         history_velocities_3r << setprecision(10) << 
-        computeMeanVelocityComponent(lattice, surface_probe_3r, 0)/lattice_speed_sound << endl;
+        computeMeanVelocityComponent(lattice, surface_probe_3r, 2)/lattice_speed_sound << endl;
 
         history_velocities_4r << setprecision(10) << 
-        computeMeanVelocityComponent(lattice, surface_probe_4r, 0)/lattice_speed_sound << endl;
+        computeMeanVelocityComponent(lattice, surface_probe_4r, 2)/lattice_speed_sound << endl;
 
         history_velocities_6r << setprecision(10) << 
-        computeMeanVelocityComponent(lattice, surface_probe_6r, 0)/lattice_speed_sound << endl;
+        computeMeanVelocityComponent(lattice, surface_probe_6r, 2)/lattice_speed_sound << endl;
+
+
+        // extract values of pressure and velocities point
+        history_pressures_3r_point << setprecision(10) << (lattice.get(nx/2, ny/2, 100).computeDensity() - rho0)*cs2 << endl;
+        history_pressures_4r_point << setprecision(10) << (lattice.get(nx/2, ny/2, 120).computeDensity() - rho0)*cs2 << endl;
+        history_pressures_6r_point << setprecision(10) << (lattice.get(nx/2, ny/2, 0).computeDensity() - rho0)*cs2 << endl;
+
+        Array<T,3> velocities;
+        lattice.get(nx/2, ny/2, 100).computeVelocity(velocities);
+        history_velocities_3r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
+        lattice.get(nx/2, ny/2, 120).computeVelocity(velocities);
+        history_velocities_4r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
+        lattice.get(nx/2, ny/2, 0).computeVelocity(velocities);
+        history_velocities_6r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
 
         Array<T,6> positions = surface_probe_3r.to_plbArray();
 
