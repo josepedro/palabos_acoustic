@@ -49,6 +49,7 @@ void writeVTK(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
 
 void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness, T omega){
+    length += 4;
     // Duct is constructed along the Z direction
     //plint size_square = 50;
     plint size_square = 2*radius;
@@ -61,7 +62,7 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
                     //pcout << "passou" << endl;
                     DotList3D points_to_aplly_dynamics;
                     points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
-                    defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(-999));
+                    defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(0));
                 }
                 // extrude
                 if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2) && z > position[2] + 2){
@@ -111,9 +112,10 @@ int main(int argc, char **argv){
     const plint nz = 350;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 10000/5;
+    const plint maxT = 10000/2;
+    //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - 0.1*maxT;
-    const T ka_max = 1.82;
+    const T ka_max = 2.5;
     const T ka_min = 0;
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
 
@@ -125,7 +127,7 @@ int main(int argc, char **argv){
     MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx, ny, nz,  new AnechoicBackgroundDynamics(omega));
     defineDynamics(lattice, lattice.getBoundingBox(), new BackgroundDynamics(omega));
 
-    pcout << "Creation of the lattice." << endl;
+    pcout << "Creation of the lattice. Time max: " << maxT << endl;
 
     pcout << getMultiBlockInfo(lattice) << std::endl;
 
@@ -145,7 +147,7 @@ int main(int argc, char **argv){
     /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
     Array<plint,3> position(nx/2, ny/2, 30);
-    plint length_duct = 3*diameter;
+    plint length_duct = 120;
     plint thickness_duct = 2;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
 
@@ -165,40 +167,42 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes
-    plint position_z_3r = 100;
-    Box3D surface_probe_3r(nx/2 - radius/sqrt(2), 
-            nx/2 + radius/sqrt(2), 
-            ny/2 - radius/sqrt(2), 
-            ny/2 + radius/sqrt(2),
+    plint radius_probe = (radius - 1)/sqrt(2);
+    // half size
+    plint position_z_3r = position[2] + length_duct - 3*radius;
+    Box3D surface_probe_3r(nx/2 - radius_probe/sqrt(2), 
+            nx/2 + radius_probe/sqrt(2), 
+            ny/2 - radius_probe/sqrt(2), 
+            ny/2 + radius_probe/sqrt(2),
             position_z_3r, position_z_3r);
 
     //plint position_z_4r = position[2] + length_duct - 4*radius;
-    plint position_z_4r = 120;
-    Box3D surface_probe_4r(nx/2 - radius/sqrt(2), 
-            nx/2 + radius/sqrt(2), 
-            ny/2 - radius/sqrt(2), 
-            ny/2 + radius/sqrt(2),
+    plint position_z_4r = position[2] + length_duct;
+    Box3D surface_probe_4r(nx/2 - radius_probe/sqrt(2), 
+            nx/2 + radius_probe/sqrt(2), 
+            ny/2 - radius_probe/sqrt(2), 
+            ny/2 + radius_probe/sqrt(2),
             position_z_4r, position_z_4r);
 
-    plint position_z_6r = position[2] + length_duct - 0*radius;
-    Box3D surface_probe_6r(nx/2 - radius/sqrt(2), 
-            nx/2 + radius/sqrt(2), 
-            ny/2 - radius/sqrt(2), 
-            ny/2 + radius/sqrt(2),
+    plint position_z_6r = position[2] + length_duct - 6*radius;
+    Box3D surface_probe_6r(nx/2 - radius_probe/sqrt(2), 
+            nx/2 + radius_probe/sqrt(2), 
+            ny/2 - radius_probe/sqrt(2), 
+            ny/2 + radius_probe/sqrt(2),
             position_z_6r, position_z_6r);
     plb_ofstream history_pressures_3r("tmp/history_pressures_3r.dat");
-    plb_ofstream history_pressures_4r("tmp/history_pressures_4r.dat");
-    plb_ofstream history_pressures_6r("tmp/history_pressures_boca.dat");
+    plb_ofstream history_pressures_4r("tmp/history_pressures_boca.dat");
+    plb_ofstream history_pressures_6r("tmp/history_pressures_6r.dat");
     plb_ofstream history_velocities_3r("tmp/history_velocities_3r.dat");
-    plb_ofstream history_velocities_4r("tmp/history_velocities_4r.dat");
-    plb_ofstream history_velocities_6r("tmp/history_velocities_boca.dat");
+    plb_ofstream history_velocities_4r("tmp/history_velocities_boca.dat");
+    plb_ofstream history_velocities_6r("tmp/history_velocities_6r.dat");
 
     plb_ofstream history_pressures_3r_point("tmp/history_pressures_3r_point.dat");
-    plb_ofstream history_pressures_4r_point("tmp/history_pressures_4r_point.dat");
-    plb_ofstream history_pressures_6r_point("tmp/history_pressures_boca_point.dat");
+    plb_ofstream history_pressures_4r_point("tmp/history_pressures_boca_point.dat");
+    plb_ofstream history_pressures_6r_point("tmp/history_pressures_6r_point.dat");
     plb_ofstream history_velocities_3r_point("tmp/history_velocities_3r_point.dat");
-    plb_ofstream history_velocities_4r_point("tmp/history_velocities_4r_point.dat");
-    plb_ofstream history_velocities_6r_point("tmp/history_velocities_boca_point.dat");
+    plb_ofstream history_velocities_4r_point("tmp/history_velocities_boca_point.dat");
+    plb_ofstream history_velocities_6r_point("tmp/history_velocities_6r_point.dat");
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source){
             //drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
@@ -211,23 +215,23 @@ int main(int argc, char **argv){
             T phase = 2*M_PI*frequency_function;
             T chirp_hand = 1. + drho*sin(phase);
 
-            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            //Box3D impulse(nx/2 + 50, nx/2 + 50, ny/2 + 50, ny/2 + 50, nz/2 + 50, nz/2 + 50);
-            plint source_radius = radius;
+            //T rho_changing = 1. + drho;//*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            //Box3D impulse(nx/2, nx/2, ny/2, ny/2, position_z_3r, position_z_3r);
+            plint source_radius = radius - 1;
             Box3D place_source(position[0] - source_radius/sqrt(2), 
                 position[0] + source_radius/sqrt(2), 
                 position[1] - source_radius/sqrt(2), 
                 position[1] + source_radius/sqrt(2), 
-                position[2] + 2, position[2] + 7);
+                position[2] + 3, position[2] + 8);
             //Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
             initializeAtEquilibrium(lattice, place_source, chirp_hand, u0);
         }else{
-            plint source_radius = radius;
+            plint source_radius = radius - 1;
             Box3D place_source(position[0] - source_radius/sqrt(2), 
                 position[0] + source_radius/sqrt(2), 
                 position[1] - source_radius/sqrt(2), 
                 position[1] + source_radius/sqrt(2), 
-                position[2] + 2, position[2] + 7);
+                position[2] + 3, position[2] + 8);
             initializeAtEquilibrium(lattice, place_source, rho0, u0);
         }
 
@@ -235,7 +239,7 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT == 8000 && iT>0) {
+        if (iT % 10 == 0) {
             //pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
@@ -258,26 +262,17 @@ int main(int argc, char **argv){
 
 
         // extract values of pressure and velocities point
-        history_pressures_3r_point << setprecision(10) << (lattice.get(nx/2, ny/2, 100).computeDensity() - rho0)*cs2 << endl;
-        history_pressures_4r_point << setprecision(10) << (lattice.get(nx/2, ny/2, 120).computeDensity() - rho0)*cs2 << endl;
-        history_pressures_6r_point << setprecision(10) << (lattice.get(nx/2, ny/2, 0).computeDensity() - rho0)*cs2 << endl;
+        history_pressures_3r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_3r).computeDensity() - rho0)*cs2 << endl;
+        history_pressures_4r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_4r).computeDensity() - rho0)*cs2 << endl;
+        history_pressures_6r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_6r).computeDensity() - rho0)*cs2 << endl;
 
         Array<T,3> velocities;
-        lattice.get(nx/2, ny/2, 100).computeVelocity(velocities);
+        lattice.get(nx/2, ny/2, position_z_3r).computeVelocity(velocities);
         history_velocities_3r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
-        lattice.get(nx/2, ny/2, 120).computeVelocity(velocities);
+        lattice.get(nx/2, ny/2, position_z_4r).computeVelocity(velocities);
         history_velocities_4r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
-        lattice.get(nx/2, ny/2, 0).computeVelocity(velocities);
+        lattice.get(nx/2, ny/2, position_z_6r).computeVelocity(velocities);
         history_velocities_6r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
-
-        Array<T,6> positions = surface_probe_3r.to_plbArray();
-
-       /* pcout << "positions[0] = " << positions[0] << endl;
-        pcout << "positions[1] = " << positions[1] << endl;
-        pcout << "positions[2] = " << positions[2] << endl;
-        pcout << "positions[3] = " << positions[3] << endl;
-        pcout << "positions[4] = " << positions[4] << endl;
-        pcout << "positions[5] = " << positions[5] << endl;*/
 
 
         lattice.collideAndStream();
