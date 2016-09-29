@@ -112,7 +112,7 @@ int main(int argc, char **argv){
     const plint nz = 350;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 10000/2;
+    const plint maxT = 10000;
     //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - 0.1*maxT;
     const T ka_max = 2.5;
@@ -148,7 +148,7 @@ int main(int argc, char **argv){
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
     Array<plint,3> position(nx/2, ny/2, 30);
     plint length_duct = 120;
-    plint thickness_duct = 2;
+    plint thickness_duct = 1;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
 
     T rhoBar_target = 0;
@@ -239,7 +239,7 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 10 == 0) {
+        if (iT % 1000 == 0) {
             //pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
