@@ -2,10 +2,10 @@
 clear('all'); clc;
 %close all;
 % chirp
-pressures = textread('history_pressures_4r.dat');
+pressures = textread('history_pressures_boca.dat');
 pressures = [pressures(:) - mean(pressures)];
 %pressures = pressures(5000:end);
-particle_velocity = textread('history_velocities_4r.dat');
+particle_velocity = textread('history_velocities_boca.dat');
 particle_velocity = [particle_velocity(:)];
 %particle_velocity = particle_velocity(5000:end);
 a = 18;
@@ -60,8 +60,8 @@ uiopen('/home/josepedro/palabos_acoustic/examples/codesByTopic/duct_radiation_st
 hold on
 
 %figure;
-plot(ka, real(Zr),'--'); hold on; plot(ka, imag(Zr), 'r--');
-%plot(ka, real(ZL/Zo),'--'); hold on; plot(ka, imag(ZL/Zo), 'r--');
+%plot(ka, real(Zr),'--'); hold on; plot(ka, imag(Zr), 'r--');
+plot(ka, real(ZL/Zo),'--'); hold on; plot(ka, imag(ZL/Zo), 'r--');
 %axis([0 1.82 0 max(abs(ZL))]);
 ylabel('Impedance','FontSize',20);
 xlabel('Numero de Helmholtz, ka','FontSize',20);
