@@ -101,27 +101,31 @@ T computeMeanVelocityComponent(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Box3D
 
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
-    std::string fNameOut = "tmp";
 
     //const plint length_domain = 420;
-    const plint radius = 20;
+    const plint radius = 40;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
     const plint nx = 6*diameter;
     const plint ny = 6*diameter;
-    const plint nz = 350;
+    const plint position_duct_z = 30;
+    const plint nz = position_duct_z + 6*diameter;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 5000;
+    const plint maxT = 10000;
+
     //const plint maxT = 2*120/lattice_speed_sound;
-    const plint maxT_final_source = maxT - 0.1*maxT;
+    const plint maxT_final_source = maxT - nz*sqrt(3);
     const T ka_max = 2.5;
     const T ka_min = 0;
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
+    clock_t t;
 
     Array<T,3> u0(0, 0, 0);
 
+    std::string fNameOut = "tmp";
     global::directories().setOutputDir(fNameOut+"/");
+
 
     // Setting anechoic dynamics like this way
     MultiBlockLattice3D<T, DESCRIPTOR> lattice(nx, ny, nz,  new AnechoicBackgroundDynamics(omega));
@@ -146,7 +150,7 @@ int main(int argc, char **argv){
 
     /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
-    Array<plint,3> position(nx/2, ny/2, 30);
+    Array<plint,3> position(nx/2, ny/2, position_duct_z);
     plint length_duct = 120;
     plint thickness_duct = 2;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
@@ -203,6 +207,21 @@ int main(int argc, char **argv){
     plb_ofstream history_velocities_3r_point("tmp/history_velocities_3r_point.dat");
     plb_ofstream history_velocities_4r_point("tmp/history_velocities_boca_point.dat");
     plb_ofstream history_velocities_6r_point("tmp/history_velocities_6r_point.dat");
+
+    t = clock();
+    plb_ofstream AllSimulationInfo("./tmp/AllSimulationInfo.txt");
+
+    AllSimulationInfo << endl 
+    << "Dados da simulação" << endl
+    << "Lattice:" << endl << endl 
+    << "nx: " << nx << " ny: " << ny << " nz: " << nz << endl
+    << " omega: " << omega << endl << endl
+    << "Tempos: " << endl
+    << "Total Time step: " << maxT << endl
+    << "Discretizacao: " << radius/thickness_duct << endl
+    << "Tamanho duto: " << length_duct << endl
+    << "Posicao do duto: " << position[2] << endl
+    ;
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source){
             //drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
@@ -278,6 +297,9 @@ int main(int argc, char **argv){
         lattice.collideAndStream();
 
     }
+
+     t = (clock() - t)/CLOCKS_PER_SEC;
+    AllSimulationInfo << endl << "Main-loop Execution time: " << t << endl << endl;
 
     pcout << "End of simulation at iteration " << endl;
 }
