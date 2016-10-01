@@ -103,16 +103,16 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
     //const plint length_domain = 420;
-    const plint radius = 40;
+    const plint radius = 20;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
     const plint nx = 6*diameter;
     const plint ny = 6*diameter;
     const plint position_duct_z = 30;
-    const plint nz = position_duct_z + 6*diameter;
+    const plint nz = 8*diameter;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 10000;
+    const plint maxT = 500;
 
     //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - nz*sqrt(3);
@@ -258,7 +258,7 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 1000 == 0) {
+        if (iT % 100 == 0) {
             //pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
@@ -299,7 +299,7 @@ int main(int argc, char **argv){
     }
 
      t = (clock() - t)/CLOCKS_PER_SEC;
-    AllSimulationInfo << endl << "Main-loop Execution time: " << t << endl << endl;
+    AllSimulationInfo << endl << "Execution time: " << t/60 << " minutos" << endl << endl;
 
     pcout << "End of simulation at iteration " << endl;
 }
