@@ -112,7 +112,7 @@ int main(int argc, char **argv){
     const plint nz = 8*diameter;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 500;
+    const plint maxT = 20000;
 
     //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - nz*sqrt(3);
