@@ -103,7 +103,7 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
     //const plint length_domain = 420;
-    const plint radius = 20;
+    const plint radius = 40;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
     const plint nx = 6*diameter;
@@ -112,7 +112,7 @@ int main(int argc, char **argv){
     const plint nz = 8*diameter;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 20000;
+    const plint maxT = 10000;
 
     //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - nz*sqrt(3);
@@ -223,6 +223,7 @@ int main(int argc, char **argv){
     << "Posicao do duto: " << position[2] << endl
     ;
     for (plint iT=0; iT<maxT; ++iT){
+        pcout << " foi 1 " << iT << endl;
         if (iT <= maxT_final_source){
             //drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             //drho*cos((lattice_speed_sound/radius)*(ka_max*((maxT-iT)/maxT)));
@@ -254,7 +255,9 @@ int main(int argc, char **argv){
             initializeAtEquilibrium(lattice, place_source, rho0, u0);
         }
 
-        if (iT % 100 == 0 && iT>0) {
+        pcout << " foi 2 " << iT << endl;
+
+        if (iT % 1 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
         }
 
@@ -264,37 +267,45 @@ int main(int argc, char **argv){
             writeVTK(lattice, iT);
         }
 
+        pcout << " foi 3 " << iT << endl;
         // extract values of pressure and velocities
         history_pressures_3r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_3r) - rho0)*cs2 << endl;
         history_pressures_4r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_4r) - rho0)*cs2 << endl;
         history_pressures_6r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_6r) - rho0)*cs2 << endl;
 
+        pcout << " foi 3.1 " << iT << endl;
 
-        history_velocities_3r << setprecision(10) << 
+        std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, surface_probe_4r, 2));
+        history_velocities_4r << setprecision(10) <<
+        computeAverage(*velocity, surface_probe_4r)/lattice_speed_sound << endl;
+
+        /*history_velocities_3r << setprecision(10) << 
         computeMeanVelocityComponent(lattice, surface_probe_3r, 2)/lattice_speed_sound << endl;
 
         history_velocities_4r << setprecision(10) << 
         computeMeanVelocityComponent(lattice, surface_probe_4r, 2)/lattice_speed_sound << endl;
 
         history_velocities_6r << setprecision(10) << 
-        computeMeanVelocityComponent(lattice, surface_probe_6r, 2)/lattice_speed_sound << endl;
+        computeMeanVelocityComponent(lattice, surface_probe_6r, 2)/lattice_speed_sound << endl;*/
 
-
+        pcout << " foi 3.2 " << iT << endl;  
         // extract values of pressure and velocities point
-        history_pressures_3r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_3r).computeDensity() - rho0)*cs2 << endl;
+        /*history_pressures_3r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_3r).computeDensity() - rho0)*cs2 << endl;
         history_pressures_4r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_4r).computeDensity() - rho0)*cs2 << endl;
-        history_pressures_6r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_6r).computeDensity() - rho0)*cs2 << endl;
+        history_pressures_6r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_6r).computeDensity() - rho0)*cs2 << endl;*/
 
-        Array<T,3> velocities;
+        pcout << " foi 3.3 " << iT << endl;  
+        /*Array<T,3> velocities;
         lattice.get(nx/2, ny/2, position_z_3r).computeVelocity(velocities);
         history_velocities_3r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
         lattice.get(nx/2, ny/2, position_z_4r).computeVelocity(velocities);
         history_velocities_4r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
         lattice.get(nx/2, ny/2, position_z_6r).computeVelocity(velocities);
-        history_velocities_6r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
+        history_velocities_6r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;*/
 
-
+        pcout << " foi 4 " << iT << endl;   
         lattice.collideAndStream();
+        pcout << " foi 5 " << iT << endl;
 
     }
 
