@@ -223,7 +223,7 @@ int main(int argc, char **argv){
     << "Posicao do duto: " << position[2] << endl
     ;
     for (plint iT=0; iT<maxT; ++iT){
-        pcout << " foi 1 " << iT << endl;
+        //pcout << " foi 1 " << iT << endl;
         if (iT <= maxT_final_source){
             //drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             //drho*cos((lattice_speed_sound/radius)*(ka_max*((maxT-iT)/maxT)));
@@ -235,7 +235,7 @@ int main(int argc, char **argv){
             T phase = 2*M_PI*frequency_function;
             T chirp_hand = 1. + drho*sin(phase);
 
-            //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             //Box3D impulse(nx/2, nx/2, ny/2, ny/2, position_z_3r, position_z_3r);
             plint source_radius = radius - 1;
             Box3D place_source(position[0] - source_radius/sqrt(2), 
@@ -244,7 +244,7 @@ int main(int argc, char **argv){
                 position[1] + source_radius/sqrt(2), 
                 position[2] + 3, position[2] + 8);
             //Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
-            initializeAtEquilibrium(lattice, place_source, chirp_hand, u0);
+            initializeAtEquilibrium(lattice, place_source, rho_changing, u0);
         }else{
             plint source_radius = radius - 1;
             Box3D place_source(position[0] - source_radius/sqrt(2), 
@@ -255,9 +255,9 @@ int main(int argc, char **argv){
             initializeAtEquilibrium(lattice, place_source, rho0, u0);
         }
 
-        pcout << " foi 2 " << iT << endl;
+//        pcout << " foi 2 " << iT << endl;
 
-        if (iT % 1 == 0 && iT>0) {
+        if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
         }
 
@@ -267,13 +267,13 @@ int main(int argc, char **argv){
             writeVTK(lattice, iT);
         }
 
-        pcout << " foi 3 " << iT << endl;
+        //pcout << " foi 3 " << iT << endl;
         // extract values of pressure and velocities
         history_pressures_3r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_3r) - rho0)*cs2 << endl;
         history_pressures_4r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_4r) - rho0)*cs2 << endl;
         history_pressures_6r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_6r) - rho0)*cs2 << endl;
 
-        pcout << " foi 3.1 " << iT << endl;
+        //pcout << " foi 3.1 " << iT << endl;
 
         std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, surface_probe_4r, 2));
         history_velocities_4r << setprecision(10) <<
@@ -288,13 +288,13 @@ int main(int argc, char **argv){
         history_velocities_6r << setprecision(10) << 
         computeMeanVelocityComponent(lattice, surface_probe_6r, 2)/lattice_speed_sound << endl;*/
 
-        pcout << " foi 3.2 " << iT << endl;  
+        //pcout << " foi 3.2 " << iT << endl;  
         // extract values of pressure and velocities point
         /*history_pressures_3r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_3r).computeDensity() - rho0)*cs2 << endl;
         history_pressures_4r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_4r).computeDensity() - rho0)*cs2 << endl;
         history_pressures_6r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_6r).computeDensity() - rho0)*cs2 << endl;*/
 
-        pcout << " foi 3.3 " << iT << endl;  
+        //pcout << " foi 3.3 " << iT << endl;  
         /*Array<T,3> velocities;
         lattice.get(nx/2, ny/2, position_z_3r).computeVelocity(velocities);
         history_velocities_3r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
@@ -303,9 +303,9 @@ int main(int argc, char **argv){
         lattice.get(nx/2, ny/2, position_z_6r).computeVelocity(velocities);
         history_velocities_6r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;*/
 
-        pcout << " foi 4 " << iT << endl;   
+        //pcout << " foi 4 " << iT << endl;   
         lattice.collideAndStream();
-        pcout << " foi 5 " << iT << endl;
+        //pcout << " foi 5 " << iT << endl;
 
     }
 
