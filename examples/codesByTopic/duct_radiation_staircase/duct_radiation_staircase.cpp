@@ -2,6 +2,7 @@
 #include "palabos3D.hh"
 #include <vector>
 #include <cmath>
+#include <time.h>
 
 using namespace plb;
 using namespace plb::descriptors;
@@ -24,6 +25,19 @@ using namespace plb_acoustics_3D;
 const T rho0 = 1;
 const T drho = rho0/10;
 
+// Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+const std::string currentDateTime() {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+    return buf;
+}
+
 void writeGifs(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
     const plint nx = lattice.getNx();
     const plint ny = lattice.getNy();
@@ -44,7 +58,7 @@ void writeGifs(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
 void writeVTK(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
         VtkImageOutput3D<T> vtkOut(createFileName("vtk", iter, 6), 1.);
         vtkOut.writeData<float>(*computeDensity(lattice), "density", 1.);
-        vtkOut.writeData<3,float>(*computeVelocity(lattice), "velocity", 1.);
+        //vtkOut.writeData<3,float>(*computeVelocity(lattice), "velocity", 1.);
 }
 
 void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
@@ -62,6 +76,8 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
                     //pcout << "passou" << endl;
                     DotList3D points_to_aplly_dynamics;
                     points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                    //OnLatticeBoundaryCondition3D<T,DESCRIPTOR> *bc = createLocalBoundaryCondition3D<T,DESCRIPTOR>();
+                    //bc->setVelocityConditionOnBlockBoundaries(lattice, points_to_aplly_dynamics, boundary::freeslip);
                     defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(0));
                 }
                 // extrude
@@ -78,38 +94,17 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
 
 }
 
-T computeMeanVelocityComponent(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Box3D surface_probe, plint component){
-    Array<T,6> positions = surface_probe.to_plbArray();
-    T mean_velocity = 0;
-    
-
-    for (plint x = positions[0]; x <= positions[1]; ++x){
-        for (plint y = positions[2]; y <= positions[3]; ++y){
-            for (plint z = positions[4]; z <= positions[5]; ++z){
-                Array<T,3> velocities;
-                lattice.get(x, y, z).computeVelocity(velocities);
-                mean_velocity += velocities[component];
-                //pcout << "entrei" <<  endl;
-                //pcout << mean_velocity <<  endl;
-            }
-        }        
-    }
-    mean_velocity = mean_velocity/surface_probe.nCells();    
-    
-    return mean_velocity;
-}
-
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
     //const plint length_domain = 420;
-    const plint radius = 40;
+    const plint radius = 20;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
-    const plint nx = 6*diameter;
-    const plint ny = 6*diameter;
+    const plint nx = 12*diameter + 60;
+    const plint ny = 12*diameter + 60;
     const plint position_duct_z = 30;
-    const plint nz = 8*diameter;
+    const plint nz = 9*diameter + 60;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
     const plint maxT = 10000;
@@ -123,7 +118,11 @@ int main(int argc, char **argv){
 
     Array<T,3> u0(0, 0, 0);
 
-    std::string fNameOut = "tmp";
+    std::string fNameOut = currentDateTime() + "+tmp";
+    std::string command = "mkdir -p " + fNameOut;
+    char to_char_command[1024];
+    strcpy(to_char_command, command.c_str());
+    system(to_char_command);
     global::directories().setOutputDir(fNameOut+"/");
 
 
@@ -151,7 +150,7 @@ int main(int argc, char **argv){
     /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
     Array<plint,3> position(nx/2, ny/2, position_duct_z);
-    plint length_duct = 120;
+    plint length_duct = 3*diameter;
     plint thickness_duct = 2;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
 
@@ -181,32 +180,17 @@ int main(int argc, char **argv){
             position_z_3r, position_z_3r);
 
     //plint position_z_4r = position[2] + length_duct - 4*radius;
-    plint position_z_4r = position[2] + length_duct;
-    Box3D surface_probe_4r(nx/2 - radius_probe/sqrt(2), 
+    plint position_z_boca = position[2] + length_duct;
+    Box3D surface_probe_boca(nx/2 - radius_probe/sqrt(2), 
             nx/2 + radius_probe/sqrt(2), 
             ny/2 - radius_probe/sqrt(2), 
             ny/2 + radius_probe/sqrt(2),
-            position_z_4r, position_z_4r);
+            position_z_boca, position_z_boca);
 
-    plint position_z_6r = position[2] + length_duct - 6*radius;
-    Box3D surface_probe_6r(nx/2 - radius_probe/sqrt(2), 
-            nx/2 + radius_probe/sqrt(2), 
-            ny/2 - radius_probe/sqrt(2), 
-            ny/2 + radius_probe/sqrt(2),
-            position_z_6r, position_z_6r);
     plb_ofstream history_pressures_3r("tmp/history_pressures_3r.dat");
-    plb_ofstream history_pressures_4r("tmp/history_pressures_boca.dat");
-    plb_ofstream history_pressures_6r("tmp/history_pressures_6r.dat");
+    plb_ofstream history_pressures_boca("tmp/history_pressures_boca.dat");
     plb_ofstream history_velocities_3r("tmp/history_velocities_3r.dat");
-    plb_ofstream history_velocities_4r("tmp/history_velocities_boca.dat");
-    plb_ofstream history_velocities_6r("tmp/history_velocities_6r.dat");
-
-    plb_ofstream history_pressures_3r_point("tmp/history_pressures_3r_point.dat");
-    plb_ofstream history_pressures_4r_point("tmp/history_pressures_boca_point.dat");
-    plb_ofstream history_pressures_6r_point("tmp/history_pressures_6r_point.dat");
-    plb_ofstream history_velocities_3r_point("tmp/history_velocities_3r_point.dat");
-    plb_ofstream history_velocities_4r_point("tmp/history_velocities_boca_point.dat");
-    plb_ofstream history_velocities_6r_point("tmp/history_velocities_6r_point.dat");
+    plb_ofstream history_velocities_boca("tmp/history_velocities_boca.dat");
 
     t = clock();
     plb_ofstream AllSimulationInfo("./tmp/AllSimulationInfo.txt");
@@ -261,7 +245,7 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 100 == 0) {
+        if (iT % 1000 == 0) {
             //pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
@@ -270,19 +254,18 @@ int main(int argc, char **argv){
         //pcout << " foi 3 " << iT << endl;
         // extract values of pressure and velocities
         history_pressures_3r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_3r) - rho0)*cs2 << endl;
-        history_pressures_4r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_4r) - rho0)*cs2 << endl;
-        history_pressures_6r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_6r) - rho0)*cs2 << endl;
+        history_pressures_boca << setprecision(10) << (computeAverageDensity(lattice, surface_probe_boca) - rho0)*cs2 << endl;
 
         //pcout << " foi 3.1 " << iT << endl;
 
-        std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, surface_probe_4r, 2));
-        history_velocities_4r << setprecision(10) <<
-        computeAverage(*velocity, surface_probe_4r)/lattice_speed_sound << endl;
+        std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, surface_probe_boca, 2));
+        history_velocities_boca << setprecision(10) <<
+        computeAverage(*velocity, surface_probe_boca)/lattice_speed_sound << endl;
 
         /*history_velocities_3r << setprecision(10) << 
         computeMeanVelocityComponent(lattice, surface_probe_3r, 2)/lattice_speed_sound << endl;
 
-        history_velocities_4r << setprecision(10) << 
+        history_velocities_boca << setprecision(10) << 
         computeMeanVelocityComponent(lattice, surface_probe_4r, 2)/lattice_speed_sound << endl;
 
         history_velocities_6r << setprecision(10) << 
@@ -310,7 +293,7 @@ int main(int argc, char **argv){
     }
 
      t = (clock() - t)/CLOCKS_PER_SEC;
-    AllSimulationInfo << endl << "Execution time: " << t/60 << " minutos" << endl << endl;
+    AllSimulationInfo << endl << "Execution time: " << t << " segundos" << endl << endl;
 
     pcout << "End of simulation at iteration " << endl;
 }
