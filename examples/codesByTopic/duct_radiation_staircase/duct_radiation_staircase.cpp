@@ -108,6 +108,7 @@ int main(int argc, char **argv){
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
     const plint maxT = 10000;
+    Array<T,3> u0(0, 0, 0);
 
     //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - nz*sqrt(3);
@@ -116,8 +117,7 @@ int main(int argc, char **argv){
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
     clock_t t;
 
-    Array<T,3> u0(0, 0, 0);
-
+    // Saving a propery directory
     std::string fNameOut = currentDateTime() + "+tmp";
     std::string command = "mkdir -p " + fNameOut;
     char to_char_command[1024];
@@ -187,15 +187,35 @@ int main(int argc, char **argv){
             ny/2 + radius_probe/sqrt(2),
             position_z_boca, position_z_boca);
 
-    plb_ofstream history_pressures_3r("tmp/history_pressures_3r.dat");
-    plb_ofstream history_pressures_boca("tmp/history_pressures_boca.dat");
-    plb_ofstream history_velocities_3r("tmp/history_velocities_3r.dat");
-    plb_ofstream history_velocities_boca("tmp/history_velocities_boca.dat");
+    std::string pressures_boca_string = fNameOut+"/history_pressures_boca.dat";
+    char to_char_pressures_boca[1024];
+    strcpy(to_char_pressures_boca, pressures_boca_string.c_str());
+    plb_ofstream history_pressures_boca(to_char_pressures_boca);
 
+    std::string velocities_boca_string = fNameOut+"/history_velocities_boca.dat";
+    char to_char_velocities_boca[1024];
+    strcpy(to_char_velocities_boca, velocities_boca_string.c_str());
+    plb_ofstream history_velocities_boca(to_char_velocities_boca);
+
+    std::string pressures_3r_string = fNameOut+"/history_pressures_3r.dat";
+    char to_char_pressures_3r[1024];
+    strcpy(to_char_pressures_3r, pressures_3r_string.c_str());
+    plb_ofstream history_pressures_3r(to_char_pressures_3r);
+
+    std::string velocities_3r_string = fNameOut+"/history_velocities_3r.dat";
+    char to_char_velocities_3r[1024];
+    strcpy(to_char_velocities_3r, velocities_3r_string.c_str());
+    plb_ofstream history_velocities_3r(to_char_velocities_3r);
+    
     t = clock();
-    plb_ofstream AllSimulationInfo("./tmp/AllSimulationInfo.txt");
+    std::string AllSimulationInfo_string = fNameOut + "/AllSimulationInfo.txt";
+    char to_char_AllSimulationInfo[1024];
+    strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
+    plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
 
-    AllSimulationInfo << endl 
+    std::string title = "\nSimulacao para testar a questao da inercia.\n"; 
+    AllSimulationInfo << endl
+    << title << endl
     << "Dados da simulação" << endl
     << "Lattice:" << endl << endl 
     << "nx: " << nx << " ny: " << ny << " nz: " << nz << endl
@@ -204,8 +224,8 @@ int main(int argc, char **argv){
     << "Total Time step: " << maxT << endl
     << "Discretizacao: " << radius/thickness_duct << endl
     << "Tamanho duto: " << length_duct << endl
-    << "Posicao do duto: " << position[2] << endl
-    ;
+    << "Posicao do duto: " << position[2] << endl;
+
     for (plint iT=0; iT<maxT; ++iT){
         //pcout << " foi 1 " << iT << endl;
         if (iT <= maxT_final_source){
@@ -239,60 +259,31 @@ int main(int argc, char **argv){
             initializeAtEquilibrium(lattice, place_source, rho0, u0);
         }
 
-//        pcout << " foi 2 " << iT << endl;
 
         if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
         }
 
         if (iT % 1000 == 0) {
-            //pcout << "Iteration " << iT << endl;
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
         }
 
-        //pcout << " foi 3 " << iT << endl;
         // extract values of pressure and velocities
         history_pressures_3r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_3r) - rho0)*cs2 << endl;
         history_pressures_boca << setprecision(10) << (computeAverageDensity(lattice, surface_probe_boca) - rho0)*cs2 << endl;
 
-        //pcout << " foi 3.1 " << iT << endl;
-
-        std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, surface_probe_boca, 2));
+        std::auto_ptr<MultiScalarField3D<T> > velocity_boca(plb::computeVelocityComponent(lattice, surface_probe_boca, 2));
         history_velocities_boca << setprecision(10) <<
-        computeAverage(*velocity, surface_probe_boca)/lattice_speed_sound << endl;
+        computeAverage(*velocity_boca, surface_probe_boca)/lattice_speed_sound << endl;
+        std::auto_ptr<MultiScalarField3D<T> > velocity_3r(plb::computeVelocityComponent(lattice, surface_probe_3r, 2));
+        history_velocities_boca << setprecision(10) <<
+        computeAverage(*velocity_3r, surface_probe_3r)/lattice_speed_sound << endl;
 
-        /*history_velocities_3r << setprecision(10) << 
-        computeMeanVelocityComponent(lattice, surface_probe_3r, 2)/lattice_speed_sound << endl;
-
-        history_velocities_boca << setprecision(10) << 
-        computeMeanVelocityComponent(lattice, surface_probe_4r, 2)/lattice_speed_sound << endl;
-
-        history_velocities_6r << setprecision(10) << 
-        computeMeanVelocityComponent(lattice, surface_probe_6r, 2)/lattice_speed_sound << endl;*/
-
-        //pcout << " foi 3.2 " << iT << endl;  
-        // extract values of pressure and velocities point
-        /*history_pressures_3r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_3r).computeDensity() - rho0)*cs2 << endl;
-        history_pressures_4r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_4r).computeDensity() - rho0)*cs2 << endl;
-        history_pressures_6r_point << setprecision(10) << (lattice.get(nx/2, ny/2, position_z_6r).computeDensity() - rho0)*cs2 << endl;*/
-
-        //pcout << " foi 3.3 " << iT << endl;  
-        /*Array<T,3> velocities;
-        lattice.get(nx/2, ny/2, position_z_3r).computeVelocity(velocities);
-        history_velocities_3r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
-        lattice.get(nx/2, ny/2, position_z_4r).computeVelocity(velocities);
-        history_velocities_4r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;
-        lattice.get(nx/2, ny/2, position_z_6r).computeVelocity(velocities);
-        history_velocities_6r_point << setprecision(10) << velocities[2]/lattice_speed_sound << endl;*/
-
-        //pcout << " foi 4 " << iT << endl;   
         lattice.collideAndStream();
-        //pcout << " foi 5 " << iT << endl;
-
     }
 
-     t = (clock() - t)/CLOCKS_PER_SEC;
+    t = (clock() - t)/CLOCKS_PER_SEC;
     AllSimulationInfo << endl << "Execution time: " << t << " segundos" << endl << endl;
 
     pcout << "End of simulation at iteration " << endl;
