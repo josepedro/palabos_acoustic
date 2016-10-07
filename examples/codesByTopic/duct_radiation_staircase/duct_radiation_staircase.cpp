@@ -107,7 +107,7 @@ int main(int argc, char **argv){
     const plint nz = 9*diameter + 60;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 10000;
+    const plint maxT = 15000;
     Array<T,3> u0(0, 0, 0);
 
     //const plint maxT = 2*120/lattice_speed_sound;
