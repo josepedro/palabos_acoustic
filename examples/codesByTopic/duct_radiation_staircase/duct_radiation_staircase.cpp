@@ -239,7 +239,7 @@ int main(int argc, char **argv){
             T phase = 2*M_PI*frequency_function;
             T chirp_hand = 1. + drho*sin(phase);
 
-            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             //Box3D impulse(nx/2, nx/2, ny/2, ny/2, position_z_3r, position_z_3r);
             plint source_radius = radius - 1;
             Box3D place_source(position[0] - source_radius/sqrt(2), 
@@ -248,7 +248,7 @@ int main(int argc, char **argv){
                 position[1] + source_radius/sqrt(2), 
                 position[2] + 3, position[2] + 8);
             //Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
-            initializeAtEquilibrium(lattice, place_source, rho_changing, u0);
+            initializeAtEquilibrium(lattice, place_source, chirp_hand, u0);
         }else{
             plint source_radius = radius - 1;
             Box3D place_source(position[0] - source_radius/sqrt(2), 
