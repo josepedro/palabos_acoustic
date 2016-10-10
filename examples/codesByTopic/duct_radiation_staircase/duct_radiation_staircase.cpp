@@ -275,10 +275,11 @@ int main(int argc, char **argv){
 
         std::auto_ptr<MultiScalarField3D<T> > velocity_boca(plb::computeVelocityComponent(lattice, surface_probe_boca, 2));
         history_velocities_boca << setprecision(10) <<
-        computeAverage(*velocity_boca, surface_probe_boca)/lattice_speed_sound << endl;
+        computeAverage(*velocity_boca, surface_probe_boca) << endl;
+
         std::auto_ptr<MultiScalarField3D<T> > velocity_3r(plb::computeVelocityComponent(lattice, surface_probe_3r, 2));
-        history_velocities_boca << setprecision(10) <<
-        computeAverage(*velocity_3r, surface_probe_3r)/lattice_speed_sound << endl;
+        history_velocities_3r << setprecision(10) <<
+        computeAverage(*velocity_3r, surface_probe_3r) << endl;
 
         lattice.collideAndStream();
     }
