@@ -64,6 +64,7 @@ void writeVTK(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
 void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness, T omega){
     length += 4;
+    plint anechoic_size = 20;
     // Duct is constructed along the Z direction
     //plint size_square = 50;
     plint size_square = 2*radius;
@@ -83,9 +84,26 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
                 // extrude
                 if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2) && z > position[2] + 2){
                     //pcout << "passou" << endl;
+
                     DotList3D points_to_aplly_dynamics;
                     points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
-                    defineDynamics(lattice, points_to_aplly_dynamics, new BackgroundDynamics(omega));
+                    if (z < position[2] + 2 + anechoic_size && z > position[2] + 3){
+                        Array<T,3> u0(0, 0, 0);
+                        T rhoBar_target = 0;
+                        AnechoicBackgroundDynamics *anechoicDynamics = 
+                        new AnechoicBackgroundDynamics(omega);
+                        T delta_efective = anechoic_size - z - position[2] - 2;
+                        anechoicDynamics->setDelta(delta_efective);
+                        anechoicDynamics->setRhoBar_target(rhoBar_target);
+                        anechoicDynamics->setJ_target(u0);
+                        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        
+                    }else{
+                        defineDynamics(lattice, points_to_aplly_dynamics, new BackgroundDynamics(omega));
+                    }
+
+
+                    
                 }
 
             }
@@ -94,20 +112,42 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
 
 }
 
+
+void define_anechoic_condition_in_duct(plint size, Array<T,3> position, plint source_radius, MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T omega){
+    
+    for (plint z = position[2] + 3; z <= position[2] + size + 3; z++){
+        Box3D place_source_anechoic(position[0] - source_radius/sqrt(2), 
+        position[0] + source_radius/sqrt(2), 
+        position[1] - source_radius/sqrt(2), 
+        position[1] + source_radius/sqrt(2), 
+        z, z);
+        Array<T,3> u0(0, 0, 0);
+        T rhoBar_target = 0;
+
+        AnechoicBackgroundDynamics *anechoicDynamics = 
+        new AnechoicBackgroundDynamics(omega);
+        T delta_efective = size - z;
+        anechoicDynamics->setDelta(delta_efective);
+        anechoicDynamics->setRhoBar_target(rhoBar_target);
+        anechoicDynamics->setJ_target(u0);
+        defineDynamics(lattice, place_source_anechoic, anechoicDynamics);
+    }
+}
+
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
     //const plint length_domain = 420;
-    const plint radius = 20;
+    const plint radius = 10;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
-    const plint nx = 12*diameter + 60;
-    const plint ny = 12*diameter + 60;
+    const plint nx = 6*diameter + 60;
+    const plint ny = 6*diameter + 60;
     const plint position_duct_z = 30;
     const plint nz = 9*diameter + 60;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 15000;
+    const plint maxT = 1000;
     Array<T,3> u0(0, 0, 0);
 
     //const plint maxT = 2*120/lattice_speed_sound;
@@ -115,6 +155,7 @@ int main(int argc, char **argv){
     const T ka_max = 2.5;
     const T ka_min = 0;
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
+    const plint source_radius = radius - 1;
     clock_t t;
 
     // Saving a propery directory
@@ -150,7 +191,7 @@ int main(int argc, char **argv){
     /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
     Array<plint,3> position(nx/2, ny/2, position_duct_z);
-    plint length_duct = 3*diameter;
+    plint length_duct = 6*diameter + 30;
     plint thickness_duct = 2;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
 
@@ -163,6 +204,12 @@ int main(int argc, char **argv){
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);
 
+   // plint size_anechoic_buffer_source = 20;
+    //define_anechoic_condition_in_duct(size_anechoic_buffer_source, position, source_radius, lattice, omega);
+    
+
+     
+
     lattice.initialize();
 
     pcout << std::endl << "Voxelizing the domain." << std::endl;
@@ -170,21 +217,21 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes
-    plint radius_probe = (radius - 1)/sqrt(2);
     // half size
-    plint position_z_3r = position[2] + length_duct - 3*radius;
-    Box3D surface_probe_3r(nx/2 - radius_probe/sqrt(2), 
-            nx/2 + radius_probe/sqrt(2), 
-            ny/2 - radius_probe/sqrt(2), 
-            ny/2 + radius_probe/sqrt(2),
+    plint radius_probe = (radius - 1)/sqrt(2);
+    plint position_z_3r = position[2] + length_duct - 6*radius;
+    Box3D surface_probe_3r(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
             position_z_3r, position_z_3r);
 
     //plint position_z_4r = position[2] + length_duct - 4*radius;
     plint position_z_boca = position[2] + length_duct;
-    Box3D surface_probe_boca(nx/2 - radius_probe/sqrt(2), 
-            nx/2 + radius_probe/sqrt(2), 
-            ny/2 - radius_probe/sqrt(2), 
-            ny/2 + radius_probe/sqrt(2),
+    Box3D surface_probe_boca(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
             position_z_boca, position_z_boca);
 
     std::string pressures_boca_string = fNameOut+"/history_pressures_boca.dat";
@@ -239,23 +286,21 @@ int main(int argc, char **argv){
             T phase = 2*M_PI*frequency_function;
             T chirp_hand = 1. + drho*sin(phase);
 
-            //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             //Box3D impulse(nx/2, nx/2, ny/2, ny/2, position_z_3r, position_z_3r);
-            plint source_radius = radius - 1;
             Box3D place_source(position[0] - source_radius/sqrt(2), 
                 position[0] + source_radius/sqrt(2), 
                 position[1] - source_radius/sqrt(2), 
                 position[1] + source_radius/sqrt(2), 
-                position[2] + 3, position[2] + 8);
+                position[2] + 2 + 20, position[2] + 2 + 21);
             //Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
             initializeAtEquilibrium(lattice, place_source, chirp_hand, u0);
         }else{
-            plint source_radius = radius - 1;
             Box3D place_source(position[0] - source_radius/sqrt(2), 
                 position[0] + source_radius/sqrt(2), 
                 position[1] - source_radius/sqrt(2), 
                 position[1] + source_radius/sqrt(2), 
-                position[2] + 3, position[2] + 8);
+                position[2] + 2 + 20, position[2] + 2 + 21);
             initializeAtEquilibrium(lattice, place_source, rho0, u0);
         }
 
@@ -264,14 +309,14 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 1000 == 0) {
+        if (iT % 10 == 0) {
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
         }
 
         // extract values of pressure and velocities
-        history_pressures_3r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_3r) - rho0)*cs2 << endl;
         history_pressures_boca << setprecision(10) << (computeAverageDensity(lattice, surface_probe_boca) - rho0)*cs2 << endl;
+        history_pressures_3r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_3r) - rho0)*cs2 << endl;
 
         std::auto_ptr<MultiScalarField3D<T> > velocity_boca(plb::computeVelocityComponent(lattice, surface_probe_boca, 2));
         history_velocities_boca << setprecision(10) <<
