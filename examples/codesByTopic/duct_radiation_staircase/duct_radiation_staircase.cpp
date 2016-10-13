@@ -3,6 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <time.h>
+#include <cfloat> 
 
 using namespace plb;
 using namespace plb::descriptors;
@@ -58,7 +59,9 @@ void writeGifs(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
 void writeVTK(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
         VtkImageOutput3D<T> vtkOut(createFileName("vtk", iter, 6), 1.);
         vtkOut.writeData<float>(*computeDensity(lattice), "density", 1.);
-        //vtkOut.writeData<3,float>(*computeVelocity(lattice), "velocity", 1.);
+        std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, lattice.getBoundingBox(), 2));
+        
+        vtkOut.writeData<T>(*velocity, "velocity", 1.);
 }
 
 void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
@@ -112,26 +115,34 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
 
 }
 
+T get_linear_chirp_value(T ka_min, T ka_max, plint maxT_final_source, plint iT, T drho, T radius){
+    T lattice_speed_sound = 1/sqrt(3);
+    T initial_frequency = ka_min*lattice_speed_sound/(2*M_PI*radius);
+    T frequency_max_lattice = ka_max*lattice_speed_sound/(2*M_PI*radius);
+    T variation_frequency = (frequency_max_lattice - initial_frequency)/maxT_final_source;
+    T frequency_function = initial_frequency*iT + (variation_frequency*iT*iT)/2;
+    T phase = 2*M_PI*frequency_function;
+    T chirp_hand = 1. + drho*sin(phase);
 
-void define_anechoic_condition_in_duct(plint size, Array<T,3> position, plint source_radius, MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T omega){
-    
-    for (plint z = position[2] + 3; z <= position[2] + size + 3; z++){
-        Box3D place_source_anechoic(position[0] - source_radius/sqrt(2), 
-        position[0] + source_radius/sqrt(2), 
-        position[1] - source_radius/sqrt(2), 
-        position[1] + source_radius/sqrt(2), 
-        z, z);
-        Array<T,3> u0(0, 0, 0);
-        T rhoBar_target = 0;
+    return chirp_hand;
+}
 
-        AnechoicBackgroundDynamics *anechoicDynamics = 
-        new AnechoicBackgroundDynamics(omega);
-        T delta_efective = size - z;
-        anechoicDynamics->setDelta(delta_efective);
-        anechoicDynamics->setRhoBar_target(rhoBar_target);
-        anechoicDynamics->setJ_target(u0);
-        defineDynamics(lattice, place_source_anechoic, anechoicDynamics);
+T get_exponential_chirp_value(T ka_min, T ka_max, plint maxT_final_source, plint iT, T drho, T radius){
+    T lattice_speed_sound = 1/sqrt(3);
+    T initial_frequency = ka_min*lattice_speed_sound/(2*M_PI*radius);
+    T frequency_max_lattice = ka_max*lattice_speed_sound/(2*M_PI*radius);
+    T variation_frequency = pow((frequency_max_lattice/initial_frequency), (1/maxT_final_source));
+    T frequency_function;
+    if (log(variation_frequency) == 0){
+        frequency_function = (pow(variation_frequency, iT) - 1)/pow(10, -9);
+    }else{
+        frequency_function = (pow(variation_frequency, iT) - 1)/log(variation_frequency); 
     }
+    //pcout << frequency_function << endl;
+    T phase = 2*M_PI*initial_frequency*frequency_function;
+    T chirp_hand = 1. + drho*sin(phase);
+
+    return chirp_hand;
 }
 
 int main(int argc, char **argv){
@@ -144,10 +155,10 @@ int main(int argc, char **argv){
     const plint nx = 6*diameter + 60;
     const plint ny = 6*diameter + 60;
     const plint position_duct_z = 30;
-    const plint nz = 9*diameter + 60;
+    const plint nz = 12*diameter + 60;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 1000;
+    const plint maxT = 500;
     Array<T,3> u0(0, 0, 0);
 
     //const plint maxT = 2*120/lattice_speed_sound;
@@ -164,6 +175,10 @@ int main(int argc, char **argv){
     char to_char_command[1024];
     strcpy(to_char_command, command.c_str());
     system(to_char_command);
+    std::string command_copy_script_matlab = "cp duct_radiation.m " + fNameOut;
+    char to_char_command_copy_script_matlab[1024];
+    strcpy(to_char_command_copy_script_matlab, command_copy_script_matlab.c_str());
+    system(to_char_command_copy_script_matlab);
     global::directories().setOutputDir(fNameOut+"/");
 
 
@@ -203,12 +218,6 @@ int main(int argc, char **argv){
     defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);
-
-   // plint size_anechoic_buffer_source = 20;
-    //define_anechoic_condition_in_duct(size_anechoic_buffer_source, position, source_radius, lattice, omega);
-    
-
-     
 
     lattice.initialize();
 
@@ -276,18 +285,9 @@ int main(int argc, char **argv){
     for (plint iT=0; iT<maxT; ++iT){
         //pcout << " foi 1 " << iT << endl;
         if (iT <= maxT_final_source){
-            //drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            //drho*cos((lattice_speed_sound/radius)*(ka_max*((maxT-iT)/maxT)));
             
-            T initial_frequency = ka_min*lattice_speed_sound/(2*M_PI*radius);
-            T frequency_max_lattice = ka_max*lattice_speed_sound/(2*M_PI*radius);
-            T variation_frequency = (frequency_max_lattice - initial_frequency)/maxT_final_source;
-            T frequency_function = initial_frequency*iT + (variation_frequency*iT*iT)/2;
-            T phase = 2*M_PI*frequency_function;
-            T chirp_hand = 1. + drho*sin(phase);
-
-            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            //Box3D impulse(nx/2, nx/2, ny/2, ny/2, position_z_3r, position_z_3r);
+            T chirp_hand = get_linear_chirp_value(ka_min, ka_max, maxT_final_source, iT, drho, radius);
+            
             Box3D place_source(position[0] - source_radius/sqrt(2), 
                 position[0] + source_radius/sqrt(2), 
                 position[1] - source_radius/sqrt(2), 
