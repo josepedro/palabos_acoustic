@@ -12,7 +12,6 @@ using namespace std;
 
 typedef double T;
 typedef Array<T,3> Velocity;
-//#define DESCRIPTOR descriptors::D3Q27Descriptor
 #define DESCRIPTOR MRTD3Q19Descriptor
  typedef MRTdynamics<T,DESCRIPTOR> BackgroundDynamics;
  typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
@@ -24,7 +23,7 @@ using namespace plb_acoustics_3D;
 // ---------------------------------------------
 
 const T rho0 = 1;
-const T drho = rho0/10;
+const T drho = rho0/100;
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 const std::string currentDateTime() {
@@ -77,17 +76,12 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
             for (plint z = position[2]; z < length + position[2]; ++z){
 
                 if (radius*radius > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
-                    //pcout << "passou" << endl;
                     DotList3D points_to_aplly_dynamics;
                     points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
-                    //OnLatticeBoundaryCondition3D<T,DESCRIPTOR> *bc = createLocalBoundaryCondition3D<T,DESCRIPTOR>();
-                    //bc->setVelocityConditionOnBlockBoundaries(lattice, points_to_aplly_dynamics, boundary::freeslip);
                     defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(0));
                 }
                 // extrude
                 if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2) && z > position[2] + 2){
-                    //pcout << "passou" << endl;
-
                     DotList3D points_to_aplly_dynamics;
                     points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
                     if (z < position[2] + 2 + anechoic_size && z > position[2] + 3){
@@ -104,15 +98,10 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
                     }else{
                         defineDynamics(lattice, points_to_aplly_dynamics, new BackgroundDynamics(omega));
                     }
-
-
-                    
                 }
-
             }
         }
     }
-
 }
 
 T get_linear_chirp_value(T ka_min, T ka_max, plint maxT_final_source, plint iT, T drho, T radius){
@@ -127,29 +116,22 @@ T get_linear_chirp_value(T ka_min, T ka_max, plint maxT_final_source, plint iT, 
     return chirp_hand;
 }
 
-T get_exponential_chirp_value(T ka_min, T ka_max, plint maxT_final_source, plint iT, T drho, T radius){
-    T lattice_speed_sound = 1/sqrt(3);
-    T initial_frequency = ka_min*lattice_speed_sound/(2*M_PI*radius);
-    T frequency_max_lattice = ka_max*lattice_speed_sound/(2*M_PI*radius);
-    T variation_frequency = pow((frequency_max_lattice/initial_frequency), (1/maxT_final_source));
-    T frequency_function;
-    if (log(variation_frequency) == 0){
-        frequency_function = (pow(variation_frequency, iT) - 1)/pow(10, -9);
-    }else{
-        frequency_function = (pow(variation_frequency, iT) - 1)/log(variation_frequency); 
+T get_linear_chirp_AZ(T ka_max, plint total_signals, plint maxT_final_source, plint iT, T drho, T radius){
+    T cs = 1/sqrt(3);
+    T chirp_value = 1;
+    for (plint n_signal = 1; n_signal <= total_signals; n_signal++){
+        T interval = ka_max/total_signals;
+        T phase = (n_signal*interval*cs*iT)/radius;
+        chirp_value += drho*sin(phase);
     }
-    //pcout << frequency_function << endl;
-    T phase = 2*M_PI*initial_frequency*frequency_function;
-    T chirp_hand = 1. + drho*sin(phase);
-
-    return chirp_hand;
+    return chirp_value;
 }
 
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
     //const plint length_domain = 420;
-    const plint radius = 10;
+    const plint radius = 20;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
     const plint nx = 6*diameter + 60;
@@ -158,13 +140,13 @@ int main(int argc, char **argv){
     const plint nz = 12*diameter + 60;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 500;
+    const plint maxT = pow(2,13) + nz*sqrt(3);
     Array<T,3> u0(0, 0, 0);
 
     //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - nz*sqrt(3);
-    const T ka_max = 2.5;
-    const T ka_min = 0;
+    const T ka_max = 1.86;
+    //const T ka_min = 0;
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
     const plint source_radius = radius - 1;
     clock_t t;
@@ -196,13 +178,6 @@ int main(int argc, char **argv){
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium(lattice, lattice.getBoundingBox(), rho0 , u0);
 
-    /*plint size_square = 10;
-    Box3D square(
-    35, 35 + size_square,
-    ny/2 - size_square/2, ny/2 + size_square/2, 
-    nz/2 - size_square/2, nz/2 + size_square/2);
-    defineDynamics(lattice, square, new BounceBack<T,DESCRIPTOR>((T)0));*/
-
     /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
     Array<plint,3> position(nx/2, ny/2, position_duct_z);
@@ -228,14 +203,21 @@ int main(int argc, char **argv){
     // Setting probes
     // half size
     plint radius_probe = (radius - 1)/sqrt(2);
-    plint position_z_3r = position[2] + length_duct - 6*radius;
+    
+    plint position_z_3r = position[2] + length_duct - 3*radius;
     Box3D surface_probe_3r(nx/2 - (radius_probe)/sqrt(2), 
             nx/2 + (radius_probe)/sqrt(2), 
             ny/2 - (radius_probe)/sqrt(2), 
             ny/2 + (radius_probe)/sqrt(2),
             position_z_3r, position_z_3r);
 
-    //plint position_z_4r = position[2] + length_duct - 4*radius;
+    plint position_z_6r = position[2] + length_duct - 6*radius;
+    Box3D surface_probe_6r(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
+            position_z_6r, position_z_6r);
+
     plint position_z_boca = position[2] + length_duct;
     Box3D surface_probe_boca(nx/2 - (radius_probe)/sqrt(2), 
             nx/2 + (radius_probe)/sqrt(2), 
@@ -262,6 +244,16 @@ int main(int argc, char **argv){
     char to_char_velocities_3r[1024];
     strcpy(to_char_velocities_3r, velocities_3r_string.c_str());
     plb_ofstream history_velocities_3r(to_char_velocities_3r);
+
+    std::string pressures_6r_string = fNameOut+"/history_pressures_6r.dat";
+    char to_char_pressures_6r[1024];
+    strcpy(to_char_pressures_6r, pressures_6r_string.c_str());
+    plb_ofstream history_pressures_6r(to_char_pressures_6r);
+
+    std::string velocities_6r_string = fNameOut+"/history_velocities_6r.dat";
+    char to_char_velocities_6r[1024];
+    strcpy(to_char_velocities_6r, velocities_6r_string.c_str());
+    plb_ofstream history_velocities_6r(to_char_velocities_6r);
     
     t = clock();
     std::string AllSimulationInfo_string = fNameOut + "/AllSimulationInfo.txt";
@@ -283,10 +275,10 @@ int main(int argc, char **argv){
     << "Posicao do duto: " << position[2] << endl;
 
     for (plint iT=0; iT<maxT; ++iT){
-        //pcout << " foi 1 " << iT << endl;
         if (iT <= maxT_final_source){
             
-            T chirp_hand = get_linear_chirp_value(ka_min, ka_max, maxT_final_source, iT, drho, radius);
+            plint total_signals = 20;
+            T chirp_hand = get_linear_chirp_AZ(ka_max, total_signals, maxT_final_source, iT, drho, radius);
             
             Box3D place_source(position[0] - source_radius/sqrt(2), 
                 position[0] + source_radius/sqrt(2), 
@@ -309,7 +301,7 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 10 == 0) {
+        if (iT % 1000 == 0) {
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
         }
@@ -317,6 +309,7 @@ int main(int argc, char **argv){
         // extract values of pressure and velocities
         history_pressures_boca << setprecision(10) << (computeAverageDensity(lattice, surface_probe_boca) - rho0)*cs2 << endl;
         history_pressures_3r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_3r) - rho0)*cs2 << endl;
+        history_pressures_6r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_6r) - rho0)*cs2 << endl;
 
         std::auto_ptr<MultiScalarField3D<T> > velocity_boca(plb::computeVelocityComponent(lattice, surface_probe_boca, 2));
         history_velocities_boca << setprecision(10) <<
@@ -326,11 +319,15 @@ int main(int argc, char **argv){
         history_velocities_3r << setprecision(10) <<
         computeAverage(*velocity_3r, surface_probe_3r) << endl;
 
+        std::auto_ptr<MultiScalarField3D<T> > velocity_6r(plb::computeVelocityComponent(lattice, surface_probe_6r, 2));
+        history_velocities_6r << setprecision(10) <<
+        computeAverage(*velocity_6r, surface_probe_6r) << endl;
+
         lattice.collideAndStream();
     }
 
     t = (clock() - t)/CLOCKS_PER_SEC;
-    AllSimulationInfo << endl << "Execution time: " << t << " segundos" << endl << endl;
+    AllSimulationInfo << endl << "Execution time: " << t << " segundos" << endl;
 
     pcout << "End of simulation at iteration " << endl;
 }
