@@ -134,10 +134,10 @@ int main(int argc, char **argv){
     const plint radius = 20;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
-    const plint nx = 6*diameter + 60;
-    const plint ny = 6*diameter + 60;
+    const plint nx = 9*diameter + 60;
+    const plint ny = 9*diameter + 60;
     const plint position_duct_z = 30;
-    const plint nz = 12*diameter + 60;
+    const plint nz = 15*diameter + 60;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
     const plint maxT = pow(2,13) + nz*sqrt(3);
