@@ -121,7 +121,7 @@ T get_linear_chirp_AZ(T ka_max, plint total_signals, plint maxT_final_source, pl
     T chirp_value = 1;
     for (plint n_signal = 1; n_signal <= total_signals; n_signal++){
         T interval = ka_max/total_signals;
-        T phase = (n_signal*interval*cs*iT)/radius;
+        T phase = (n_signal*interval*cs*iT)/(2*M_PI*radius);
         chirp_value += drho*sin(phase);
     }
     return chirp_value;
@@ -131,7 +131,7 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
     //const plint length_domain = 420;
-    const plint radius = 50;
+    const plint radius = 20;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
     const plint nx = 6*diameter + 60;
@@ -303,7 +303,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
 
-    std::string title = "\nSimulacao para testar a discretizacao. Sera que com mais elementos na na boca do duto dá certo?\n"; 
+    std::string title = "\nTestando mais uma vez a questão da discretizacao. Esse eh com raio 20! Sera que com mais elementos na na boca do duto dá certo?\n"; 
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
