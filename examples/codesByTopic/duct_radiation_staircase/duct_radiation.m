@@ -3,6 +3,8 @@ clear('all'); clc;
 %close all;
 % chirp
 pressures = textread('history_pressures_boca.dat');
+signal_in = textread('signal_in.dat');
+
 %pressures = [pressures(:) - mean(pressures)];
 pressures = pressures(100:end);
 particle_velocity = textread('history_velocities_boca.dat');
