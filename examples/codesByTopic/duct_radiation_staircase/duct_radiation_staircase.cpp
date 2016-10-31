@@ -104,7 +104,7 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     }
 }
 
-T get_linear_chirp_value(T ka_min, T ka_max, plint maxT_final_source, plint iT, T drho, T radius){
+T get_linear_chirp(T ka_min, T ka_max, plint maxT_final_source, plint iT, T drho, T radius){
     T lattice_speed_sound = 1/sqrt(3);
     T initial_frequency = ka_min*lattice_speed_sound/(2*M_PI*radius);
     T frequency_max_lattice = ka_max*lattice_speed_sound/(2*M_PI*radius);
@@ -128,11 +128,81 @@ T get_linear_chirp_AZ(T ka_max, plint total_signals, plint maxT_final_source, pl
     return chirp_value;
 }
 
+
+void set_source(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> position, 
+    T chirp_hand, Array<T,3> u0, plint radius, plint radius_intern, plint nx, plint ny){
+
+    plint size_square = 2*radius;
+    Box3D impulse_local;
+    for (plint x = position[0] - radius; x < nx/2 + size_square/2; ++x){
+        for (plint y = position[1] - radius; y < ny/2 + size_square/2; ++y){
+            // extrude
+            if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
+                Array<plint, 6> local_source_1(x, x, y, y, position[2] + 2 + 20, position[2] + 2 + 20);
+                impulse_local.from_plbArray(local_source_1);
+                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u0);
+                Array<plint, 6> local_source_2(x, x, y, y, position[2] + 2 + 20, position[2] + 2 + 21);
+                impulse_local.from_plbArray(local_source_2);
+                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u0);
+            }
+        }
+    }
+}
+
+T compute_avarage_density(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> position, 
+    plint radius, plint radius_intern, plint nx, plint ny, plint position_z){
+
+    plint number_cells = 0;
+    T average_density = 0;
+    plint size_square = 2*radius;
+    Box3D local_box;
+    for (plint x = position[0] - radius; x < nx/2 + size_square/2; ++x){
+        for (plint y = position[1] - radius; y < ny/2 + size_square/2; ++y){
+            // extrude
+            if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
+                Array<plint, 6> local(x, x, y, y, position_z, position_z);
+                local_box.from_plbArray(local);
+                average_density += computeAverageDensity(lattice, local_box);
+                number_cells += 1;
+            }
+        }
+    }
+
+    average_density = average_density/number_cells;
+
+    return average_density;
+}
+
+T compute_avarage_velocity(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> position, 
+    plint radius, plint radius_intern, plint nx, plint ny, plint position_z){
+
+    plint number_cells = 0;
+    T average_velocity = 0;
+    plint size_square = 2*radius;
+    Box3D local_box;
+    for (plint x = position[0] - radius; x < nx/2 + size_square/2; ++x){
+        for (plint y = position[1] - radius; y < ny/2 + size_square/2; ++y){
+            // extrude
+            if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
+                Array<plint, 6> local(x, x, y, y, position_z, position_z);
+                local_box.from_plbArray(local);
+                std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, local_box, 2));
+                average_velocity += computeAverage(*velocity, local_box);
+                number_cells += 1;
+            }
+        }
+    }
+
+    average_velocity = average_velocity/number_cells;
+
+    return average_velocity;
+}
+
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
     //const plint length_domain = 420;
-    const plint radius = 10;
+    const plint radius = 20;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
     const plint nx = 6*diameter + 60;
@@ -142,7 +212,11 @@ int main(int argc, char **argv){
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
     const plint maxT = pow(2,13) + nz*sqrt(3);
-    Array<T,3> u0(0, 0, 0);
+    const Array<T,3> u0(0, 0, 0);
+    const Array<plint,3> position(nx/2, ny/2, position_duct_z);
+    const plint length_duct = 6*diameter + 30;
+    const plint thickness_duct = 2;
+    const plint radius_intern = radius - 2;
 
     //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - nz*sqrt(3);
@@ -181,9 +255,6 @@ int main(int argc, char **argv){
 
     /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
-    Array<plint,3> position(nx/2, ny/2, position_duct_z);
-    plint length_duct = 6*diameter + 30;
-    plint thickness_duct = 2;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
 
     T rhoBar_target = 0;
@@ -267,7 +338,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
 
-    std::string title = "\nCom o sinal de entrada correto, agora vamos testar a questão do refinamento da malha comecando agora com raio igual a 10.\n"; 
+    std::string title = "\nCom o sinal de entrada correto, agora vamos testar a questão do refinamento da malha comecando agora com raio igual a 20.\n"; 
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
@@ -282,25 +353,12 @@ int main(int argc, char **argv){
 
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source){
-            
             plint total_signals = 20;
             T chirp_hand = get_linear_chirp_AZ(ka_max, total_signals, maxT_final_source, iT, drho, radius);
             history_signal_in << setprecision(10) << chirp_hand << endl;
-            
-            Box3D place_source(position[0] - source_radius/sqrt(2), 
-                position[0] + source_radius/sqrt(2), 
-                position[1] - source_radius/sqrt(2), 
-                position[1] + source_radius/sqrt(2), 
-                position[2] + 2 + 20, position[2] + 2 + 21);
-            //Box3D impulse(centerLB[0] + 10, centerLB[0] + 10, ny/2, ny/2, nz/2, nz/2);
-            initializeAtEquilibrium(lattice, place_source, chirp_hand, u0);
+            set_source(lattice, position, chirp_hand, u0, radius, radius_intern, nx, ny);
         }else{
-            Box3D place_source(position[0] - source_radius/sqrt(2), 
-                position[0] + source_radius/sqrt(2), 
-                position[1] - source_radius/sqrt(2), 
-                position[1] + source_radius/sqrt(2), 
-                position[2] + 2 + 20, position[2] + 2 + 21);
-            initializeAtEquilibrium(lattice, place_source, rho0, u0);
+            set_source(lattice, position, rho0, u0, radius, radius_intern, nx, ny);
         }
 
 

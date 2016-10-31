@@ -13,22 +13,24 @@ ka_max = 2.5;
 total_n = 20;
 for time = 1:time_total
 	for n_sin = 1:total_n
-		chirp_signal(time) = chirp_signal(time) + amplitude*sin((n_sin*(ka_max/total_n)*cs*time)/(a));
+		%random_phase = rand(1,1)*pi;
+		random_phase = 0;
+		chirp_signal(time) = chirp_signal(time) + amplitude*sin(random_phase+(n_sin*(ka_max/total_n)*cs*time)/(a));
 	end
 end
 chirp_signal = chirp_signal/max(abs(chirp_signal));
 
 figure(1);
 plot(chirp_signal);
-hold on;
-plot(signal_in - mean(signal_in), 'r'); hold off;
+%hold on;
+%plot(signal_in - mean(signal_in), 'r'); hold off;
 
 figure(2);
 plot(ka, abs(fft(chirp_signal)));
-hold on;
-fft_signal_in = fft(signal_in - mean(signal_in));
-fft_signal_in(1:2) = 0;
-plot(ka, abs(fft_signal_in), 'r');
+%hold on;
+%fft_signal_in = fft(signal_in - mean(signal_in));
+%fft_signal_in(1:2) = 0;
+%plot(ka, abs(fft_signal_in), 'r');
 xlim([0 2.6]);
 
 
