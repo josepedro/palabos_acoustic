@@ -198,6 +198,13 @@ T compute_avarage_velocity(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<pli
     return average_velocity;
 }
 
+
+void set_nodynamics(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny, plint nz, plint diameter){
+    Box3D place_nodynamics(0, nx - 1, 0, ny - 1, 0, 30 + 3*diameter - 1);
+    defineDynamics(lattice, place_nodynamics, new NoDynamics<T,DESCRIPTOR>(0));
+
+}
+
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
@@ -207,8 +214,8 @@ int main(int argc, char **argv){
     //const plint length_domain = 150;
     const plint nx = 6*diameter + 60;
     const plint ny = 6*diameter + 60;
-    const plint position_duct_z = 30;
-    const plint nz = 12*diameter + 60;
+    const plint position_duct_z = 0;
+    const plint nz = 9*diameter + 60;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
     const plint maxT = pow(2,13) + nz*sqrt(3);
@@ -217,7 +224,7 @@ int main(int argc, char **argv){
     const plint length_duct = 6*diameter + 30;
     const plint thickness_duct = 2;
     const plint radius_intern = radius - 2;
-
+    const plint boca_duct = 30 + 6*diameter - 1;
     //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - nz*sqrt(3);
     const T ka_max = 2.5;
@@ -254,6 +261,10 @@ int main(int argc, char **argv){
     pcout << "Initilization of rho and u." << endl;
     initializeAtEquilibrium(lattice, lattice.getBoundingBox(), rho0 , u0);
 
+    // Set NoDynamics to improve performance!
+    set_nodynamics(lattice, nx, ny, nz, diameter);
+        
+
     /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
@@ -263,9 +274,9 @@ int main(int argc, char **argv){
     //const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
-    defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
+    /*defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
-      rhoBar_target);
+      rhoBar_target);*/
 
     lattice.initialize();
 
@@ -339,7 +350,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
 
-    std::string title = "\nCom o sinal de entrada correto, agora vamos testar a questão do refinamento da malha comecando agora com raio igual a 20.\n"; 
+    std::string title = "\n2 - Aplicação do NoDynamics.\n"; 
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
@@ -356,18 +367,23 @@ int main(int argc, char **argv){
         if (iT <= maxT_final_source){
             plint total_signals = 20;
             T chirp_hand = get_linear_chirp_AZ(ka_max, total_signals, maxT_final_source, iT, drho, radius);
+            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             set_source(lattice, position, chirp_hand, u0, radius, radius_intern, nx, ny);
         }else{
             set_source(lattice, position, rho0, u0, radius, radius_intern, nx, ny);
         }
 
+        /*T rho_changing = 1. + (drho*100)*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+        history_signal_in << setprecision(10) << rho_changing << endl;
+        Box3D test_source(nx/2, nx/2, ny/2, ny/2, boca_duct, boca_duct);
+        initializeAtEquilibrium(lattice, test_source, rho_changing, u0);*/
 
         if (iT % 10 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 2000 == 0) {
+        if (iT % 10 == 0) {
             //writeGifs(lattice,iT);
             writeVTK(lattice, iT);
         }
