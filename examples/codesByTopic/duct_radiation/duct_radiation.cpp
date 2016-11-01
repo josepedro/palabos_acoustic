@@ -51,7 +51,7 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
     std::string fNameOut = "tmp";
 
-    const T radius = 6;
+    const T radius = 30;
     const T diameter = 2*radius;
 
     const plint nx = 23*diameter;

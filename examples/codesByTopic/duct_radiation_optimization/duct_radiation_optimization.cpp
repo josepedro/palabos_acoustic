@@ -202,7 +202,6 @@ T compute_avarage_velocity(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<pli
 void set_nodynamics(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny, plint nz, plint diameter){
     Box3D place_nodynamics(0, nx - 1, 0, ny - 1, 0, 30 + 3*diameter - 1);
     defineDynamics(lattice, place_nodynamics, new NoDynamics<T,DESCRIPTOR>(0));
-
 }
 
 int main(int argc, char **argv){
@@ -264,19 +263,23 @@ int main(int argc, char **argv){
     // Set NoDynamics to improve performance!
     set_nodynamics(lattice, nx, ny, nz, diameter);
         
-
-    /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
-    Array<plint,3> position, plint radius, plint length, plint thickness)*/
-    build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
-
     T rhoBar_target = 0;
     //const T mach_number = 0.2;
     //const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
+    plint off_set_z = 30 + 3*diameter;
+    defineAnechoicMRTBoards_limited(nx, ny, nz, lattice, size_anechoic_buffer,
+      omega, j_target, j_target, j_target, j_target, j_target, j_target,
+      rhoBar_target, off_set_z);
     /*defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);*/
+
+    
+    /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
+    Array<plint,3> position, plint radius, plint length, plint thickness)*/
+    build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
 
     lattice.initialize();
 
