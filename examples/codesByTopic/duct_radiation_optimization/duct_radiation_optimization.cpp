@@ -204,6 +204,59 @@ void set_nodynamics(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint 
     defineDynamics(lattice, place_nodynamics, new NoDynamics<T,DESCRIPTOR>(0));
 }
 
+class Probe{
+    private:
+        Box3D location;
+        string name_probe;
+        plb_ofstream file_pressures;
+        plb_ofstream file_velocities_x;
+        plb_ofstream file_velocities_y;
+        plb_ofstream file_velocities_z;
+    public:
+        Probe(Box3D location, string directory, string name_probe){
+
+            directory = directory + "/" + name_probe;
+            std::string command = "mkdir -p " + directory;
+            char to_char_command[1024];
+            strcpy(to_char_command, command.c_str());
+            system(to_char_command);
+
+            string pressures_string = directory + "/history_pressures_" + name_probe + ".dat";
+            string velocities_x_string = directory + "/history_velocities_x_" + name_probe + ".dat";
+            string velocities_y_string = directory + "/history_velocities_y_" + name_probe + ".dat";
+            string velocities_z_string = directory + "/history_velocities_z_" + name_probe + ".dat";
+            char to_char_pressures[1024];
+            char to_char_velocities_x[1024];
+            char to_char_velocities_y[1024];
+            char to_char_velocities_z[1024];
+            strcpy(to_char_pressures, pressures_string.c_str());
+            strcpy(to_char_velocities_x, velocities_x_string.c_str());
+            strcpy(to_char_velocities_y, velocities_y_string.c_str());
+            strcpy(to_char_velocities_z, velocities_z_string.c_str());
+
+            this->file_pressures.open(to_char_pressures);
+            this->file_velocities_x.open(to_char_velocities_x);
+            this->file_velocities_y.open(to_char_velocities_y);
+            this->file_velocities_z.open(to_char_velocities_z);
+            this->location = location;
+            this->name_probe = name_probe;
+        }
+
+        string get_name_probe(){
+            return this->name_probe;
+        }
+
+        void save_point(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T rho0, T cs2){
+            file_pressures << setprecision(10) << (computeAverageDensity(lattice, this->location) - rho0)*cs2 << endl;
+            std::auto_ptr<MultiScalarField3D<T> > velocity_x(plb::computeVelocityComponent(lattice, this->location, 0));
+            file_velocities_x << setprecision(10) << computeAverage(*velocity_x, this->location) << endl;
+            std::auto_ptr<MultiScalarField3D<T> > velocity_y(plb::computeVelocityComponent(lattice, this->location, 1));
+            file_velocities_y << setprecision(10) << computeAverage(*velocity_y, this->location) << endl;
+            std::auto_ptr<MultiScalarField3D<T> > velocity_z(plb::computeVelocityComponent(lattice, this->location, 2));
+            file_velocities_z << setprecision(10) << computeAverage(*velocity_z, this->location) << endl;
+        }
+};
+
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
@@ -276,7 +329,7 @@ int main(int argc, char **argv){
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);*/
 
-    
+
     /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness)*/
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
@@ -297,6 +350,7 @@ int main(int argc, char **argv){
             ny/2 - (radius_probe)/sqrt(2), 
             ny/2 + (radius_probe)/sqrt(2),
             position_z_3r, position_z_3r);
+    Probe probe_3r(surface_probe_3r, fNameOut, "3r");
 
     plint position_z_6r = position[2] + length_duct - 6*radius;
     Box3D surface_probe_6r(nx/2 - (radius_probe)/sqrt(2), 
@@ -304,6 +358,7 @@ int main(int argc, char **argv){
             ny/2 - (radius_probe)/sqrt(2), 
             ny/2 + (radius_probe)/sqrt(2),
             position_z_6r, position_z_6r);
+    Probe probe_6r(surface_probe_6r, fNameOut, "6r");
 
     plint position_z_boca = position[2] + length_duct;
     Box3D surface_probe_boca(nx/2 - (radius_probe)/sqrt(2), 
@@ -311,36 +366,7 @@ int main(int argc, char **argv){
             ny/2 - (radius_probe)/sqrt(2), 
             ny/2 + (radius_probe)/sqrt(2),
             position_z_boca, position_z_boca);
-
-    std::string pressures_boca_string = fNameOut+"/history_pressures_boca.dat";
-    char to_char_pressures_boca[1024];
-    strcpy(to_char_pressures_boca, pressures_boca_string.c_str());
-    plb_ofstream history_pressures_boca(to_char_pressures_boca);
-
-    std::string velocities_boca_string = fNameOut+"/history_velocities_boca.dat";
-    char to_char_velocities_boca[1024];
-    strcpy(to_char_velocities_boca, velocities_boca_string.c_str());
-    plb_ofstream history_velocities_boca(to_char_velocities_boca);
-
-    std::string pressures_3r_string = fNameOut+"/history_pressures_3r.dat";
-    char to_char_pressures_3r[1024];
-    strcpy(to_char_pressures_3r, pressures_3r_string.c_str());
-    plb_ofstream history_pressures_3r(to_char_pressures_3r);
-
-    std::string velocities_3r_string = fNameOut+"/history_velocities_3r.dat";
-    char to_char_velocities_3r[1024];
-    strcpy(to_char_velocities_3r, velocities_3r_string.c_str());
-    plb_ofstream history_velocities_3r(to_char_velocities_3r);
-
-    std::string pressures_6r_string = fNameOut+"/history_pressures_6r.dat";
-    char to_char_pressures_6r[1024];
-    strcpy(to_char_pressures_6r, pressures_6r_string.c_str());
-    plb_ofstream history_pressures_6r(to_char_pressures_6r);
-
-    std::string velocities_6r_string = fNameOut+"/history_velocities_6r.dat";
-    char to_char_velocities_6r[1024];
-    strcpy(to_char_velocities_6r, velocities_6r_string.c_str());
-    plb_ofstream history_velocities_6r(to_char_velocities_6r);
+    Probe probe_boca(surface_probe_boca, fNameOut, "boca");
 
     std::string signal_in_string = fNameOut+"/signal_in.dat";
     char to_char_signal_in[1024];
@@ -353,7 +379,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
 
-    std::string title = "\n2 - Aplicação do NoDynamics.\n"; 
+    std::string title = "\nTestando a classe probe.\n"; 
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
@@ -392,23 +418,11 @@ int main(int argc, char **argv){
         }
 
         // extract values of pressure and velocities
-        history_pressures_boca << setprecision(10) << (computeAverageDensity(lattice, surface_probe_boca) - rho0)*cs2 << endl;
-        history_pressures_3r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_3r) - rho0)*cs2 << endl;
-        history_pressures_6r << setprecision(10) << (computeAverageDensity(lattice, surface_probe_6r) - rho0)*cs2 << endl;
+        probe_3r.save_point(lattice, rho0, cs2);
+        probe_6r.save_point(lattice, rho0, cs2);
+        probe_boca.save_point(lattice, rho0, cs2);
 
-        std::auto_ptr<MultiScalarField3D<T> > velocity_boca(plb::computeVelocityComponent(lattice, surface_probe_boca, 2));
-        history_velocities_boca << setprecision(10) <<
-        computeAverage(*velocity_boca, surface_probe_boca) << endl;
-
-        std::auto_ptr<MultiScalarField3D<T> > velocity_3r(plb::computeVelocityComponent(lattice, surface_probe_3r, 2));
-        history_velocities_3r << setprecision(10) <<
-        computeAverage(*velocity_3r, surface_probe_3r) << endl;
-
-        std::auto_ptr<MultiScalarField3D<T> > velocity_6r(plb::computeVelocityComponent(lattice, surface_probe_6r, 2));
-        history_velocities_6r << setprecision(10) <<
-        computeAverage(*velocity_6r, surface_probe_6r) << endl;
-
-        lattice.collideAndStream();
+        //lattice.collideAndStream();
     }
 
     t = (clock() - t)/CLOCKS_PER_SEC;
