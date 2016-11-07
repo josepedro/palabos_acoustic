@@ -261,7 +261,7 @@ int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
     //const plint length_domain = 420;
-    const plint radius = 10;
+    const plint radius = 20;
     const plint diameter = 2*radius;
     //const plint length_domain = 150;
     const plint nx = 6*diameter + 60;
@@ -340,10 +340,8 @@ int main(int argc, char **argv){
 
     pcout << "Simulation begins" << endl;
 
-    // Setting probes
-    // half size
+    // Setting probes ------------------------------------------
     plint radius_probe = (radius - 1)/sqrt(2);
-    
     plint position_z_3r = position[2] + length_duct - 3*radius;
     Box3D surface_probe_3r(nx/2 - (radius_probe)/sqrt(2), 
             nx/2 + (radius_probe)/sqrt(2), 
@@ -368,18 +366,30 @@ int main(int argc, char **argv){
             position_z_boca, position_z_boca);
     Probe probe_boca(surface_probe_boca, fNameOut, "boca");
 
+    Box3D point_A(nx/2, nx/2, ny/2, ny/2, (nz - 32), (nz - 32));
+    Probe probe_A(point_A, fNameOut, "point_A");
+    Box3D point_B(nx/2, nx/2, (ny - 32), (ny - 32), (nz - 32), (nz - 32));
+    Probe probe_B(point_B, fNameOut, "point_B");
+    Box3D point_C(nx/2, nx/2, (ny - 32), (ny - 32), nz/2, nz/2);
+    Probe probe_C(point_C, fNameOut, "point_C");
+    Box3D point_D(nx/2, nx/2, (0.75)*ny, (0.75)*ny, (61 + 3*diameter), (61 + 3*diameter));
+    Probe probe_D(point_D, fNameOut, "point_D");
+    // ---------------------------------------------------------
+
+    // Recording entering signal -------------------------------
     std::string signal_in_string = fNameOut+"/signal_in.dat";
     char to_char_signal_in[1024];
     strcpy(to_char_signal_in, signal_in_string.c_str());
     plb_ofstream history_signal_in(to_char_signal_in);
-    
+    // ---------------------------------------------------------
+
+    // Important information about simulation ------------------    
     t = clock();
     std::string AllSimulationInfo_string = fNameOut + "/AllSimulationInfo.txt";
     char to_char_AllSimulationInfo[1024];
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
-
-    std::string title = "\nTestando a classe probe.\n"; 
+    std::string title = "\nImplementando o teste de reflexao.\n"; 
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
@@ -391,7 +401,10 @@ int main(int argc, char **argv){
     << "Discretizacao: " << radius/thickness_duct << endl
     << "Tamanho duto: " << length_duct << endl
     << "Posicao do duto: " << position[2] << endl;
+    // --------------------------------------------------------
 
+
+    // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source){
             plint total_signals = 20;
@@ -412,17 +425,22 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 10 == 0) {
+        if (iT % 2000 == 0) {
             //writeGifs(lattice,iT);
-            writeVTK(lattice, iT);
+            //writeVTK(lattice, iT);
         }
 
         // extract values of pressure and velocities
         probe_3r.save_point(lattice, rho0, cs2);
         probe_6r.save_point(lattice, rho0, cs2);
         probe_boca.save_point(lattice, rho0, cs2);
+        probe_A.save_point(lattice, rho0, cs2);
+        probe_B.save_point(lattice, rho0, cs2);
+        probe_C.save_point(lattice, rho0, cs2);
+        probe_D.save_point(lattice, rho0, cs2);
 
-        //lattice.collideAndStream();
+
+        lattice.collideAndStream();
     }
 
     t = (clock() - t)/CLOCKS_PER_SEC;
