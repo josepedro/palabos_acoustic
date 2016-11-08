@@ -271,7 +271,7 @@ int main(int argc, char **argv){
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
     const plint maxT = pow(2,13) + nz*sqrt(3);
-    const Array<T,3> u0(0, 0, 0);
+    Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint length_duct = 6*diameter + 30;
     const plint thickness_duct = 2;
@@ -463,10 +463,16 @@ int main(int argc, char **argv){
         if (iT <= maxT_final_source){
             plint total_signals = 20;
             T chirp_hand = get_linear_chirp_AZ(ka_max, total_signals, maxT_final_source, iT, drho, radius);
+            //chirp_hand = chirp_hand*0.0001;
             T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            history_signal_in << setprecision(10) << chirp_hand << endl;
+            u0[2] = 0;
             set_source(lattice, position, chirp_hand, u0, radius, radius_intern, nx, ny);
+            u0[2] = (chirp_hand-1)*lattice_speed_sound;
+            history_signal_in << setprecision(10) << chirp_hand << " ";
+            history_signal_in << setprecision(10) << u0[2] << endl;
+            set_source(lattice, position, rho0, u0, radius, radius_intern, nx, ny);
         }else{
+            u0[2] = 0;
             set_source(lattice, position, rho0, u0, radius, radius_intern, nx, ny);
         }
 
@@ -479,7 +485,7 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 20 == 0) {
+        if (iT % 50 == 0) {
             //writeGifs(lattice,iT);
             //writeVTK(lattice, iT);
         }
