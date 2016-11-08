@@ -342,38 +342,90 @@ int main(int argc, char **argv){
 
     // Setting probes ------------------------------------------
     plint radius_probe = (radius - 1)/sqrt(2);
+    plint double_microphone_distance = 5;
+
+    plint position_z_1r = position[2] + length_duct - 1*radius;
+    Box3D surface_probe_1r_p1(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
+            position_z_1r, position_z_1r);
+    Probe probe_1r_p1(surface_probe_1r_p1, fNameOut, "1r_p1");
+
+    Box3D surface_probe_1r_p2(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
+            position_z_1r + double_microphone_distance,
+            position_z_1r + double_microphone_distance);
+    Probe probe_1r_p2(surface_probe_1r_p2, fNameOut, "1r_p2");
+
+    plint position_z_2r = position[2] + length_duct - 2*radius;
+    Box3D surface_probe_2r_p1(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
+            position_z_2r, position_z_2r);
+    Probe probe_2r_p1(surface_probe_2r_p1, fNameOut, "2r_p1");
+
+    Box3D surface_probe_2r_p2(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
+            position_z_2r + double_microphone_distance,
+            position_z_2r + double_microphone_distance);
+    Probe probe_2r_p2(surface_probe_2r_p2, fNameOut, "2r_p2");
+
     plint position_z_3r = position[2] + length_duct - 3*radius;
-    Box3D surface_probe_3r(nx/2 - (radius_probe)/sqrt(2), 
+    Box3D surface_probe_3r_p1(nx/2 - (radius_probe)/sqrt(2), 
             nx/2 + (radius_probe)/sqrt(2), 
             ny/2 - (radius_probe)/sqrt(2), 
             ny/2 + (radius_probe)/sqrt(2),
             position_z_3r, position_z_3r);
-    Probe probe_3r(surface_probe_3r, fNameOut, "3r");
+    Probe probe_3r_p1(surface_probe_3r_p1, fNameOut, "3r_p1");
+
+    Box3D surface_probe_3r_p2(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
+            position_z_3r + double_microphone_distance,
+            position_z_3r + double_microphone_distance);
+    Probe probe_3r_p2(surface_probe_3r_p2, fNameOut, "3r_p2");
 
     plint position_z_6r = position[2] + length_duct - 6*radius;
-    Box3D surface_probe_6r(nx/2 - (radius_probe)/sqrt(2), 
+    Box3D surface_probe_6r_p1(nx/2 - (radius_probe)/sqrt(2), 
             nx/2 + (radius_probe)/sqrt(2), 
             ny/2 - (radius_probe)/sqrt(2), 
             ny/2 + (radius_probe)/sqrt(2),
             position_z_6r, position_z_6r);
-    Probe probe_6r(surface_probe_6r, fNameOut, "6r");
+    Probe probe_6r_p1(surface_probe_6r_p1, fNameOut, "6r_p1");
 
-    plint position_z_boca = position[2] + length_duct;
-    Box3D surface_probe_boca(nx/2 - (radius_probe)/sqrt(2), 
+    Box3D surface_probe_6r_p2(nx/2 - (radius_probe)/sqrt(2), 
             nx/2 + (radius_probe)/sqrt(2), 
             ny/2 - (radius_probe)/sqrt(2), 
             ny/2 + (radius_probe)/sqrt(2),
-            position_z_boca, position_z_boca);
-    Probe probe_boca(surface_probe_boca, fNameOut, "boca");
+            position_z_6r + double_microphone_distance,
+            position_z_6r + double_microphone_distance);
+    Probe probe_6r_p2(surface_probe_6r_p2, fNameOut, "6r_p2");
 
-    Box3D point_A(nx/2, nx/2, ny/2, ny/2, (nz - 32), (nz - 32));
-    Probe probe_A(point_A, fNameOut, "point_A");
-    Box3D point_B(nx/2, nx/2, (ny - 32), (ny - 32), (nz - 32), (nz - 32));
-    Probe probe_B(point_B, fNameOut, "point_B");
-    Box3D point_C(nx/2, nx/2, (ny - 32), (ny - 32), nz/2, nz/2);
-    Probe probe_C(point_C, fNameOut, "point_C");
-    Box3D point_D(nx/2, nx/2, (0.75)*ny, (0.75)*ny, (61 + 3*diameter), (61 + 3*diameter));
-    Probe probe_D(point_D, fNameOut, "point_D");
+    plint position_z_boca_p2 = position[2] + length_duct;
+    Box3D surface_probe_boca_p2(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
+            position_z_boca_p2, position_z_boca_p2);
+    Probe probe_boca_p2(surface_probe_boca_p2, fNameOut, "boca_p2");
+
+    plint position_z_boca_p1 = position[2] + length_duct;
+    Box3D surface_probe_boca_p1(nx/2 - (radius_probe)/sqrt(2), 
+            nx/2 + (radius_probe)/sqrt(2), 
+            ny/2 - (radius_probe)/sqrt(2), 
+            ny/2 + (radius_probe)/sqrt(2),
+            position_z_boca_p1 - double_microphone_distance,
+            position_z_boca_p1 - double_microphone_distance);
+    Probe probe_boca_p1(surface_probe_boca_p1, fNameOut, "boca_p1");
+
+   
     // ---------------------------------------------------------
 
     // Recording entering signal -------------------------------
@@ -389,7 +441,9 @@ int main(int argc, char **argv){
     char to_char_AllSimulationInfo[1024];
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
-    std::string title = "\nImplementando o teste de reflexao.\n"; 
+    
+    std::string title = "\nTESTE DOS DOIS MICROFONES.\n"; 
+    
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
@@ -425,19 +479,22 @@ int main(int argc, char **argv){
             pcout << "Iteration " << iT << endl;
         }
 
-        if (iT % 2000 == 0) {
+        if (iT % 20 == 0) {
             //writeGifs(lattice,iT);
             //writeVTK(lattice, iT);
         }
 
         // extract values of pressure and velocities
-        probe_3r.save_point(lattice, rho0, cs2);
-        probe_6r.save_point(lattice, rho0, cs2);
-        probe_boca.save_point(lattice, rho0, cs2);
-        probe_A.save_point(lattice, rho0, cs2);
-        probe_B.save_point(lattice, rho0, cs2);
-        probe_C.save_point(lattice, rho0, cs2);
-        probe_D.save_point(lattice, rho0, cs2);
+        probe_1r_p1.save_point(lattice, rho0, cs2);
+        probe_1r_p2.save_point(lattice, rho0, cs2);
+        probe_2r_p1.save_point(lattice, rho0, cs2);
+        probe_2r_p2.save_point(lattice, rho0, cs2);
+        probe_3r_p1.save_point(lattice, rho0, cs2);
+        probe_3r_p2.save_point(lattice, rho0, cs2);
+        probe_6r_p1.save_point(lattice, rho0, cs2);
+        probe_6r_p2.save_point(lattice, rho0, cs2);
+        probe_boca_p1.save_point(lattice, rho0, cs2);
+        probe_boca_p2.save_point(lattice, rho0, cs2);
 
 
         lattice.collideAndStream();
