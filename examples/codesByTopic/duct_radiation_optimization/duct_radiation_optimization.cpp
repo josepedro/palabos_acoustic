@@ -442,7 +442,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nTESTE DOS DOIS MICROFONES.\n"; 
+    std::string title = "\nREFINAMENTO DE MALHA.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -463,16 +463,10 @@ int main(int argc, char **argv){
         if (iT <= maxT_final_source){
             plint total_signals = 20;
             T chirp_hand = get_linear_chirp_AZ(ka_max, total_signals, maxT_final_source, iT, drho, radius);
-            //chirp_hand = chirp_hand*0.0001;
-            T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            u0[2] = 0;
+            //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+            history_signal_in << setprecision(10) << chirp_hand << endl;
             set_source(lattice, position, chirp_hand, u0, radius, radius_intern, nx, ny);
-            u0[2] = (chirp_hand-1)*lattice_speed_sound;
-            history_signal_in << setprecision(10) << chirp_hand << " ";
-            history_signal_in << setprecision(10) << u0[2] << endl;
-            set_source(lattice, position, rho0, u0, radius, radius_intern, nx, ny);
         }else{
-            u0[2] = 0;
             set_source(lattice, position, rho0, u0, radius, radius_intern, nx, ny);
         }
 
