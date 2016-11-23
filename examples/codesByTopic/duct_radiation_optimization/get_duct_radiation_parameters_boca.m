@@ -3,9 +3,14 @@ function parameters = get_duct_radiation_parameters_boca(history_pressures_file,
 
 	pressures = textread(history_pressures_file);
 	pressures = [pressures(:)];
+	%size(pressures)
+	%figure(1); plot(pressures);
 
 	particle_velocity = textread(history_velocities_file);
 	particle_velocity = [particle_velocity(:)];
+	particle_velocity = particle_velocity(1:length(pressures));
+	%size(particle_velocity)
+	%figure(2); plot(particle_velocity);
 
 	% filtering signal
 	window = hanning(length(pressures));

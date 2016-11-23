@@ -7,12 +7,12 @@ addpath(genpath('../'));
 % To probes in a boca
 history_pressures_file_with = 'with/history_pressures_boca.dat';
 history_velocities_file_with = 'with/history_velocities_boca.dat';
-radius_with = 20;
+radius_with = 10;
 parameters_with = get_duct_radiation_parameters_boca(history_pressures_file_with, history_velocities_file_with, radius_with);
 
 history_pressures_file_without = 'without/history_pressures_boca.dat';
 history_velocities_file_without = 'without/history_velocities_boca.dat';
-radius_without = 20;
+radius_without = 10;
 parameters_without = get_duct_radiation_parameters_boca(history_pressures_file_without, history_velocities_file_without, radius_without);
 
 % -----------------------------------------------------------------
