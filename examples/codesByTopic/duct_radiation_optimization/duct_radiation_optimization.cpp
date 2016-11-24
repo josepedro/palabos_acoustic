@@ -13,8 +13,8 @@ using namespace std;
 typedef double T;
 typedef Array<T,3> Velocity;
 #define DESCRIPTOR MRTD3Q19Descriptor
- typedef MRTdynamics<T,DESCRIPTOR> BackgroundDynamics;
- typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
+typedef MRTdynamics<T,DESCRIPTOR> BackgroundDynamics;
+typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
 
 // ---------------------------------------------
 // Includes of acoustics resources
@@ -199,8 +199,8 @@ T compute_avarage_velocity(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<pli
 }
 
 
-void set_nodynamics(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny, plint nz, plint diameter){
-    Box3D place_nodynamics(0, nx - 1, 0, ny - 1, 0, 30 + 3*diameter - 1);
+void set_nodynamics(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny, plint off_set_z){
+    Box3D place_nodynamics(0, nx - 1, 0, ny - 1, 0, off_set_z);
     defineDynamics(lattice, place_nodynamics, new NoDynamics<T,DESCRIPTOR>(0));
 }
 
@@ -213,6 +213,8 @@ class Probe{
         plb_ofstream file_velocities_y;
         plb_ofstream file_velocities_z;
     public:
+        Probe() : location(), name_probe(), file_pressures(), file_velocities_x(),
+        file_velocities_y(), file_velocities_z(){ }
         Probe(Box3D location, string directory, string name_probe){
 
             directory = directory + "/" + name_probe;
@@ -246,6 +248,34 @@ class Probe{
             return this->name_probe;
         }
 
+        void set_properties(Box3D location, string directory, string name_probe){
+            directory = directory + "/" + name_probe;
+            std::string command = "mkdir -p " + directory;
+            char to_char_command[1024];
+            strcpy(to_char_command, command.c_str());
+            system(to_char_command);
+
+            string pressures_string = directory + "/history_pressures_" + name_probe + ".dat";
+            string velocities_x_string = directory + "/history_velocities_x_" + name_probe + ".dat";
+            string velocities_y_string = directory + "/history_velocities_y_" + name_probe + ".dat";
+            string velocities_z_string = directory + "/history_velocities_z_" + name_probe + ".dat";
+            char to_char_pressures[1024];
+            char to_char_velocities_x[1024];
+            char to_char_velocities_y[1024];
+            char to_char_velocities_z[1024];
+            strcpy(to_char_pressures, pressures_string.c_str());
+            strcpy(to_char_velocities_x, velocities_x_string.c_str());
+            strcpy(to_char_velocities_y, velocities_y_string.c_str());
+            strcpy(to_char_velocities_z, velocities_z_string.c_str());
+
+            this->file_pressures.open(to_char_pressures);
+            this->file_velocities_x.open(to_char_velocities_x);
+            this->file_velocities_y.open(to_char_velocities_y);
+            this->file_velocities_z.open(to_char_velocities_z);
+            this->location = location;
+            this->name_probe = name_probe;   
+        }
+
         void save_point(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T rho0, T cs2){
             file_pressures << setprecision(10) << (computeAverageDensity(lattice, this->location) - rho0)*cs2 << endl;
             std::auto_ptr<MultiScalarField3D<T> > velocity_x(plb::computeVelocityComponent(lattice, this->location, 0));
@@ -257,32 +287,65 @@ class Probe{
         }
 };
 
+class Two_Microphones{
+    private:
+        Probe microphone_1;
+        Probe microphone_2;
+    public:
+        Two_Microphones(plint radius, plint microphone_distance, 
+            plint length_duct, Array<plint,3> position_duct, 
+            std::string fNameOut, std::string name, plint distance, 
+            plint nx, plint ny, plint nz){
+
+            plint radius_probe = (radius - 1)/sqrt(2);
+            plint position_z = position_duct[2] + length_duct - distance;
+            
+            Box3D surface_probe_p1(nx/2 - (radius_probe)/sqrt(2), 
+                    nx/2 + (radius_probe)/sqrt(2), 
+                    ny/2 - (radius_probe)/sqrt(2), 
+                    ny/2 + (radius_probe)/sqrt(2),
+                    position_z, position_z);
+            std::string name_p1 = name + "_p1";
+            Probe probe_p1(surface_probe_p1, fNameOut, name_p1);
+            this->microphone_1.set_properties(surface_probe_p1, fNameOut, name_p1);
+
+            Box3D surface_probe_p2(nx/2 - (radius_probe)/sqrt(2), 
+                    nx/2 + (radius_probe)/sqrt(2), 
+                    ny/2 - (radius_probe)/sqrt(2), 
+                    ny/2 + (radius_probe)/sqrt(2),
+                    position_z + microphone_distance,
+                    position_z + microphone_distance);
+            std::string name_p2 = name + "_p2";
+            this->microphone_2.set_properties(surface_probe_p2, fNameOut, name_p2);
+        }
+
+        void save_point(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T rho0, T cs2){
+            this->microphone_1.save_point(lattice, rho0, cs2);
+            this->microphone_2.save_point(lattice, rho0, cs2);   
+        }
+};
+
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
-    //const plint length_domain = 420;
     const plint radius = 20;
     const plint diameter = 2*radius;
-    //const plint length_domain = 150;
     const plint nx = 6*diameter + 60;
     const plint ny = 6*diameter + 60;
     const plint position_duct_z = 0;
-    const plint nz = 9*diameter + 60;
+    const plint length_duct = 10*diameter + 30;
+    const plint nz = length_duct + 3*diameter + 30;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
     const plint maxT = pow(2,13) + nz*sqrt(3);
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
-    const plint length_duct = 6*diameter + 30;
     const plint thickness_duct = 2;
     const plint radius_intern = radius - 2;
-    const plint boca_duct = 30 + 6*diameter - 1;
-    //const plint maxT = 2*120/lattice_speed_sound;
     const plint maxT_final_source = maxT - nz*sqrt(3);
     const T ka_max = 2.5;
     //const T ka_min = 0;
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
-    const plint source_radius = radius - 1;
     clock_t t;
 
     // Saving a propery directory
@@ -314,24 +377,18 @@ int main(int argc, char **argv){
     initializeAtEquilibrium(lattice, lattice.getBoundingBox(), rho0 , u0);
 
     // Set NoDynamics to improve performance!
-    set_nodynamics(lattice, nx, ny, nz, diameter);
+    plint off_set_z = position_duct_z + length_duct - 3*diameter - 30;
+    set_nodynamics(lattice, nx, ny, off_set_z);
         
     T rhoBar_target = 0;
     //const T mach_number = 0.2;
     //const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
-    plint off_set_z = 30 + 3*diameter;
     defineAnechoicMRTBoards_limited(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target, off_set_z);
-    /*defineAnechoicMRTBoards(nx, ny, nz, lattice, size_anechoic_buffer,
-      omega, j_target, j_target, j_target, j_target, j_target, j_target,
-      rhoBar_target);*/
 
-
-    /*(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
-    Array<plint,3> position, plint radius, plint length, plint thickness)*/
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
 
     lattice.initialize();
@@ -341,91 +398,33 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes ------------------------------------------
-    plint radius_probe = (radius - 1)/sqrt(2);
     plint double_microphone_distance = 5;
 
-    plint position_z_1r = position[2] + length_duct - 1*radius;
-    Box3D surface_probe_1r_p1(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_1r, position_z_1r);
-    Probe probe_1r_p1(surface_probe_1r_p1, fNameOut, "1r_p1");
+    plint distance_boca = 0*radius;
+    string name_boca = "boca";
+    Two_Microphones two_microphones_boca(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_boca, distance_boca, nx, ny, nz);
 
-    Box3D surface_probe_1r_p2(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_1r + double_microphone_distance,
-            position_z_1r + double_microphone_distance);
-    Probe probe_1r_p2(surface_probe_1r_p2, fNameOut, "1r_p2");
+    plint distance_1r = 1*radius;
+    string name_1r = "1r";
+    Two_Microphones two_microphones_1r(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_1r, distance_1r, nx, ny, nz);
 
-    plint position_z_2r = position[2] + length_duct - 2*radius;
-    Box3D surface_probe_2r_p1(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_2r, position_z_2r);
-    Probe probe_2r_p1(surface_probe_2r_p1, fNameOut, "2r_p1");
+    plint distance_2r = 2*radius;
+    string name_2r = "2r";
+    Two_Microphones two_microphones_2r(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_2r, distance_2r, nx, ny, nz);
 
-    Box3D surface_probe_2r_p2(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_2r + double_microphone_distance,
-            position_z_2r + double_microphone_distance);
-    Probe probe_2r_p2(surface_probe_2r_p2, fNameOut, "2r_p2");
+    plint distance_3r = 3*radius;
+    string name_3r = "3r";
+    Two_Microphones two_microphones_3r(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_3r, distance_3r, nx, ny, nz);
 
-    plint position_z_3r = position[2] + length_duct - 3*radius;
-    Box3D surface_probe_3r_p1(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_3r, position_z_3r);
-    Probe probe_3r_p1(surface_probe_3r_p1, fNameOut, "3r_p1");
+    plint distance_6r = 6*radius;
+    string name_6r = "6r";
+    Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
-    Box3D surface_probe_3r_p2(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_3r + double_microphone_distance,
-            position_z_3r + double_microphone_distance);
-    Probe probe_3r_p2(surface_probe_3r_p2, fNameOut, "3r_p2");
-
-    plint position_z_6r = position[2] + length_duct - 6*radius;
-    Box3D surface_probe_6r_p1(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_6r, position_z_6r);
-    Probe probe_6r_p1(surface_probe_6r_p1, fNameOut, "6r_p1");
-
-    Box3D surface_probe_6r_p2(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_6r + double_microphone_distance,
-            position_z_6r + double_microphone_distance);
-    Probe probe_6r_p2(surface_probe_6r_p2, fNameOut, "6r_p2");
-
-    plint position_z_boca_p2 = position[2] + length_duct;
-    Box3D surface_probe_boca_p2(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_boca_p2, position_z_boca_p2);
-    Probe probe_boca_p2(surface_probe_boca_p2, fNameOut, "boca_p2");
-
-    plint position_z_boca_p1 = position[2] + length_duct;
-    Box3D surface_probe_boca_p1(nx/2 - (radius_probe)/sqrt(2), 
-            nx/2 + (radius_probe)/sqrt(2), 
-            ny/2 - (radius_probe)/sqrt(2), 
-            ny/2 + (radius_probe)/sqrt(2),
-            position_z_boca_p1 - double_microphone_distance,
-            position_z_boca_p1 - double_microphone_distance);
-    Probe probe_boca_p1(surface_probe_boca_p1, fNameOut, "boca_p1");
-
-   
     // ---------------------------------------------------------
 
     // Recording entering signal -------------------------------
@@ -442,7 +441,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nREFINAMENTO DE MALHA.\n"; 
+    std::string title = "\nTESTANDO A QUESTÃO DA POSICAO DOS MICROFONES PARA CONSTRUIR O ESPECTRO.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -485,17 +484,11 @@ int main(int argc, char **argv){
         }
 
         // extract values of pressure and velocities
-        probe_1r_p1.save_point(lattice, rho0, cs2);
-        probe_1r_p2.save_point(lattice, rho0, cs2);
-        probe_2r_p1.save_point(lattice, rho0, cs2);
-        probe_2r_p2.save_point(lattice, rho0, cs2);
-        probe_3r_p1.save_point(lattice, rho0, cs2);
-        probe_3r_p2.save_point(lattice, rho0, cs2);
-        probe_6r_p1.save_point(lattice, rho0, cs2);
-        probe_6r_p2.save_point(lattice, rho0, cs2);
-        probe_boca_p1.save_point(lattice, rho0, cs2);
-        probe_boca_p2.save_point(lattice, rho0, cs2);
-
+        two_microphones_1r.save_point(lattice, rho0, cs2);
+        two_microphones_2r.save_point(lattice, rho0, cs2);
+        two_microphones_3r.save_point(lattice, rho0, cs2);
+        two_microphones_6r.save_point(lattice, rho0, cs2);
+        two_microphones_boca.save_point(lattice, rho0, cs2);
 
         lattice.collideAndStream();
     }
