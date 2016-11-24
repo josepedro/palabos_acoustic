@@ -328,6 +328,7 @@ class Two_Microphones{
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
+    const std::string title = "\ntestando sugestao do andrey dos microfones dentro do espaco 4D\n"; 
     const plint radius = 20;
     const plint diameter = 2*radius;
     const plint nx = 6*diameter + 60;
@@ -398,32 +399,21 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes ------------------------------------------
-    plint double_microphone_distance = 5;
+    plint distance_major_p1 = length_duct - 3*diameter - 30;
+    plint distance_microphones_major = 4*diameter;
+    plint distance_minor_p1 = distance_major_p1 - 1*radius;
+    plint distance_microphones_minor = distance_microphones_major - 1*radius;
 
-    plint distance_boca = 0*radius;
-    string name_boca = "boca";
-    Two_Microphones two_microphones_boca(radius, double_microphone_distance, 
-            length_duct, position, fNameOut, name_boca, distance_boca, nx, ny, nz);
+    string name_major = "major";
+    Two_Microphones two_microphones_major(radius, distance_microphones_major, 
+            length_duct, position, fNameOut, name_major, 
+            distance_microphones_major, nx, ny, nz);
 
-    plint distance_1r = 1*radius;
-    string name_1r = "1r";
-    Two_Microphones two_microphones_1r(radius, double_microphone_distance, 
-            length_duct, position, fNameOut, name_1r, distance_1r, nx, ny, nz);
+    string name_minor = "minor";
+    Two_Microphones two_microphones_minor(radius, distance_microphones_minor, 
+            length_duct, position, fNameOut, name_minor, 
+            distance_microphones_minor, nx, ny, nz);
 
-    plint distance_2r = 2*radius;
-    string name_2r = "2r";
-    Two_Microphones two_microphones_2r(radius, double_microphone_distance, 
-            length_duct, position, fNameOut, name_2r, distance_2r, nx, ny, nz);
-
-    plint distance_3r = 3*radius;
-    string name_3r = "3r";
-    Two_Microphones two_microphones_3r(radius, double_microphone_distance, 
-            length_duct, position, fNameOut, name_3r, distance_3r, nx, ny, nz);
-
-    plint distance_6r = 6*radius;
-    string name_6r = "6r";
-    Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
-            length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
     // ---------------------------------------------------------
 
@@ -441,8 +431,6 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nTESTANDO A QUESTÃO DA POSICAO DOS MICROFONES PARA CONSTRUIR O ESPECTRO.\n"; 
-    
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
@@ -456,7 +444,7 @@ int main(int argc, char **argv){
     << "Posicao do duto: " << position[2] << endl;
     // --------------------------------------------------------
 
-
+    pcout << title << endl;
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source){
@@ -484,12 +472,9 @@ int main(int argc, char **argv){
         }
 
         // extract values of pressure and velocities
-        two_microphones_1r.save_point(lattice, rho0, cs2);
-        two_microphones_2r.save_point(lattice, rho0, cs2);
-        two_microphones_3r.save_point(lattice, rho0, cs2);
-        two_microphones_6r.save_point(lattice, rho0, cs2);
-        two_microphones_boca.save_point(lattice, rho0, cs2);
-
+        two_microphones_major.save_point(lattice, rho0, cs2);
+        two_microphones_minor.save_point(lattice, rho0, cs2);
+        
         lattice.collideAndStream();
     }
 
