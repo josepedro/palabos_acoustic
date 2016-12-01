@@ -66,7 +66,10 @@ void writeVTK(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter){
 void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness, T omega){
     length += 4;
-    plint anechoic_size = 20;
+    T mach_number = 0.18;
+    T lattice_speed_sound = 1/sqrt(3);
+    T velocity_flow = -mach_number*lattice_speed_sound;
+    plint anechoic_size = 30;
     // Duct is constructed along the Z direction
     //plint size_square = 50;
     plint size_square = 2*radius;
@@ -85,7 +88,7 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
                     DotList3D points_to_aplly_dynamics;
                     points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
                     if (z < position[2] + 2 + anechoic_size && z > position[2] + 3){
-                        Array<T,3> u0(0, 0, 0);
+                        Array<T,3> u0(0, 0, velocity_flow);
                         T rhoBar_target = 0;
                         AnechoicBackgroundDynamics *anechoicDynamics = 
                         new AnechoicBackgroundDynamics(omega);
@@ -441,7 +444,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nTESTE PARA VER EM QUAL TIME STEP O ESCOAMENTO ESTABILIZA.\n"; 
+    std::string title = "\nVERIFICANDO SE ESTOU COM ESCOAMENTO ESTABILIZADO.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -451,12 +454,15 @@ int main(int argc, char **argv){
     << " omega: " << omega << endl << endl
     << "Tempos: " << endl
     << "Total Time step: " << maxT << endl
-    << "Discretizacao: " << radius/thickness_duct << endl
+    << "Raio do duto: " << radius << endl
+    << "Espessura: " << thickness_duct << endl
     << "Tamanho duto: " << length_duct << endl
     << "Posicao do duto: " << position[2] << endl;
     // --------------------------------------------------------
 
 
+    pcout << "!!Loading lattice initial condition!!" << endl;
+    loadBinaryBlock(lattice, "checkpoint.dat");
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source){
@@ -464,9 +470,9 @@ int main(int argc, char **argv){
             T chirp_hand = get_linear_chirp_AZ(ka_max, total_signals, maxT_final_source, iT, drho, radius);
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
-            set_source(lattice, position, chirp_hand, u0, radius, radius_intern, nx, ny);
+            //set_source(lattice, position, chirp_hand, u0, radius, radius_intern, nx, ny);
         }else{
-            set_source(lattice, position, rho0, u0, radius, radius_intern, nx, ny);
+            //set_source(lattice, position, rho0, u0, radius, radius_intern, nx, ny);
         }
 
         /*T rho_changing = 1. + (drho*100)*sin(2*M_PI*(lattice_speed_sound/20)*iT);
@@ -474,13 +480,27 @@ int main(int argc, char **argv){
         Box3D test_source(nx/2, nx/2, ny/2, ny/2, boca_duct, boca_duct);
         initializeAtEquilibrium(lattice, test_source, rho_changing, u0);*/
 
-        if (iT % 10 == 0 && iT>0) {
+        if (iT % 50 == 0 && iT>0) {
             pcout << "Iteration " << iT << endl;
+             pcout << " energy ="
+            << setprecision(10) << getStoredAverageEnergy<T>(lattice)
+            << " rho ="
+            << getStoredAverageDensity<T>(lattice)
+            << " max_velocity ="
+            << setprecision(10) << (getStoredMaxVelocity<T>(lattice))/lattice_speed_sound
+            << endl;
         }
 
-        if (iT % 50 == 0) {
+        if (iT == 0) {
             //writeGifs(lattice,iT);
-            //writeVTK(lattice, iT);
+            writeVTK(lattice, iT);
+        }
+
+        if (iT == 8000)
+        {
+            pcout << "Saving the state of the simulation ..." << endl;
+            //saveRawMultiBlock(lattice, "checkpoint.dat");
+            //saveBinaryBlock(lattice, "checkpoint.dat");
         }
 
         // extract values of pressure and velocities

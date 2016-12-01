@@ -1,58 +1,61 @@
-% duct radiation
-clear('all'); clc;
-%close all;
-% chirp
-pressures = textread('history_pressures_boca.dat');
-signal_in = textread('signal_in.dat');
+% duct_radiation_2
 
-%pressures = [pressures(:) - mean(pressures)];
-pressures = pressures(100:end);
-particle_velocity = textread('history_velocities_boca.dat');
-particle_velocity = [particle_velocity(:)];
-particle_velocity = particle_velocity(100:end);
-% a_1 eh o maior / a_2 eh o menor
-a_1 = 20;
-a_2 = a_1;
+clear('all'); clc; close all;
+
+pressures_1 = textread('2r_p1/history_pressures_2r_p1.dat');
+pressures_1 = [pressures_1(:)];
+pressures_2 = textread('2r_p2/history_pressures_2r_p2.dat');
+pressures_2 = [pressures_2(:)];
+type_mic = 2;
+
+window = hanning(length(pressures_1));
+pressures_1 = window.*pressures_1;
+pressures_2 = window.*pressures_2;
+
+a = 20;
+const = 6;
+L_1 = type_mic*a + const;
+L_2 = type_mic*a - 5  + const;
 cs = 1/sqrt(3);
-L = 6*a_1;
-
-particle_velocity = particle_velocity(1:length(pressures));
-
-fft_pressure = fft(pressures);
-fft_particle_velocity = fft(particle_velocity);
-ZL = fft_pressure./fft_particle_velocity;
-frequencies = linspace(0, 1, length(ZL));
+frequencies = linspace(0, 1, length(pressures_1));
 frequencies = frequencies';
-ka = (2*pi*frequencies*a_1)/cs;
-k = ka/a_1;
-Zo = 1*cs;%/(pi*a^2);
-Zr = Zo*1i*tan(atan(ZL./(1i*Zo))-(ka/a_1)*L);
+ka = (2*pi*frequencies*a)/cs;
+k = ka/a;
+rho0 = 1;
 
-Rr=(Zr-Zo)./(Zr+Zo);
-RL=(ZL-Zo)./(ZL+Zo);
-%l = (log(-Rr./(abs(Rr))))./(-2*i*k);
-l = (log(-RL./(abs(RL))))./(-2*i*k);
+H_12 = (fft(pressures_2))./(fft(pressures_1));
+s = L_1 - L_2;
+H_I = exp(-i*k*s);
+H_R = exp(i*k*s);
+A = H_12 - H_I;
+B = H_R - H_12;
+r = ((A./B)).*exp(2*i*k*L_1);
+l = (log(-r./(abs(r))))./(-2*i*k);
 l_line = real(l);
-la = l_line/(a_2);
-% Refletion Coeff. 
-%figure;
-%load munt_R.mat
-%plot(munt005(:,1),munt005(:,2),'black')
-%hold on
-%figure;
-uiopen('/home/josepedro/palabos_acoustic/examples/codesByTopic/duct_radiation_staircase/abs_r.fig',1)
+la = l_line/(a);
+Zr = (1 + r)./(1 - r);
+
+
+uiopen('/home/josepedro/palabos_acoustic/examples/codesByTopic/duct_radiation_staircase/levine.fig',1)
+hold on
+plot(ka, real(Zr),'--'); hold on; plot(ka, imag(Zr), 'r--');
+xlim([0 1.8])
+hold off
+ylabel('Impedance','FontSize',20);
+xlabel('Numero de Helmholtz, ka','FontSize',20);
+legend('Impedance real part','Impedance imaginary part');
+
+uiopen('/home/josepedro/palabos_acoustic/examples/codesByTopic/duct_radiation_staircase/abs_r.fig',2)
 hold on;
-plot(ka,abs(RL),'--black');
-%plot(ka,abs(Rr),'--black');
+%plot(ka,abs(RL),'--black');
+plot(ka,abs(r),'--black');
 axis([0 2.5 0 1.5]);
 ylabel('Coeficiente de Reflex\E3o, Rr','FontSize',20);
 xlabel('Numero de Helmholtz, ka','FontSize',20);
 %legend('Analitico','LBM');
 hold off
 
-% %% end correction
-%figure;
-uiopen('/home/josepedro/palabos_acoustic/examples/codesByTopic/duct_radiation_staircase/loa.fig',1)
+uiopen('/home/josepedro/palabos_acoustic/examples/codesByTopic/duct_radiation_staircase/loa.fig',3)
 % %load munt_loa.mat
 % %plot(loa_005(:,1),loa_005(:,2),'black')
 hold on
@@ -61,18 +64,10 @@ ylabel('End correction, l/a','FontSize',20);
 xlabel('Numero de Helmholtz, ka','FontSize',20);
 axis([0 1.5 -1 1]);
 legend('Analitico','LBM');
-% hold off
 
-uiopen('/home/josepedro/palabos_acoustic/examples/codesByTopic/duct_radiation_staircase/levine.fig',1)
-hold on
-%plot(ka, real(Zr),'--'); hold on; plot(ka, imag(Zr), 'r--');
-plot(ka, real(ZL),'--'); hold on; plot(ka, imag(ZL), 'r--');
-%axis([0 1.82 0 max(abs(ZL))]);
-ylabel('Impedance','FontSize',20);
-xlabel('Numero de Helmholtz, ka','FontSize',20);
-legend('Impedance real part','Impedance imaginary part');
-xlim([0 3])
-
-%cd ~/palabos_acoustic/examples/codesByTopic/duct_radiation/
-%system('rm tmp/*');
-%system('make && time mpirun -n 6 duct_radiation');
+saveas(1, 'impedance', 'png');
+saveas(1, 'impedance', 'fig');
+saveas(2, 'abs_r', 'png');
+saveas(2, 'abs_r', 'fig');
+saveas(3, 'loa', 'png');
+saveas(3, 'loa', 'fig');
