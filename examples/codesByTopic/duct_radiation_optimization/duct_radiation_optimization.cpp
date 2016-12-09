@@ -144,7 +144,8 @@ void set_source(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> posit
             if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
                 Array<plint, 6> local_source_2(x, x, y, y, position[2] + 29, position[2] + 30);
                 impulse_local.from_plbArray(local_source_2);
-                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u0);
+                Array<T,3> u_chirp_hand(0, 0, (chirp_hand-1)/(1/sqrt(3)));
+                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u_chirp_hand);
             }
         }
     }
@@ -570,7 +571,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nVERIFICANDO SE ESTOU COM ESCOAMENTO ESTABILIZADO.\n"; 
+    std::string title = "\nTENTANDO DE NOVO A TECNICA DO ABOM.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
