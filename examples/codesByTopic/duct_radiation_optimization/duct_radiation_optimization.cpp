@@ -23,7 +23,7 @@ using namespace plb_acoustics_3D;
 // ---------------------------------------------
 
 const T rho0 = 1;
-const T drho = rho0/10;
+const T drho = rho0/100;
 
 // Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 const std::string currentDateTime() {
@@ -145,7 +145,7 @@ void set_source(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> posit
                 Array<plint, 6> local_source_2(x, x, y, y, position[2] + 29, position[2] + 30);
                 impulse_local.from_plbArray(local_source_2);
                 Array<T,3> u_chirp_hand(0, 0, (chirp_hand-1)/(1/sqrt(3)));
-                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u_chirp_hand);
+                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u0);
             }
         }
     }
@@ -571,7 +571,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nTENTANDO DE NOVO A TECNICA DO ABOM.\n"; 
+    std::string title = "\nTENTANDO AGORA COM ABOM E O MEU NOVO SINAL DE HARMONICOS.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -594,7 +594,8 @@ int main(int argc, char **argv){
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source){
             plint total_signals = 20;
-            T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
+	    T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT, drho, radius);
+            //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             set_source(lattice, position, chirp_hand, u0, radius, radius_intern, nx, ny);
