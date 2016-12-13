@@ -554,6 +554,36 @@ int main(int argc, char **argv){
     plint distance_group_B = 113;
     System_Abom_Measurement system_abom_measurement(lattice, position, radius, 
         distance_group_A, distance_group_B, fNameOut);
+
+
+     plint double_microphone_distance = 5;
+
+    plint distance_boca = 0*radius;
+    string name_boca = "boca";
+    Two_Microphones two_microphones_boca(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_boca, distance_boca, nx, ny, nz);
+
+    plint distance_1r = 1*radius;
+    string name_1r = "1r";
+    Two_Microphones two_microphones_1r(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_1r, distance_1r, nx, ny, nz);
+
+    plint distance_2r = 2*radius;
+    string name_2r = "2r";
+    Two_Microphones two_microphones_2r(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_2r, distance_2r, nx, ny, nz);
+
+    plint distance_3r = 3*radius;
+    string name_3r = "3r";
+    Two_Microphones two_microphones_3r(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_3r, distance_3r, nx, ny, nz);
+
+    plint distance_6r = 6*radius;
+    string name_6r = "6r";
+    Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
+            length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
+
+
     // ---------------------------------------------------------
     
 
@@ -621,6 +651,12 @@ int main(int argc, char **argv){
 
         // extract values of pressure and velocities
         system_abom_measurement.save_point(lattice, rho0, cs2);
+        two_microphones_1r.save_point(lattice, rho0, cs2);
+        two_microphones_2r.save_point(lattice, rho0, cs2);
+        two_microphones_3r.save_point(lattice, rho0, cs2);
+        two_microphones_6r.save_point(lattice, rho0, cs2);
+        two_microphones_boca.save_point(lattice, rho0, cs2);
+
 
         lattice.collideAndStream();
     }
