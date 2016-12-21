@@ -608,7 +608,7 @@ void writeVTK(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter, T rho0, T 
 void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness, T omega){
     length += 4;
-    //T mach_number = 0;
+    T mach_number = 0;
     T lattice_speed_sound = 1/sqrt(3);
     T velocity_flow = -mach_number*lattice_speed_sound;
     plint anechoic_size = 29;

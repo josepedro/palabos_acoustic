@@ -195,9 +195,9 @@ int main(int argc, char **argv){
             << endl;
         }
 
-        if (iT % 200 == 0) {
+        if (iT == 0) {
             //writeGifs(lattice,iT);
-            //writeVTK(lattice, iT, rho0, drho);
+            writeVTK(lattice, iT, rho0, drho);
         }
 
         if (iT == maxT/2){
