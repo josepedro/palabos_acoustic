@@ -197,7 +197,7 @@ int main(int argc, char **argv){
 
         if (iT == 0) {
             //writeGifs(lattice,iT);
-            writeVTK(lattice, iT, rho0, drho);
+            //writeVTK(lattice, iT, rho0, drho);
         }
 
         if (iT == maxT/2){
