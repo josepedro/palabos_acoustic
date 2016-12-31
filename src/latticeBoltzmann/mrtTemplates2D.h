@@ -153,6 +153,45 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD2Q9DescriptorBa
         
         return jSqr;
     }
+
+    static T anechoicMRTCollision( Array<T,Descriptor::q>& f, const T &omega, T delta, T rhoBar_target, Array<T,2> j_target)
+    {
+        Array<T,9> m, meq, mt;
+        //pcout << "MRT HERE!!! Legal!!!" << std::endl;
+        // Compute m
+        computeMoments(m,f);
+        T rhoBar = m[0];
+        Array<T,2> j(m[MRTDescriptor::momentumIndexes[0]],m[MRTDescriptor::momentumIndexes[1]]);
+        T jSqr = VectorTemplateImpl<T,2>::normSqr(j);
+        
+        // Compute meq
+        computeEquilibriumMoments(meq,rhoBar,j,jSqr);
+        // Compute mt
+        T jSqr_target = VectorTemplateImpl<T,2>::normSqr(j_target);
+        computeEquilibriumMoments(mt, rhoBar_target, j_target, jSqr_target);
+
+        // Parameters of Anechoic Condition
+        T total_distance = 30;
+        T sigma_m = 0.3;
+        // Targets values to anechoic dynamics
+        T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
+
+        // Collide in moments
+        m[0] = m[0] + sigma_target*mt[0] - meq[0]*(1 - sigma_target);
+        m[1] = m[1] + sigma_target*mt[1] - meq[1]*(1 - sigma_target);
+        m[2] = m[2] + sigma_target*mt[2] - meq[2]*(1 - sigma_target);
+        m[3] = m[3] + sigma_target*mt[3] - meq[3]*(1 - sigma_target);
+        m[4] = m[4] + sigma_target*mt[4] - meq[4]*(1 - sigma_target);
+        m[5] = m[5] + sigma_target*mt[5] - meq[5]*(1 - sigma_target);
+        m[6] = m[6] + sigma_target*mt[6] - meq[6]*(1 - sigma_target);
+        m[7] = m[7] + sigma_target*mt[7] - meq[7]*(1 - sigma_target);
+        m[8] = m[8] + sigma_target*mt[8] - meq[8]*(1 - sigma_target);
+        
+        computef_InvM_Smoments(f, m, omega);
+
+        return jSqr;
+        
+    }
     
     /// MRT collision step imposed rhoBar and j
     static T mrtCollision( Array<T,Descriptor::q>& f,

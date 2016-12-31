@@ -76,7 +76,7 @@ struct mrtTemplates {
     }
 
     // Anechoic MRT collision step
-    static T anechoicMRTCollision( Cell<T,Descriptor>& cell, T omega, T delta, T rhoBar_target ,Array<T,3> j_target)
+    static T anechoicMRTCollision( Cell<T,Descriptor>& cell, T omega, T delta, T rhoBar_target ,Array<T,Descriptor<T>::d> j_target)
     {
         return mrtTemplatesImpl<T,typename Descriptor<T>::SecondBaseDescriptor>::
         anechoicMRTCollision( cell.getRawPopulations(), omega, delta, rhoBar_target, j_target);
