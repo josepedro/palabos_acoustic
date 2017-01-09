@@ -37,10 +37,14 @@
 #include <iomanip>
 
 using namespace plb;
+using namespace plb::descriptors;
 using namespace std;
 
 typedef double T;
-#define DESCRIPTOR plb::descriptors::D2Q9Descriptor
+//#define DESCRIPTOR plb::descriptors::D2Q9Descriptor
+#define DESCRIPTOR MRTD2Q9Descriptor
+typedef MRTdynamics<T,DESCRIPTOR> BackgroundDynamics;
+//typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
 
 // ---------------------------------------------
 // Includes of acoustics resources
@@ -61,7 +65,7 @@ const T reynolds_number = 150;
 const T mach_number = 0.1;
 const T velocity_flow = mach_number*lattice_speed_sound;
 //const T tau = (0.5 + ((velocity_flow*size_square)/(reynolds_number*lattice_speed_sound*lattice_speed_sound)));
-const T omega = 1.98;
+const T omega = 1.990;
 
 T get_linear_chirp(T frequency_min, T frequency_max, plint maxT_final_source, plint iT, T drho){
     T lattice_speed_sound = 1/sqrt(3);
@@ -85,7 +89,7 @@ int main(int argc, char* argv[]) {
     pcout << "velocity_flow: " << velocity_flow << std::endl;
     pcout << "Total iteration: " << maxIter << std::endl;
 
-    MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new CompleteBGKdynamics<T,DESCRIPTOR>(omega));
+    MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new BackgroundDynamics(omega));
 
     Array<T,2> u0((T)0,(T)0);
 
@@ -99,7 +103,7 @@ int main(int argc, char* argv[]) {
     Array<T,2> j_target(0, 0.0/std::sqrt(3));
     T size_anechoic_buffer = 30;
     // Define Anechoic Boards
-    defineAnechoicBoards(nx, ny, lattice, size_anechoic_buffer,
+    defineAnechoicMRTBoards(nx, ny, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target,
       rhoBar_target, rhoBar_target, rhoBar_target, rhoBar_target);
 
@@ -146,10 +150,10 @@ int main(int argc, char* argv[]) {
         if (iT%20==0) { 
             pcout << "iT= " << iT << endl;
 
-            /*VtkImageOutput2D<T> vtkOut(createFileName("vtk", iT, 6), 1.);
+            VtkImageOutput2D<T> vtkOut(createFileName("vtk", iT, 6), 1.);
             vtkOut.writeData<float>(*computeDensity(lattice), "density", 1.);
             vtkOut.writeData<2,float>(*computeVelocity(lattice), "velocity", 1.);
-            vtkOut.writeData<float>(*computeDensity(lattice), "vorticity", 1.);*/
+            vtkOut.writeData<float>(*computeDensity(lattice), "vorticity", 1.);
 
             pcout << " energy ="
             << setprecision(10) << getStoredAverageEnergy<T>(lattice)
