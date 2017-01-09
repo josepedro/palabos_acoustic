@@ -877,7 +877,7 @@ class System_Abom_Measurement{
         plb_ofstream file_velocities_z;
     public:
         System_Abom_Measurement(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> position_duct, 
-            plint radius, plint distance_group_A, plint distance_group_B, string directory){
+            plint begin_microphone, plint length_duct, plint radius, string directory){
 
             string name_probe = "system_abom_measurement_data";
             directory = directory + "/" + name_probe;
@@ -886,13 +886,10 @@ class System_Abom_Measurement{
             strcpy(to_char_command, command.c_str());
             system(to_char_command);
 
-            // normaly distance_group_A = 28
-            // normaly distance_group_B = 135
-
-            const plint nx = lattice.getNx();
+            /*const plint nx = lattice.getNx();
             const plint ny = lattice.getNy();
             const plint nz = lattice.getNz();
-            const plint diameter = 2*radius;
+            const plint diameter = 2*radius;*/
 
             string pressures_string = directory + "/history_pressures_" + name_probe + ".dat";
             string velocities_x_string = directory + "/history_velocities_x_" + name_probe + ".dat";
@@ -912,92 +909,31 @@ class System_Abom_Measurement{
             this->file_velocities_y.open(to_char_velocities_y);
             this->file_velocities_z.open(to_char_velocities_z);
 
-            // Group A
-            plint position_microphone_1 = position_duct[2] + 30 + 3*diameter;
-            Box3D microphone_1_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_1, position_microphone_1);
-            microphones_positions.push_back(microphone_1_position);
+            plint radius_probe = (radius - 1)/sqrt(2);
+            for (int i = begin_microphone; i <= length_duct + 3; i++){
+            	plint position_microphone = position_duct[2] + i;
 
-            plint position_microphone_2 = position_microphone_1 + distance_group_A;
-            Box3D microphone_2_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_2, position_microphone_2);
-            microphones_positions.push_back(microphone_2_position);
+            	Box3D surface_microphone(
+            		position_duct[0] - (radius_probe)/sqrt(2), 
+            		position_duct[0] + (radius_probe)/sqrt(2),
+                	position_duct[1] - (radius_probe)/sqrt(2), 
+                	position_duct[1] + (radius_probe)/sqrt(2),
+                	position_microphone, 
+                	position_microphone);
 
-            plint position_microphone_3 = position_microphone_2 + distance_group_A;
-            Box3D microphone_3_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_3, position_microphone_3);
-            microphones_positions.push_back(microphone_3_position);
-
-            plint position_microphone_4 = position_microphone_3 + distance_group_A;
-            Box3D microphone_4_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_4, position_microphone_4);
-            microphones_positions.push_back(microphone_4_position);
-
-            plint position_microphone_5 = position_microphone_4 + distance_group_A;
-            Box3D microphone_5_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_5, position_microphone_5);
-            microphones_positions.push_back(microphone_5_position);
-
-            plint position_microphone_6 = position_microphone_5 + distance_group_A;
-            Box3D microphone_6_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_6, position_microphone_6);
-            microphones_positions.push_back(microphone_6_position);
-
-            // Group B
-            plint position_microphone_7 = position_duct[2] + 30 + 3*diameter;
-            Box3D microphone_7_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_7, position_microphone_7);
-            microphones_positions.push_back(microphone_7_position);
-
-            plint position_microphone_8 = position_microphone_7 + distance_group_B;
-            Box3D microphone_8_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_8, position_microphone_8);
-            microphones_positions.push_back(microphone_8_position);
-
-            plint position_microphone_9 = position_microphone_8 + distance_group_B;
-            Box3D microphone_9_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_9, position_microphone_9);
-            microphones_positions.push_back(microphone_9_position);
-
-            plint position_microphone_10 = position_microphone_9 + distance_group_B;
-            Box3D microphone_10_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_10, position_microphone_10);
-            microphones_positions.push_back(microphone_10_position);
-
-            plint position_microphone_11 = position_microphone_10 + distance_group_B;
-            Box3D microphone_11_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_11, position_microphone_11);
-            microphones_positions.push_back(microphone_11_position);
-
-            plint position_microphone_12 = position_microphone_11 + distance_group_B;
-            Box3D microphone_12_position(position_duct[0], position_duct[0],
-                position_duct[1], position_duct[1],
-                position_microphone_12, position_microphone_12);
-            microphones_positions.push_back(microphone_12_position);
+            	this->microphones_positions.push_back(surface_microphone);
+            }
 
             pcout << "MICROPHONES" << endl;
-            for (int i = 0; i < 12; ++i)
-            {
+            for (int i = 0; i < this->microphones_positions.size(); i++){
                 Box3D to_see = microphones_positions[i];
                 Array<plint, 6> test = to_see.to_plbArray();
-                pcout << test[5] << endl;
+                pcout << i + 1 << " - " << test[5] << "; ";
             }
         }
 
     void save_point(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T rho0, T cs2){
-
-        for (int mic = 0; mic < 11; mic++){
+        for (int mic = 0; mic < this->microphones_positions.size(); mic++){
             file_pressures << setprecision(10) << (computeAverageDensity(lattice, this->microphones_positions[mic]) - rho0)*cs2 << " ";
             std::auto_ptr<MultiScalarField3D<T> > velocity_x(plb::computeVelocityComponent(lattice, this->microphones_positions[mic], 0));
             file_velocities_x << setprecision(10) << computeAverage(*velocity_x, this->microphones_positions[mic]) << " ";
@@ -1006,14 +942,10 @@ class System_Abom_Measurement{
             std::auto_ptr<MultiScalarField3D<T> > velocity_z(plb::computeVelocityComponent(lattice, this->microphones_positions[mic], 2));
             file_velocities_z << setprecision(10) << computeAverage(*velocity_z, this->microphones_positions[mic]) << " ";
         }
-
-        file_pressures << setprecision(10) << (computeAverageDensity(lattice, this->microphones_positions[11]) - rho0)*cs2 << endl;
-        std::auto_ptr<MultiScalarField3D<T> > velocity_x(plb::computeVelocityComponent(lattice, this->microphones_positions[11], 0));
-        file_velocities_x << setprecision(10) << computeAverage(*velocity_x, this->microphones_positions[11]) << endl;
-        std::auto_ptr<MultiScalarField3D<T> > velocity_y(plb::computeVelocityComponent(lattice, this->microphones_positions[11], 1));
-        file_velocities_y << setprecision(10) << computeAverage(*velocity_y, this->microphones_positions[11]) << endl;
-        std::auto_ptr<MultiScalarField3D<T> > velocity_z(plb::computeVelocityComponent(lattice, this->microphones_positions[11], 2));
-        file_velocities_z << setprecision(10) << computeAverage(*velocity_z, this->microphones_positions[11]) << endl;
+        file_pressures << endl;
+        file_velocities_x << endl;
+        file_velocities_y << endl;
+        file_velocities_z << endl;
     }
 };
 

@@ -101,10 +101,9 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes ------------------------------------------
-    plint distance_group_A = 28;
-    plint distance_group_B = 113 + 123;
-    System_Abom_Measurement system_abom_measurement(lattice, position, radius,
-    distance_group_A, distance_group_B, fNameOut);
+    plint begin_microphone = length_duct/2;
+    System_Abom_Measurement system_abom_measurement(lattice, position, 
+        begin_microphone, length_duct, radius, fNameOut);
 
     plint double_microphone_distance = 5;
 
@@ -163,7 +162,8 @@ int main(int argc, char **argv){
     << "Raio do duto: " << radius << endl
     << "Espessura: " << thickness_duct << endl
     << "Tamanho duto: " << length_duct << endl
-    << "Posicao do duto: " << position[2] << endl;
+    << "Posicao do duto: " << position[2] << endl
+    << "Começo dos microfones em lattice: " << begin_microphone << endl;
     // --------------------------------------------------------
 
 
@@ -172,7 +172,7 @@ int main(int argc, char **argv){
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source && iT > maxT/2){
-            plint total_signals = 20;
+            plint total_signals = 115;
 	    T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
