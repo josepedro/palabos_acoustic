@@ -101,10 +101,9 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes ------------------------------------------
-    plint distance_group_A = 28;
-    plint distance_group_B = 113 + 123;
-    System_Abom_Measurement system_abom_measurement(lattice, position, radius,
-    distance_group_A, distance_group_B, fNameOut);
+    plint begin_microphone = length_duct/2;
+    System_Abom_Measurement system_abom_measurement(lattice, position, 
+        begin_microphone, length_duct, radius, fNameOut);
 
     plint double_microphone_distance = 5;
 
@@ -150,7 +149,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nRODANDO AGORA COM ESCOAMENTO E A CAVIDADE MAIOR (2 VESZES PARA FRENTE).\n"; 
+    std::string title = "\nVALENDO AGORA SEM FONTE E COM ESCOAMENTO.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -178,13 +177,13 @@ int main(int argc, char **argv){
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
-            set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
+            set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
         }else{
-              Array<T,3> j_target(0, 0, velocity_flow);
+            Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
         }
 
-        if (iT % 100 == 0) {
+        if (iT % 50 == 0) {
             pcout << "Iteration " << iT << endl;
              pcout << " energy ="
             << setprecision(10) << getStoredAverageEnergy<T>(lattice)
@@ -200,10 +199,10 @@ int main(int argc, char **argv){
             //writeVTK(lattice, iT, rho0, drho);
         }
 
-        if (iT == maxT/2){
+        if (iT == maxT - 100){
             pcout << "Saving the state of the simulation ..." << endl;
             //saveRawMultiBlock(lattice, "checkpoint.dat");
-            saveBinaryBlock(lattice, "checkpoint.dat");
+            saveBinaryBlock(lattice, "checkpoint_020.dat");
         }
 
         // extract values of pressure and velocities
