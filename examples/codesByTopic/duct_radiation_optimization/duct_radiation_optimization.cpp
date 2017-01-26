@@ -39,7 +39,7 @@ int main(int argc, char **argv){
     //const plint nz = length_duct + 3*diameter + 30;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 2*(pow(2,13) + nz*sqrt(3));
+    const plint maxT = 5*(pow(2,13) + nz*sqrt(3));
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -127,8 +127,8 @@ int main(int argc, char **argv){
     Two_Microphones two_microphones_3r(radius, double_microphone_distance, 
             length_duct, position, fNameOut, name_3r, distance_3r, nx, ny, nz);
 
-    plint distance_6r = 6*radius;
-    string name_6r = "6r";
+    plint distance_6r = length_duct - 100;
+    string name_6r = "listening";
     Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
             length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
@@ -149,7 +149,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nVALENDO AGORA SEM FONTE E COM ESCOAMENTO.\n"; 
+    std::string title = "\nAGORA NAO PODE MAIS CARREGAR O ARQUIVO, TEM QUE SER AGORA NA RACA MESMO E ESPERAR ESSE CARA SE DESENVOLVER.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -165,19 +165,16 @@ int main(int argc, char **argv){
     << "Posicao do duto: " << position[2] << endl;
     // --------------------------------------------------------
 
-
-    //pcout << "!!Loading lattice initial condition!!" << endl;
-    //loadBinaryBlock(lattice, "checkpoint.dat");
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source && iT > maxT/2){
             plint total_signals = 20;
-	    T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
+	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
-            set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
+            set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
         }else{
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
@@ -197,12 +194,6 @@ int main(int argc, char **argv){
         if (iT == 0) {
             //writeGifs(lattice,iT);
             //writeVTK(lattice, iT, rho0, drho);
-        }
-
-        if (iT == maxT - 100){
-            pcout << "Saving the state of the simulation ..." << endl;
-            //saveRawMultiBlock(lattice, "checkpoint.dat");
-            saveBinaryBlock(lattice, "checkpoint_020.dat");
         }
 
         // extract values of pressure and velocities
