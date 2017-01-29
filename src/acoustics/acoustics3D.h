@@ -949,6 +949,4 @@ class System_Abom_Measurement{
     }
 };
 
-
-
 }

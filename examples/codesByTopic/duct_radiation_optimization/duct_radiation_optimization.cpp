@@ -33,13 +33,15 @@ int main(int argc, char **argv){
     const plint ny = 6*diameter + 60;
     //const plint ny = 2*diameter + 60;
     const plint position_duct_z = 0;
-    const plint length_duct = 30 + 120 + 5*113 + 3*diameter;
+    const plint length_duct = 1.4*(30 + 120 + 5*113 + 3*diameter);
     //const plint length_duct = 3*diameter;
     const plint nz = length_duct + 2*3*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 1*(pow(2,13) + nz*sqrt(3));
+
+    const plint maxT = 5*(pow(2,13) + nz*sqrt(3));
+
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -127,8 +129,8 @@ int main(int argc, char **argv){
     Two_Microphones two_microphones_3r(radius, double_microphone_distance, 
             length_duct, position, fNameOut, name_3r, distance_3r, nx, ny, nz);
 
-    plint distance_6r = 6*radius;
-    string name_6r = "6r";
+    plint distance_6r = length_duct - 100;
+    string name_6r = "listening";
     Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
             length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
@@ -149,7 +151,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nEXPLODIU MAS COMECANDO PELA METADE JA COM O DOMINIO ESTABILIZADO.\n"; 
+    std::string title = "\nTESTANDO AGORA COM O DUTO MAIOR.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -166,25 +168,22 @@ int main(int argc, char **argv){
     << "Começo dos microfones em lattice: " << begin_microphone << endl;
     // --------------------------------------------------------
 
-
-    pcout << "!!Loading lattice initial condition!!" << endl;
-    loadBinaryBlock(lattice, "checkpoint_015.dat");
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT <= maxT_final_source /*&& iT > maxT/2*/){
-            plint total_signals = 115;
-	    T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
+        if (iT <= maxT_final_source && iT > maxT/2){
+            plint total_signals = 20;
+	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
         }else{
-              Array<T,3> j_target(0, 0, velocity_flow);
+            Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
         }
 
-        if (iT % 100 == 0) {
+        if (iT % 50 == 0) {
             pcout << "Iteration " << iT << endl;
              pcout << " energy ="
             << setprecision(10) << getStoredAverageEnergy<T>(lattice)
@@ -199,12 +198,6 @@ int main(int argc, char **argv){
             //writeGifs(lattice,iT);
             //writeVTK(lattice, iT, rho0, drho);
         }
-
-        /*if (iT == maxT/2){
-            pcout << "Saving the state of the simulation ..." << endl;
-            //saveRawMultiBlock(lattice, "checkpoint.dat");
-            saveBinaryBlock(lattice, "checkpoint.dat");
-        }*/
 
         // extract values of pressure and velocities
         system_abom_measurement.save_point(lattice, rho0, cs2);
