@@ -33,7 +33,7 @@ int main(int argc, char **argv){
     const plint ny = 6*diameter + 60;
     //const plint ny = 2*diameter + 60;
     const plint position_duct_z = 0;
-    const plint length_duct = 30 + 120 + 5*113 + 3*diameter;
+    const plint length_duct = 1.4*(30 + 120 + 5*113 + 3*diameter);
     //const plint length_duct = 3*diameter;
     const plint nz = length_duct + 2*3*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
@@ -149,7 +149,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nAGORA NAO PODE MAIS CARREGAR O ARQUIVO, TEM QUE SER AGORA NA RACA MESMO E ESPERAR ESSE CARA SE DESENVOLVER.\n"; 
+    std::string title = "\nTESTANDO AGORA COM O DUTO MAIOR.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
