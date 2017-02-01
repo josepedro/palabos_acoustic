@@ -748,7 +748,7 @@ void set_nodynamics(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint 
 }
 
 class Probe{
-    private:
+    public:
         Box3D location;
         string name_probe;
         plb_ofstream file_pressures;
@@ -820,13 +820,13 @@ class Probe{
         }
 
         void save_point(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T rho0, T cs2){
-            file_pressures << setprecision(10) << (computeAverageDensity(lattice, this->location) - rho0)*cs2 << endl;
+            this->file_pressures << setprecision(10) << (computeAverageDensity(lattice, this->location) - rho0)*cs2 << endl;
             std::auto_ptr<MultiScalarField3D<T> > velocity_x(plb::computeVelocityComponent(lattice, this->location, 0));
-            file_velocities_x << setprecision(10) << computeAverage(*velocity_x, this->location) << endl;
+            this->file_velocities_x << setprecision(10) << computeAverage(*velocity_x, this->location) << endl;
             std::auto_ptr<MultiScalarField3D<T> > velocity_y(plb::computeVelocityComponent(lattice, this->location, 1));
-            file_velocities_y << setprecision(10) << computeAverage(*velocity_y, this->location) << endl;
+            this->file_velocities_y << setprecision(10) << computeAverage(*velocity_y, this->location) << endl;
             std::auto_ptr<MultiScalarField3D<T> > velocity_z(plb::computeVelocityComponent(lattice, this->location, 2));
-            file_velocities_z << setprecision(10) << computeAverage(*velocity_z, this->location) << endl;
+            this->file_velocities_z << setprecision(10) << computeAverage(*velocity_z, this->location) << endl;
         }
 };
 
@@ -867,6 +867,52 @@ class Two_Microphones{
             this->microphone_2.save_point(lattice, rho0, cs2);   
         }
 };
+
+class Coefficient_Reflection_Probes{
+    private:
+        Probe probe_A;
+        Probe probe_B;
+        Probe probe_C;
+        Probe probe_D;
+    public:
+        Coefficient_Reflection_Probes(Array<plint,3> position_A,
+        	Array<plint,3> position_B,
+        	Array<plint,3> position_C,
+        	Array<plint,3> position_D,
+            std::string fNameOut, std::string name){
+
+        	Box3D surface_probe_A(position_A[0], position_A[0], position_A[1], position_A[1], position_A[2], position_A[2]);
+        	Box3D surface_probe_B(position_B[0], position_B[0], position_B[1], position_B[1], position_B[2], position_B[2]);
+        	Box3D surface_probe_C(position_C[0], position_C[0], position_C[1], position_C[1], position_C[2], position_C[2]);
+        	Box3D surface_probe_D(position_D[0], position_D[0], position_D[1], position_D[1], position_D[2], position_D[2]);
+
+            std::string name_A = name + "_A";
+            Probe probe_A(surface_probe_A, fNameOut, name_A);
+            this->probe_A.set_properties(surface_probe_A, fNameOut, name_A);
+
+            std::string name_B = name + "_B";
+            Probe probe_B(surface_probe_B, fNameOut, name_B);
+            this->probe_B.set_properties(surface_probe_B, fNameOut, name_B);
+
+            std::string name_C = name + "_C";
+            Probe probe_C(surface_probe_C, fNameOut, name_C);
+            this->probe_C.set_properties(surface_probe_C, fNameOut, name_C);
+
+            std::string name_D = name + "_D";
+            Probe probe_D(surface_probe_D, fNameOut, name_D);
+            this->probe_D.set_properties(surface_probe_D, fNameOut, name_D);
+            
+        }
+
+        void save_point(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T rho0, T cs2){
+            this->probe_A.save_point(lattice, rho0, cs2);
+            this->probe_B.save_point(lattice, rho0, cs2);
+            this->probe_C.save_point(lattice, rho0, cs2);
+            this->probe_D.save_point(lattice, rho0, cs2);
+        }
+};
+
+
 
 class System_Abom_Measurement{
     private:

@@ -33,7 +33,8 @@ int main(int argc, char **argv){
     const plint ny = 6*diameter + 60;
     //const plint ny = 2*diameter + 60;
     const plint position_duct_z = 0;
-    const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
+    //const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
+    const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
     const plint nz = length_duct + 3*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
@@ -133,22 +134,15 @@ int main(int argc, char **argv){
     Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
             length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
-    Box3D surface_probe_A(nx/2, nx/2, ny/2, ny/2, nz - 30, nz - 30);
-    Box3D surface_probe_B(nx/2, nx/2, ny - 30, ny - 30, nz - 30, nz - 30);
-    Box3D surface_probe_C(nx/2, nx/2, ny - 30, ny - 30, nz/2, nz/2);
-    Box3D surface_probe_D(nx/2, nx/2, 0.75*ny, 0.75*ny, length_duct + 31, length_duct + 31);
-    std::string name_A = name + "_A";
-    Probe probe_A(surface_probe_A, fNameOut, name_A);
-    probe_A.set_properties(surface_probe_A, fNameOut, name_A);
-    std::string name_B = name + "_B";
-    Probe probe_B(surface_probe_B, fNameOut, name_B);
-    probe_B.set_properties(surface_probe_B, fNameOut, name_B);
-    std::string name_C = name + "_C";
-    Probe probe_C(surface_probe_C, fNameOut, name_C);
-    probe_C.set_properties(surface_probe_C, fNameOut, name_C);
-    std::string name_D = name + "_D";
-    Probe probe_D(surface_probe_D, fNameOut, name_D);
-    probe_D.set_properties(surface_probe_D, fNameOut, name_D);
+    // Setting probes to evaluate coefficient reflection of ABC
+    Array<plint,3> position_A(nx/2, ny/2, nz - 30);
+    Array<plint,3> position_B(nx/2, ny - 30, nz - 30);
+    Array<plint,3> position_C(nx/2, ny - 30, nz/2);
+    Array<plint,3> position_D(nx/2, 0.75*ny, length_duct + 31);
+    string name_abc = "abc";
+    Coefficient_Reflection_Probes coefficient_reflection_probes(position_A,
+    position_B, position_C, position_D, fNameOut, name_abc);
+    
     // ---------------------------------------------------------
     
 
@@ -179,7 +173,8 @@ int main(int argc, char **argv){
     << "Raio do duto: " << radius << endl
     << "Espessura: " << thickness_duct << endl
     << "Tamanho duto: " << length_duct << endl
-    << "Posicao do duto: " << position[2] << endl;
+    << "Posicao do duto: " << position[2] << endl
+    << "Começo dos microfones em lattice: " << begin_microphone << endl;
     // --------------------------------------------------------
 
     // Mean for-loop
@@ -208,9 +203,14 @@ int main(int argc, char **argv){
             << endl;
         }
 
-        if (iT == 0) {
+        if (iT == (maxT/2) + (maxT/4)) {
             //writeGifs(lattice,iT);
             //writeVTK(lattice, iT, rho0, drho);
+        }
+
+        if (iT%50 == 0) {
+            //writeGifs(lattice,iT);
+            writeVTK(lattice, iT, rho0, drho);
         }
 
         // extract values of pressure and velocities
@@ -220,6 +220,7 @@ int main(int argc, char **argv){
         two_microphones_3r.save_point(lattice, rho0, cs2);
         two_microphones_6r.save_point(lattice, rho0, cs2);
         two_microphones_boca.save_point(lattice, rho0, cs2);
+        coefficient_reflection_probes.save_point(lattice, rho0, cs2);
 
         lattice.collideAndStream();
     }

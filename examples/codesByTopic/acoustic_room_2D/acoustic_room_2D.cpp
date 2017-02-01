@@ -53,14 +53,14 @@ using namespace plb_acoustics_2D;
 // ---------------------------------------------
 
 const T rho0 = 1.;
-const T deltaRho = 1.e-2;
+const T deltaRho = 1.e-1;
 const T lattice_speed_sound = 1/sqrt(3);
 const T lattice_speed_sound_square = lattice_speed_sound*lattice_speed_sound;
 // 120000. 5400 keeps (5000 finish transient and 6000 vortice contact anechoic condition) 
-const plint maxIter = 50000;
+const plint maxIter = 100000;
 //const plint maxIter = 5500; // 120000. 5400 keeps
-const plint nx = 1000;       // Choice of lattice dimensions.
-const plint ny = 1000;
+const plint nx = 500;       // Choice of lattice dimensions.
+const plint ny = 500;
 const T reynolds_number = 150;
 const T mach_number = 0.1;
 const T velocity_flow = mach_number*lattice_speed_sound;
@@ -110,55 +110,65 @@ int main(int argc, char* argv[]) {
     Box2D above_bounce_back(0, nx - 1, ny - 31 , ny - 1);
     defineDynamics(lattice, above_bounce_back, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_1(0, nx/2 - nx/5, 0, ny/2);
+    Box2D down_bounce_back(0, nx - 1, 0 , 31);
+    defineDynamics(lattice, down_bounce_back, new BounceBack<T,DESCRIPTOR>((T)0));
+
+    Box2D left_bounce_back(0, 31, 0 , ny - 1);
+    defineDynamics(lattice, left_bounce_back, new BounceBack<T,DESCRIPTOR>((T)0));
+
+    Box2D right_bounce_back(nx - 31, nx - 1, 0 , ny - 1);
+    defineDynamics(lattice, right_bounce_back, new BounceBack<T,DESCRIPTOR>((T)0));
+
+    Box2D down_wall(nx/2 - 20, nx/2 + 20, 0 , 200 + 40);
+    defineDynamics(lattice, down_wall, new BounceBack<T,DESCRIPTOR>((T)0));
+
+    Box2D above_wall(nx/2 - 20, nx/2 + 20, ny - 200 - 40, ny - 1);
+    defineDynamics(lattice, above_wall, new BounceBack<T,DESCRIPTOR>((T)0));
+
+    /*Box2D square_1(0, nx/2 - 100, 0, ny/2);
     defineDynamics(lattice, square_1, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_2(nx/2 - nx/5, nx/2 + nx/5, 0, ny/10);
+    Box2D square_2(nx/2 - 100, nx/2 + 100, 0, ny/10);
     defineDynamics(lattice, square_2, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_3(nx/2 + nx/5, nx, 0, ny/2);
+    Box2D square_3(nx/2 + 100, nx, 0, ny/2);
     defineDynamics(lattice, square_3, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_4(nx/2 - nx/5, nx/2 - nx/50, ny/2 - ny/50, ny/2);
+    Box2D square_4(nx/2 - 100, nx/2 - 10, ny/2 - 10, ny/2);
     defineDynamics(lattice, square_4, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_5(nx/2 + nx/50, nx/2 + nx/5, ny/2 - ny/50, ny/2);
-    defineDynamics(lattice, square_5, new BounceBack<T,DESCRIPTOR>((T)0));
+    Box2D square_5(nx/2 + 10, nx/2 + 100, ny/2 - 10, ny/2);
+    defineDynamics(lattice, square_5, new BounceBack<T,DESCRIPTOR>((T)0));*/
 
     // Files to capture data in time
-    plint position_x_in = nx/5;
-    plint position_x_out = position_x_in + nx/2;
-    Array<plint,2> position_y(ny/2 + 1, ny - 30);
-    Box2D point_capture_in(position_x_in, position_x_in, position_y[0], position_y[1]);
-    Box2D point_capture_out(position_x_out, position_x_out, position_y[0], position_y[1]);
-
+    Box2D point_capture(nx/2 + 20, nx/2 + 20, ny/2 - 100, ny/2 - 100);
     //Box2D point_capture(nx/2, nx/2, ny/2 - 5, ny/2 - 5);
-    plb_ofstream file_pressures_in("pressures_in.dat");
-    plb_ofstream file_pressures_out("pressures_out.dat");
-    //plb_ofstream file_velocities_x("velocities_x.dat");
-    //plb_ofstream file_velocities_y("velocities_y.dat");
+    plb_ofstream file_pressures("pressures.dat");
+    plb_ofstream file_velocities_x("velocities_x.dat");
+    plb_ofstream file_velocities_y("velocities_y.dat");
 
     // Main loop over time iterations.
-    Box2D signal_input_place(31, 32, 0, ny - 1);
+    Box2D signal_input_place(nx/4, nx/4, ny/4, ny/4);
     for (plint iT = 0; iT <= maxIter; iT++){
 
 
         // excitation signal
-        if (iT >= 0){
+        if (iT == 0)
+        {
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            T rho_changing = get_linear_chirp(0, 0.1, maxIter, iT, deltaRho);
-            initializeAtEquilibrium(lattice, signal_input_place, rho_changing, u0);
+            //T rho_changing = get_linear_chirp(0, 0.1, maxIter - 1000, iT - 1000, deltaRho);
+            initializeAtEquilibrium(lattice, signal_input_place, (T) 1. + deltaRho, u0);
         }
         
 
 
-        if (iT%100==0) { 
+        if (iT%20==0) { 
             pcout << "iT= " << iT << endl;
 
-            /*VtkImageOutput2D<T> vtkOut(createFileName("vtk", iT, 6), 1.);
+            VtkImageOutput2D<T> vtkOut(createFileName("vtk", iT, 6), 1.);
             vtkOut.writeData<float>(*computeDensity(lattice), "density", 1.);
             vtkOut.writeData<2,float>(*computeVelocity(lattice), "velocity", 1.);
-            vtkOut.writeData<float>(*computeDensity(lattice), "vorticity", 1.);*/
+            vtkOut.writeData<float>(*computeDensity(lattice), "vorticity", 1.);
 
             pcout << " energy ="
             << setprecision(10) << getStoredAverageEnergy<T>(lattice)
@@ -169,14 +179,11 @@ int main(int argc, char* argv[]) {
             << endl;
         }
 
-        file_pressures_in << setprecision(10) << (computeAverageDensity(lattice, point_capture_in) 
-            - rho0)*lattice_speed_sound_square << endl;
-        file_pressures_out << setprecision(10) << (computeAverageDensity(lattice, point_capture_out) 
-            - rho0)*lattice_speed_sound_square << endl;
-        /*std::auto_ptr<MultiScalarField2D<T> > velocity_x(plb::computeVelocityComponent(lattice, point_capture, 0));
+        file_pressures << setprecision(10) << (computeAverageDensity(lattice, point_capture) - rho0)*lattice_speed_sound_square << endl;
+        std::auto_ptr<MultiScalarField2D<T> > velocity_x(plb::computeVelocityComponent(lattice, point_capture, 0));
         file_velocities_x << setprecision(10) << computeAverage(*velocity_x, point_capture) << endl;
         std::auto_ptr<MultiScalarField2D<T> > velocity_y(plb::computeVelocityComponent(lattice, point_capture, 1));
-        file_velocities_y << setprecision(10) << computeAverage(*velocity_y, point_capture) << endl;*/
+        file_velocities_y << setprecision(10) << computeAverage(*velocity_y, point_capture) << endl;
 
         // Execute lattice Boltzmann iteration.
         lattice.collideAndStream();
