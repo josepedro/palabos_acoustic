@@ -33,13 +33,13 @@ int main(int argc, char **argv){
     const plint ny = 6*diameter + 60;
     //const plint ny = 2*diameter + 60;
     const plint position_duct_z = 0;
-    const plint length_duct = 1.4*(30 + 120 + 5*113 + 3*diameter);
+    const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
     //const plint length_duct = 3*diameter;
-    const plint nz = length_duct + 2*3*diameter + 30;
+    const plint nz = length_duct + 3*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 5*(pow(2,13) + nz*sqrt(3));
+    const plint maxT = 1*(pow(2,13) + nz*sqrt(3));
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -83,7 +83,8 @@ int main(int argc, char **argv){
     set_nodynamics(lattice, nx, ny, off_set_z);
         
     T rhoBar_target = 0;
-    const T mach_number = 0.2;
+    //const T mach_number = 0.2;
+    const T mach_number = 0;
     const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
@@ -132,6 +133,22 @@ int main(int argc, char **argv){
     Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
             length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
+    Box3D surface_probe_A(nx/2, nx/2, ny/2, ny/2, nz - 30, nz - 30);
+    Box3D surface_probe_B(nx/2, nx/2, ny - 30, ny - 30, nz - 30, nz - 30);
+    Box3D surface_probe_C(nx/2, nx/2, ny - 30, ny - 30, nz/2, nz/2);
+    Box3D surface_probe_D(nx/2, nx/2, 0.75*ny, 0.75*ny, length_duct + 31, length_duct + 31);
+    std::string name_A = name + "_A";
+    Probe probe_A(surface_probe_A, fNameOut, name_A);
+    probe_A.set_properties(surface_probe_A, fNameOut, name_A);
+    std::string name_B = name + "_B";
+    Probe probe_B(surface_probe_B, fNameOut, name_B);
+    probe_B.set_properties(surface_probe_B, fNameOut, name_B);
+    std::string name_C = name + "_C";
+    Probe probe_C(surface_probe_C, fNameOut, name_C);
+    probe_C.set_properties(surface_probe_C, fNameOut, name_C);
+    std::string name_D = name + "_D";
+    Probe probe_D(surface_probe_D, fNameOut, name_D);
+    probe_D.set_properties(surface_probe_D, fNameOut, name_D);
     // ---------------------------------------------------------
     
 
@@ -149,7 +166,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nTESTANDO AGORA COM O DUTO MAIOR.\n"; 
+    std::string title = "\nVALIDANDO LS PARA DEIXAR O CODIGO ENXUTO.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -167,7 +184,7 @@ int main(int argc, char **argv){
 
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT <= maxT_final_source && iT > maxT/2){
+        if (iT <= maxT_final_source /*&& iT > maxT/2*/){
             plint total_signals = 20;
 	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
