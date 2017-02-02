@@ -34,7 +34,7 @@ int main(int argc, char **argv){
     //const plint ny = 2*diameter + 60;
     const plint position_duct_z = 0;
     //const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
-    const plint length_duct = 3*(3*diameter);
+    const plint length_duct = 1.5*(3*diameter);
     //const plint length_duct = 3*diameter;
     const plint nz = length_duct + 3*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
