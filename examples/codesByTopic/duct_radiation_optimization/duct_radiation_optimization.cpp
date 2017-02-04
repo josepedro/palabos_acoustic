@@ -34,7 +34,7 @@ int main(int argc, char **argv){
     //const plint ny = 2*diameter + 60;
     const plint position_duct_z = 0;
     //const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
-    const plint length_duct = 1.5*(3*diameter);
+    const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
     const plint nz = length_duct + 3*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
@@ -84,8 +84,8 @@ int main(int argc, char **argv){
     set_nodynamics(lattice, nx, ny, off_set_z);
         
     T rhoBar_target = 0;
-    //const T mach_number = 0.2;
-    const T mach_number = 0;
+    const T mach_number = 0.15;
+    //const T mach_number = 0;
     const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
@@ -186,7 +186,7 @@ int main(int argc, char **argv){
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
-            set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
+            set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
         }else{
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
@@ -210,7 +210,7 @@ int main(int argc, char **argv){
 
         if (iT%50 == 0) {
             //writeGifs(lattice,iT);
-            writeVTK(lattice, iT, rho0, drho);
+            //writeVTK(lattice, iT, rho0, drho);
         }
 
         // extract values of pressure and velocities
