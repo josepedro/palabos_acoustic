@@ -36,7 +36,7 @@ int main(int argc, char **argv){
     //const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
-    const plint nz = length_duct + 3*diameter + 30;
+    const plint nz = length_duct + (60/4)*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
@@ -160,21 +160,22 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nVALIDANDO LS PARA DEIXAR O CODIGO ENXUTO.\n"; 
+    std::string title = "\nCOM O LS ENXUTO AGORA VOU USAR 1/4 DO TAMANHO DE REFERENCIA DO ABOM PARA AMENIZAR O PROBLEMA DA REFLEXAO.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
     << "Lattice:" << endl << endl 
     << "nx: " << nx << " ny: " << ny << " nz: " << nz << endl
-    << " omega: " << omega << endl << endl
+    << "omega: " << omega << endl << endl
     << "Tempos: " << endl
     << "Total Time step: " << maxT << endl
     << "Raio do duto: " << radius << endl
     << "Espessura: " << thickness_duct << endl
     << "Tamanho duto: " << length_duct << endl
     << "Posicao do duto: " << position[2] << endl
-    << "Começo dos microfones em lattice: " << begin_microphone << endl;
+    << "Começo dos microfones em lattice: " << begin_microphone << endl
+    << "Mach imposto: " <<  mach_number << endl;
     // --------------------------------------------------------
 
     // Mean for-loop
