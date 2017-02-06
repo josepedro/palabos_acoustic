@@ -28,9 +28,9 @@ int main(int argc, char **argv){
     const T drho = rho0/100;
     const plint radius = 20;
     const plint diameter = 2*radius;
-    const plint nx = 6*diameter + 60;
+    const plint nx = 2*(6*diameter + 60);
     //const plint nx = 2*diameter + 60;
-    const plint ny = 6*diameter + 60;
+    const plint ny = 2*(6*diameter + 60);
     //const plint ny = 2*diameter + 60;
     const plint position_duct_z = 0;
     //const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
@@ -160,7 +160,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nCOM O LS ENXUTO AGORA VOU USAR 1/4 DO TAMANHO DE REFERENCIA DO ABOM PARA AMENIZAR O PROBLEMA DA REFLEXAO.\n"; 
+    std::string title = "\nMELHORANDO UM POUCO MAIS AINDA O COEFICIENTE DE REFLEXAO NO PONTO C.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
