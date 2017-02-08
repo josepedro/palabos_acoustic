@@ -956,7 +956,7 @@ class System_Abom_Measurement{
             this->file_velocities_z.open(to_char_velocities_z);
 
             plint radius_probe = (radius - 1)/sqrt(2);
-            for (int i = begin_microphone; i <= length_duct + 3; i++){
+            for (int i = begin_microphone; i <= length_duct + 3 + radius/2; i++){
             	plint position_microphone = position_duct[2] + i;
 
             	Box3D surface_microphone(
