@@ -28,9 +28,9 @@ int main(int argc, char **argv){
     const T drho = rho0/100;
     const plint radius = 20;
     const plint diameter = 2*radius;
-    const plint nx = 2*(6*diameter + 60);
+    const plint nx = (6*diameter + 60);
     //const plint nx = 2*diameter + 60;
-    const plint ny = 2*(6*diameter + 60);
+    const plint ny = (6*diameter + 60);
     //const plint ny = 2*diameter + 60;
     const plint position_duct_z = 0;
     //const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
