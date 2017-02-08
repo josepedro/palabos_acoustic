@@ -28,19 +28,25 @@ int main(int argc, char **argv){
     const T drho = rho0/100;
     const plint radius = 20;
     const plint diameter = 2*radius;
+    
     const plint nx = (6*diameter + 60);
     //const plint nx = 2*diameter + 60;
+    
     const plint ny = (6*diameter + 60);
     //const plint ny = 2*diameter + 60;
+    
     const plint position_duct_z = 0;
     //const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
-    const plint nz = length_duct + (60/4)*diameter + 30;
+    
+    const plint nz = length_duct + (60/2)*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
+    
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
-    const plint maxT = 1*(pow(2,13) + nz*sqrt(3));
+    const plint maxT = 2*(pow(2,13) + nz*sqrt(3));
+    //const plint maxT = 2000;
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -180,14 +186,14 @@ int main(int argc, char **argv){
 
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT <= maxT_final_source /*&& iT > maxT/2*/){
+        if (iT <= maxT_final_source && iT > maxT/2){
             plint total_signals = 20;
 	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
-            set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
+            set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
         }else{
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
