@@ -28,8 +28,8 @@ int main(int argc, char **argv){
 
     const T rho0 = 1;
     const T drho = rho0/100;
-    const plint nx = 100;
-    const plint ny = 100;
+    const plint nx = 50;
+    const plint ny = 50;
     const plint nz = 250;
     const T omega = 1.985;
     const plint maxT = 10000;
@@ -67,6 +67,11 @@ int main(int argc, char **argv){
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target);
 
+
+    T size_anechoic_buffer_2 = 100;
+    defineAnechoicMRTWall(nx, ny, nz, lattice, size_anechoic_buffer_2, omega, j_target, rhoBar_target, 5);
+
+
     lattice.initialize();
 
     pcout << std::endl << "Voxelizing the domain." << std::endl;
@@ -74,8 +79,8 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes to evaluate coefficient reflection of ABC
-    Array<plint,3> position_A(nx/2, ny/2, nz - size_anechoic_buffer);
-    Array<plint,3> position_B(nx/2, ny - size_anechoic_buffer, nz - size_anechoic_buffer);
+    Array<plint,3> position_A(nx/2, ny/2, nz - size_anechoic_buffer_2);
+    Array<plint,3> position_B(nx/2, ny - size_anechoic_buffer, nz - size_anechoic_buffer_2);
     Array<plint,3> position_C(nx/2, ny - size_anechoic_buffer, nz/2);
     Array<plint,3> position_D(nx/2, 0.75*ny, size_anechoic_buffer + 1);
     string name_abc = "abc";
@@ -127,7 +132,7 @@ int main(int argc, char **argv){
         }
 
 
-        coefficient_reflection_probes.save_point(lattice, rho0, cs2);
+        //coefficient_reflection_probes.save_point(lattice, rho0, cs2);
         lattice.collideAndStream();
     }
 

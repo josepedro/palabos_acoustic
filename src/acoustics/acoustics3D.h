@@ -388,6 +388,144 @@ namespace plb_acoustics_3D{
 		}
 	}
 
+
+/*defineAnechoicMRTWall(plint nx, plint ny, plint nz,
+	 MultiBlockLattice3D<T,Descriptor>& lattice,
+	  T size_anechoic_buffer, plint orientation, T omega, 
+	  Array<plint, 3> position_anechoic_wall, plint length_anechoic_wall,plint width_anechoic_wall,
+	  T rhoBar_target, Array<T,3> j_target)*/
+
+template<typename T, template<typename U> class Descriptor>
+	void defineAnechoicMRTWall(plint nx, plint ny, plint nz,
+	 MultiBlockLattice3D<T,Descriptor>& lattice,
+	  T size_anechoic_buffer, T omega, 
+	  Array<T,3> j_target,
+	  T rhoBar_target, plint orientation){
+
+		j_target = -j_target;
+
+	  	typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
+
+	 	for(T delta = 0; delta <= size_anechoic_buffer; delta++){
+			// for in all points-cell lattice
+	 		for(plint z = 0; z < nz; z++){
+				for(plint y = 0; y < ny; y++){
+					for(plint x = 0; x < nx; x++){
+						// condition to right (1)
+                        if(x == (nx-delta) &&
+                          y >= (delta-1) && 
+                          y < (ny-delta) &&
+                          z >= (delta-1) && 
+                          z < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = size_anechoic_buffer - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
+                            anechoicDynamics->setJ_target(j_target);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            //defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to bottom (2)
+                        else if(x >= (delta-1) &&
+                          x < (nx-delta) &&
+                          y == delta &&
+                          z >= (delta-1) && 
+                          z < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = size_anechoic_buffer - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
+                            anechoicDynamics->setJ_target(j_target);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            //defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to left (3)
+                        else if(x == delta &&
+                          y >= (delta-1) &&
+                          y < (ny-delta) &&
+                          z >= (delta-1) && 
+                          z < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = size_anechoic_buffer - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
+                            anechoicDynamics->setJ_target(j_target);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            //defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to top (4)
+                        else if(x >= (delta-1) &&
+                          x < (nx-delta) &&
+                          y == (ny-delta) &&
+                          z >= (delta-1) && 
+                          z < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = size_anechoic_buffer - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
+                            anechoicDynamics->setJ_target(j_target);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            //defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to front (5)
+                        else if(x >= (delta-1) &&
+                          x < (nx-delta) &&
+                          z == (nz-delta) &&
+                          y >= (delta-1) && 
+                          y < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = size_anechoic_buffer - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
+                            anechoicDynamics->setJ_target(j_target);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+                        // condition to back (6)
+                        else if(x >= (delta-1) &&
+                          x < (nx-delta) &&
+                          z == delta &&
+                          y >= (delta-1) && 
+                          y < (nz-delta)){
+                            // set delta here
+                            AnechoicBackgroundDynamics *anechoicDynamics = 
+                            new AnechoicBackgroundDynamics(omega);
+                            T delta_efective = size_anechoic_buffer - delta;
+                            anechoicDynamics->setDelta(delta_efective);
+                            anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
+                            anechoicDynamics->setJ_target(j_target);
+                            DotList3D points_to_aplly_dynamics;
+                            points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                            //defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        }
+					}
+				}
+			}
+		}
+	}
+
+
 template<typename T, template<typename U> class Descriptor>
 	void defineAnechoicMRTBoards_limited(plint nx, plint ny, plint nz,
 	 MultiBlockLattice3D<T,Descriptor>& lattice,
@@ -530,72 +668,7 @@ template<typename T, template<typename U> class Descriptor>
 	}
 
 
-template<typename T, template<typename U> class Descriptor>
-	void defineAnechoicMRTWall(plint nx, plint ny, plint nz,
-	 MultiBlockLattice3D<T,Descriptor>& lattice,
-	  T size_anechoic_buffer, plint orientation, T omega, 
-	  Array<plint, 3> position_anechoic_wall, plint length_anechoic_wall,plint width_anechoic_wall,
-	  T rhoBar_target, Array<T,3> j_target){
-
-	j_target = -j_target;	
-	typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
-
-		// delta increase to the right
-		if(orientation == 1){
-			for(T delta = 0; delta <= size_anechoic_buffer; delta++){        
-		        DotList3D points_to_aplly_dynamics;			// altura em y 
-
-		        for (plint j = 0 ; j <= width_anechoic_wall; ++j){
-
-			        for (int i = 0; i <= length_anechoic_wall; ++i){
-			            points_to_aplly_dynamics.addDot(
-			            	Dot3D(position_anechoic_wall[0] + delta,
-			            	 position_anechoic_wall[1] + i,
-			            	 position_anechoic_wall[2]+ j) );
-			        }
-			    }
-		        AnechoicBackgroundDynamics *anechoicDynamics = 
-		        new AnechoicBackgroundDynamics(omega);
-		        T delta_efective = size_anechoic_buffer - delta;
-		        anechoicDynamics->setDelta((T) delta_efective);
-		        anechoicDynamics->setRhoBar_target(rhoBar_target);
-		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
-		        //j_target[0] = -j_target[0];  
-		        anechoicDynamics->setJ_target(j_target);
-		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
-		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
-			    
-	    	}
-		}
-
-		// // delta increase to the left
-		// else if(orientation == 3){
-		// 	for(T delta = 0; delta <= size_anechoic_buffer; delta++){        
-		//         DotList2D points_to_aplly_dynamics;
-		//         for (int i = 0; i <= length_anechoic_wall; ++i){
-		//             points_to_aplly_dynamics.addDot(
-		//             	Dot2D(position_anechoic_wall[0] + delta,
-		//             	position_anechoic_wall[1] + i));
-		//         }
-		//         AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
-		//         new AnechoicDynamics<T,DESCRIPTOR>(omega);
-		//         T delta_left = size_anechoic_buffer - delta;
-		//         anechoicDynamics->setDelta(delta_left);
-		//         anechoicDynamics->setRhoBar_target(rhoBar_target);
-		//         anechoicDynamics->setJ_target(j_target);
-		//         defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
-	 //    	}
-		// }
-
-		else{
-			cout << "Anechoic Dynamics not Defined." << endl;
-			cout << "Choose the correct orientation number." << endl;
-		}
-
-	}
-
-
-	// Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+// Get current date/time, format is YYYY-MM-DD.HH:mm:ss
 const std::string currentDateTime() {
     time_t     now = time(0);
     struct tm  tstruct;

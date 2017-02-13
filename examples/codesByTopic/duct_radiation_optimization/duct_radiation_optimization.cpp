@@ -24,6 +24,8 @@ using namespace plb_acoustics_3D;
 int main(int argc, char **argv){
     plbInit(&argc, &argv);
 
+    global::timer("mainLoop").start();
+
     const T rho0 = 1;
     const T drho = rho0/100;
     const plint radius = 20;
@@ -40,13 +42,12 @@ int main(int argc, char **argv){
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
     
-    const plint nz = length_duct + (60/2)*diameter + 30;
+    const plint nz = length_duct + (60/4)*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
     
     const T lattice_speed_sound = 1/sqrt(3);
     const T omega = 1.985;
     const plint maxT = 2*(pow(2,13) + nz*sqrt(3));
-    //const plint maxT = 2000;
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -55,7 +56,6 @@ int main(int argc, char **argv){
     const T ka_max = 2.5;
     const T ka_min = 0;
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
-    clock_t t;
 
     // Saving a propery directory
     std::string fNameOut = currentDateTime() + "+tmp";
@@ -94,10 +94,13 @@ int main(int argc, char **argv){
     //const T mach_number = 0;
     const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
-    T size_anechoic_buffer = 30;
+    T size_anechoic_buffer = 100;
     defineAnechoicMRTBoards_limited(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target, off_set_z);
+
+    T size_anechoic_buffer_2 = 150;
+    defineAnechoicMRTWall(nx, ny, nz, lattice, size_anechoic_buffer_2, omega, j_target, rhoBar_target, 5);
 
     //const T mach_number = 0;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
@@ -109,7 +112,7 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes ------------------------------------------
-    plint begin_microphone = length_duct/2;
+    plint begin_microphone = length_duct/4;
     System_Abom_Measurement system_abom_measurement(lattice, position, 
         begin_microphone, length_duct, radius, fNameOut);
 
@@ -141,9 +144,9 @@ int main(int argc, char **argv){
             length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
     // Setting probes to evaluate coefficient reflection of ABC
-    Array<plint,3> position_A(nx/2, ny/2, nz - 30);
-    Array<plint,3> position_B(nx/2, ny - 30, nz - 30);
-    Array<plint,3> position_C(nx/2, ny - 30, nz/2);
+    Array<plint,3> position_A(nx/2, ny/2, nz - size_anechoic_buffer_2);
+    Array<plint,3> position_B(nx/2, ny - size_anechoic_buffer, nz - size_anechoic_buffer_2);
+    Array<plint,3> position_C(nx/2, ny - size_anechoic_buffer, nz/2);
     Array<plint,3> position_D(nx/2, 0.75*ny, length_duct + 31);
     string name_abc = "abc";
     Coefficient_Reflection_Probes coefficient_reflection_probes(position_A,
@@ -160,13 +163,12 @@ int main(int argc, char **argv){
     // ---------------------------------------------------------
 
     // Important information about simulation ------------------    
-    t = clock();
     std::string AllSimulationInfo_string = fNameOut + "/AllSimulationInfo.txt";
     char to_char_AllSimulationInfo[1024];
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nMELHORANDO UM POUCO MAIS AINDA O COEFICIENTE DE REFLEXAO NO PONTO C.\n"; 
+    std::string title = "\nAGORA VAI COM A NOVA CONDICAO ANECOICA MAIS GROSSA.\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -186,7 +188,7 @@ int main(int argc, char **argv){
 
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT <= maxT_final_source && iT > maxT/2){
+        if (iT <= maxT_final_source /*&& iT > maxT/2*/){
             plint total_signals = 20;
 	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
@@ -232,8 +234,9 @@ int main(int argc, char **argv){
         lattice.collideAndStream();
     }
 
-    t = (clock() - t)/CLOCKS_PER_SEC;
-    AllSimulationInfo << endl << "Execution time: " << t << " segundos" << endl;
+    T total_time_simulation = global::timer("mainLoop").stop();
+    pcout << "End of simulation at iteration with total time: " << total_time_simulation << endl;
+    AllSimulationInfo << endl << "Execution time: " << total_time_simulation << " segundos" << endl;
 
     pcout << "End of simulation at iteration " << endl;
 }
