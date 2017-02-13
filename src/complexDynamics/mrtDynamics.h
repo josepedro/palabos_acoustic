@@ -124,6 +124,8 @@ public:
     virtual T getRhoBar_target();
     virtual void setJ_target(Array<T,Descriptor<T>::d> j_target);
     virtual Array<T,Descriptor<T>::d> getJ_target();
+    virtual void setBuffer_size(T buffer_size);
+    virtual T getBuffer_size();
 private:
     static int id;
 private:
@@ -131,6 +133,7 @@ private:
     T omega;
     T rhoBar_target;
     Array<T,Descriptor<T>::d> j_target;
+    T buffer_size;
 };
 
 /// Implementation of incompressible MRT dynamics.

@@ -128,7 +128,8 @@ void AnechoicMRTdynamics<T,Descriptor>::collide (
 {
     typedef mrtTemplates<T,Descriptor> mrtTemp;
     T jSqr = mrtTemp::anechoicMRTCollision(cell, this->getOmega(),
-        this->getDelta(), this->getRhoBar_target(), this->getJ_target());
+        this->getDelta(), this->getRhoBar_target(), this->getJ_target(),
+        this->getBuffer_size());
 
     if (cell.takesStatistics()) {
         T rhoBar = momentTemplates<T,Descriptor>::get_rhoBar(cell);
@@ -189,6 +190,17 @@ void AnechoicMRTdynamics<T,Descriptor>::setJ_target(Array<T,Descriptor<T>::d> j_
 template<typename T, template<typename U> class Descriptor>
 Array<T,Descriptor<T>::d> AnechoicMRTdynamics<T,Descriptor>::getJ_target(){
     return this->j_target;
+}
+
+// size anechoic buffer
+template<typename T, template<typename U> class Descriptor>
+void AnechoicMRTdynamics<T,Descriptor>::setBuffer_size(T buffer_size){
+    this->buffer_size = buffer_size;
+}
+
+template<typename T, template<typename U> class Descriptor>
+T AnechoicMRTdynamics<T,Descriptor>::getBuffer_size(){
+    return this->buffer_size;
 }
 
 /* *************** Class IncMRTdynamics *********************************************** */

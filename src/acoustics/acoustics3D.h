@@ -38,8 +38,10 @@ namespace plb_acoustics_3D{
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
 		        anechoicDynamics->setDelta((T) delta);
 		        anechoicDynamics->setRhoBar_target(rhoBar_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        //j_target[0] = -j_target[0];  
 		        anechoicDynamics->setJ_target(j_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}
 		}
@@ -57,7 +59,9 @@ namespace plb_acoustics_3D{
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
 		        anechoicDynamics->setDelta((T) delta);
 		        anechoicDynamics->setRhoBar_target(rhoBar_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        anechoicDynamics->setJ_target(j_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}
 		}
@@ -73,10 +77,12 @@ namespace plb_acoustics_3D{
 		        }
 		        AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
-		        T delta_left = 30 - delta;
+		        T delta_left = size_anechoic_buffer - delta;
 		        anechoicDynamics->setDelta(delta_left);
 		        anechoicDynamics->setRhoBar_target(rhoBar_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        anechoicDynamics->setJ_target(j_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}
 		}
@@ -92,10 +98,12 @@ namespace plb_acoustics_3D{
 		        }
 		        AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 		        new AnechoicDynamics<T,DESCRIPTOR>(omega);
-		        T delta_left = 30 - delta;
+		        T delta_left = size_anechoic_buffer - delta;
 		        anechoicDynamics->setDelta(delta_left);
 		        anechoicDynamics->setRhoBar_target(rhoBar_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        anechoicDynamics->setJ_target(j_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 	    	}
 		}
@@ -118,7 +126,7 @@ namespace plb_acoustics_3D{
 	  Array<T,3> j_target_normal_x_positive,
 	  Array<T,3> j_target_normal_x_negative,
 	  T rhoBar_target){
-	  	/* if size_anechoic_buffer is not equal 30, we have to change 
+	  	/* if size_anechoic_buffer is not equal size_anechoic_buffer, we have to change 
 	  	total_distance in file dynamicsTemplates3D.h too*/
 	 	for(T delta = 0; delta <= size_anechoic_buffer; delta++){
 			// for in all points-cell lattice
@@ -134,9 +142,10 @@ namespace plb_acoustics_3D{
 							// set delta here
 							AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 							new AnechoicDynamics<T,DESCRIPTOR>(omega);
-							T delta_efective = 30 - delta;
+							T delta_efective = size_anechoic_buffer - delta;
 							anechoicDynamics->setDelta(delta_efective);
 							anechoicDynamics->setRhoBar_target(rhoBar_target);
+							anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 							anechoicDynamics->setJ_target(j_target_normal_x_positive);
 							DotList3D points_to_aplly_dynamics;
 							points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -151,9 +160,10 @@ namespace plb_acoustics_3D{
 							// set delta here
 							AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 							new AnechoicDynamics<T,DESCRIPTOR>(omega);
-							T delta_efective = 30 - delta;
+							T delta_efective = size_anechoic_buffer - delta;
 							anechoicDynamics->setDelta(delta_efective);
 							anechoicDynamics->setRhoBar_target(rhoBar_target);
+							anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 							anechoicDynamics->setJ_target(j_target_normal_y_negative);
 							DotList3D points_to_aplly_dynamics;
 							points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -168,9 +178,10 @@ namespace plb_acoustics_3D{
 							// set delta here
 							AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 							new AnechoicDynamics<T,DESCRIPTOR>(omega);
-							T delta_efective = 30 - delta;
+							T delta_efective = size_anechoic_buffer - delta;
 							anechoicDynamics->setDelta(delta_efective);
 							anechoicDynamics->setRhoBar_target(rhoBar_target);
+							anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 							anechoicDynamics->setJ_target(j_target_normal_x_negative);
 							DotList3D points_to_aplly_dynamics;
 							points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -185,9 +196,10 @@ namespace plb_acoustics_3D{
 							// set delta here
 							AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 							new AnechoicDynamics<T,DESCRIPTOR>(omega);
-							T delta_efective = 30 - delta;
+							T delta_efective = size_anechoic_buffer - delta;
 							anechoicDynamics->setDelta(delta_efective);
 							anechoicDynamics->setRhoBar_target(rhoBar_target);
+							anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 							anechoicDynamics->setJ_target(j_target_normal_y_positive);
 							DotList3D points_to_aplly_dynamics;
 							points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -202,9 +214,10 @@ namespace plb_acoustics_3D{
 							// set delta here
 							AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 							new AnechoicDynamics<T,DESCRIPTOR>(omega);
-							T delta_efective = 30 - delta;
+							T delta_efective = size_anechoic_buffer - delta;
 							anechoicDynamics->setDelta(delta_efective);
 							anechoicDynamics->setRhoBar_target(rhoBar_target);
+							anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 							anechoicDynamics->setJ_target(j_target_normal_z_positive);
 							DotList3D points_to_aplly_dynamics;
 							points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -219,9 +232,10 @@ namespace plb_acoustics_3D{
 							// set delta here
 							AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 							new AnechoicDynamics<T,DESCRIPTOR>(omega);
-							T delta_efective = 30 - delta;
+							T delta_efective = size_anechoic_buffer - delta;
 							anechoicDynamics->setDelta(delta_efective);
 							anechoicDynamics->setRhoBar_target(rhoBar_target);
+							anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 							anechoicDynamics->setJ_target(j_target_normal_z_negative);
 							DotList3D points_to_aplly_dynamics;
 							points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -253,7 +267,7 @@ namespace plb_acoustics_3D{
 	  	j_target_normal_x_negative = -j_target_normal_x_negative;
 
 	  	typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
-	  	/* if size_anechoic_buffer is not equal 30, we have to change 
+	  	/* if size_anechoic_buffer is not equal size_anechoic_buffer, we have to change 
 	  	total_distance in file dynamicsTemplates3D.h too*/
 	 	for(T delta = 0; delta <= size_anechoic_buffer; delta++){
 			// for in all points-cell lattice
@@ -269,9 +283,10 @@ namespace plb_acoustics_3D{
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_x_positive);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -286,9 +301,10 @@ namespace plb_acoustics_3D{
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_y_negative);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -303,9 +319,10 @@ namespace plb_acoustics_3D{
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_x_negative);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -320,9 +337,10 @@ namespace plb_acoustics_3D{
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_y_positive);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -337,9 +355,10 @@ namespace plb_acoustics_3D{
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_z_positive);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -354,9 +373,10 @@ namespace plb_acoustics_3D{
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_z_negative);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -388,7 +408,7 @@ template<typename T, template<typename U> class Descriptor>
 	  	j_target_normal_x_negative = -j_target_normal_x_negative;
 
 	  	typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
-	  	/* if size_anechoic_buffer is not equal 30, we have to change 
+	  	/* if size_anechoic_buffer is not equal size_anechoic_buffer, we have to change 
 	  	total_distance in file dynamicsTemplates3D.h too*/
 	 	for(T delta = 0; delta <= size_anechoic_buffer; delta++){
 			// for in all points-cell lattice
@@ -404,9 +424,10 @@ template<typename T, template<typename U> class Descriptor>
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_x_positive);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -421,9 +442,10 @@ template<typename T, template<typename U> class Descriptor>
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_y_negative);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -438,9 +460,10 @@ template<typename T, template<typename U> class Descriptor>
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_x_negative);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -455,9 +478,10 @@ template<typename T, template<typename U> class Descriptor>
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_y_positive);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -472,9 +496,10 @@ template<typename T, template<typename U> class Descriptor>
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_z_positive);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -489,9 +514,10 @@ template<typename T, template<typename U> class Descriptor>
                             // set delta here
                             AnechoicBackgroundDynamics *anechoicDynamics = 
                             new AnechoicBackgroundDynamics(omega);
-                            T delta_efective = 30 - delta;
+                            T delta_efective = size_anechoic_buffer - delta;
                             anechoicDynamics->setDelta(delta_efective);
                             anechoicDynamics->setRhoBar_target(rhoBar_target);
+                            anechoicDynamics->setBuffer_size(size_anechoic_buffer);
                             anechoicDynamics->setJ_target(j_target_normal_z_negative);
                             DotList3D points_to_aplly_dynamics;
                             points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
@@ -530,11 +556,13 @@ template<typename T, template<typename U> class Descriptor>
 			    }
 		        AnechoicBackgroundDynamics *anechoicDynamics = 
 		        new AnechoicBackgroundDynamics(omega);
-		        T delta_efective = 30 - delta;
+		        T delta_efective = size_anechoic_buffer - delta;
 		        anechoicDynamics->setDelta((T) delta_efective);
 		        anechoicDynamics->setRhoBar_target(rhoBar_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        //j_target[0] = -j_target[0];  
 		        anechoicDynamics->setJ_target(j_target);
+		        anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 		        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
 			    
 	    	}
@@ -551,7 +579,7 @@ template<typename T, template<typename U> class Descriptor>
 		//         }
 		//         AnechoicDynamics<T,DESCRIPTOR> *anechoicDynamics = 
 		//         new AnechoicDynamics<T,DESCRIPTOR>(omega);
-		//         T delta_left = 30 - delta;
+		//         T delta_left = size_anechoic_buffer - delta;
 		//         anechoicDynamics->setDelta(delta_left);
 		//         anechoicDynamics->setRhoBar_target(rhoBar_target);
 		//         anechoicDynamics->setJ_target(j_target);
@@ -637,6 +665,7 @@ void build_duct(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
                         T delta_efective = anechoic_size - z - position[2] - 2;
                         anechoicDynamics->setDelta(delta_efective);
                         anechoicDynamics->setRhoBar_target(rhoBar_target);
+                        anechoicDynamics->setBuffer_size(anechoic_size);
                         anechoicDynamics->setJ_target(u0);
                         defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
                         
@@ -673,6 +702,17 @@ T get_linear_chirp_AZ(T ka_max, plint total_signals, plint maxT_final_source, pl
     return chirp_value;
 }
 
+T get_linear_chirp_AZ_freq_omega(T freq_omega_max, plint total_signals, plint maxT_final_source, plint iT, T drho){
+    T cs = 1/sqrt(3);
+    T chirp_value = 1;
+    total_signals = 2*total_signals;
+    for (plint n_signal = 1; n_signal <= total_signals; n_signal++){
+        T interval = freq_omega_max/total_signals;
+        T phase = (n_signal*interval*iT);
+        chirp_value += drho*sin(phase);
+    }
+    return chirp_value;
+}
 
 void set_source(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> position, 
     T chirp_hand, Array<T,3> u0, plint radius, plint radius_intern, plint nx, plint ny){
