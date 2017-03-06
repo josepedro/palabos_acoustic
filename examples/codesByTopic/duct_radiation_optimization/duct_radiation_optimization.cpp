@@ -160,7 +160,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO . Agora com Mach sugado -0.15!!!! No 2!!!!\n"; 
+    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO BORA VER O QUE ESTA ACONTECENDO COM A FISICA DA PARADA. Agora com Mach sugado -0.15!!!! NO 1!!\n"; 
     
     AllSimulationInfo << endl
     << title << endl
