@@ -1,3 +1,8 @@
+/*
+O que quer que tenha que acontecer, aconteça!
+Seja qual for a situação, está ótimo!
+Eu realmente não preciso de coisa alguma!
+*/
 #include "palabos3D.h"
 #include "palabos3D.hh"
 #include <vector>
@@ -155,7 +160,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nAGORA COM O NUMERO DE REYNOLDS EH 441, QUE NEM DO ARTIGO DO ANDREY DE 2009. Agora com Mach sugado -0.15!!!! No 2!!!!\n"; 
+    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO . Agora com Mach sugado -0.15!!!! No 2!!!!\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -197,14 +202,23 @@ int main(int argc, char **argv){
             << endl;
         }
 
-        if (iT == (maxT/2) + (maxT/4)) {
-            //writeGifs(lattice,iT);
-            //writeVTK(lattice, iT, rho0, drho);
+        // print no transiente
+        if (iT == (maxT/2) - (maxT/4)) {
+            Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
+            writeVTK(lattice, iT, rho0, drho, local_to_extract);
         }
 
-        if (iT%50 == 0) {
+        // print no final do transiente um pouquinho antes da fonte
+        if (iT == (maxT/2) ) {
             //writeGifs(lattice,iT);
-            Box3D local_to_extract(0, nx-1, 0, ny-1, 0, length_duct + 3 + radius/2);
+            Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
+            writeVTK(lattice, iT, rho0, drho, local_to_extract);
+        }
+
+        // print junto com a fonte
+        if (iT == 18620 ) {
+            //writeGifs(lattice,iT);
+            Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
             writeVTK(lattice, iT, rho0, drho, local_to_extract);
         }
 
