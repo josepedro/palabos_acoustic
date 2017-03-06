@@ -698,10 +698,10 @@ void writeGifs(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter, T rho0, T
     (T) rho0 - drho/1000000, (T) rho0 + drho/1000000, imSize, imSize);
 }
 
-void writeVTK(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter, T rho0, T drho){
+void writeVTK(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint iter, T rho0, T drho, Box3D local_to_extract){
         VtkImageOutput3D<T> vtkOut(createFileName("vtk", iter, 6), 1.);
-        vtkOut.writeData<float>(*computeDensity(lattice), "density", 1.);
-        std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, lattice.getBoundingBox(), 2));
+        vtkOut.writeData<float>(*computeDensity(lattice, local_to_extract), "density", 1.);
+        std::auto_ptr<MultiScalarField3D<T> > velocity(plb::computeVelocityComponent(lattice, local_to_extract, 2));
         
         vtkOut.writeData<T>(*velocity, "velocity", 1.);
 }

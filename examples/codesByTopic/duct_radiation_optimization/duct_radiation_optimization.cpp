@@ -42,7 +42,7 @@ int main(int argc, char **argv){
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
     
-    const plint nz = length_duct + (60/2)*diameter + 30;
+    const plint nz = length_duct + (60/2)*diameter + 30; // precious
     //const plint nz = length_duct + 3*diameter + 30;
     
     const T lattice_speed_sound = 1/sqrt(3);
@@ -100,9 +100,6 @@ int main(int argc, char **argv){
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target, off_set_z);
 
-    //T size_anechoic_buffer_2 = 150;
-    //defineAnechoicMRTWall(nx, ny, nz, lattice, size_anechoic_buffer_2, omega, j_target, rhoBar_target, 5);
-
     //const T mach_number = 0;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
 
@@ -144,17 +141,6 @@ int main(int argc, char **argv){
     Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
             length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
-    // Setting probes to evaluate coefficient reflection of ABC
-    Array<plint,3> position_A(nx/2, ny/2, nz - size_anechoic_buffer);
-    Array<plint,3> position_B(nx/2, ny - size_anechoic_buffer, nz - size_anechoic_buffer);
-    Array<plint,3> position_C(nx/2, ny - size_anechoic_buffer, nz/2);
-    Array<plint,3> position_D(nx/2, 0.75*ny, length_duct + size_anechoic_buffer + 1);
-    string name_abc = "abc";
-    Coefficient_Reflection_Probes coefficient_reflection_probes(position_A,
-    position_B, position_C, position_D, fNameOut, name_abc);
-    
-    // ---------------------------------------------------------
-    
 
     // Recording entering signal -------------------------------
     std::string signal_in_string = fNameOut+"/signal_in.dat";
@@ -191,9 +177,7 @@ int main(int argc, char **argv){
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source && iT > maxT/2){
             plint total_signals = 20;
-	    T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
-            //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
-            //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
+	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
@@ -220,7 +204,8 @@ int main(int argc, char **argv){
 
         if (iT%50 == 0) {
             //writeGifs(lattice,iT);
-            //writeVTK(lattice, iT, rho0, drho);
+            Box3D local_to_extract(0, nx-1, 0, ny-1, 0, length_duct + 3 + radius/2);
+            writeVTK(lattice, iT, rho0, drho, local_to_extract);
         }
 
         // extract values of pressure and velocities
@@ -230,7 +215,6 @@ int main(int argc, char **argv){
         two_microphones_3r.save_point(lattice, rho0, cs2);
         two_microphones_6r.save_point(lattice, rho0, cs2);
         two_microphones_boca.save_point(lattice, rho0, cs2);
-        coefficient_reflection_probes.save_point(lattice, rho0, cs2);
 
         lattice.collideAndStream();
     }
