@@ -42,11 +42,12 @@ int main(int argc, char **argv){
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
     
-    const plint nz = length_duct + (60/4)*diameter + 30;
+    const plint nz = length_duct + (60/2)*diameter + 30;
     //const plint nz = length_duct + 3*diameter + 30;
     
     const T lattice_speed_sound = 1/sqrt(3);
-    const T omega = 1.985;
+    //const T omega = 1.985;
+    const T omega = 1.9100;
     const plint maxT = 2*(pow(2,13) + nz*sqrt(3));
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
@@ -90,17 +91,17 @@ int main(int argc, char **argv){
     set_nodynamics(lattice, nx, ny, off_set_z);
         
     T rhoBar_target = 0;
-    const T mach_number = 0.15;
+    const T mach_number = -0.15;
     //const T mach_number = 0;
     const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
-    T size_anechoic_buffer = 100;
+    T size_anechoic_buffer = 30;
     defineAnechoicMRTBoards_limited(nx, ny, nz, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target, j_target, j_target,
       rhoBar_target, off_set_z);
 
-    T size_anechoic_buffer_2 = 150;
-    defineAnechoicMRTWall(nx, ny, nz, lattice, size_anechoic_buffer_2, omega, j_target, rhoBar_target, 5);
+    //T size_anechoic_buffer_2 = 150;
+    //defineAnechoicMRTWall(nx, ny, nz, lattice, size_anechoic_buffer_2, omega, j_target, rhoBar_target, 5);
 
     //const T mach_number = 0;
     build_duct(lattice, nx, ny, position, radius, length_duct, thickness_duct, omega);
@@ -112,7 +113,7 @@ int main(int argc, char **argv){
     pcout << "Simulation begins" << endl;
 
     // Setting probes ------------------------------------------
-    plint begin_microphone = length_duct/4;
+    plint begin_microphone = length_duct/2;
     System_Abom_Measurement system_abom_measurement(lattice, position, 
         begin_microphone, length_duct, radius, fNameOut);
 
@@ -144,10 +145,10 @@ int main(int argc, char **argv){
             length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
     // Setting probes to evaluate coefficient reflection of ABC
-    Array<plint,3> position_A(nx/2, ny/2, nz - size_anechoic_buffer_2);
-    Array<plint,3> position_B(nx/2, ny - size_anechoic_buffer, nz - size_anechoic_buffer_2);
+    Array<plint,3> position_A(nx/2, ny/2, nz - size_anechoic_buffer);
+    Array<plint,3> position_B(nx/2, ny - size_anechoic_buffer, nz - size_anechoic_buffer);
     Array<plint,3> position_C(nx/2, ny - size_anechoic_buffer, nz/2);
-    Array<plint,3> position_D(nx/2, 0.75*ny, length_duct + 31);
+    Array<plint,3> position_D(nx/2, 0.75*ny, length_duct + size_anechoic_buffer + 1);
     string name_abc = "abc";
     Coefficient_Reflection_Probes coefficient_reflection_probes(position_A,
     position_B, position_C, position_D, fNameOut, name_abc);
@@ -168,7 +169,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nAGORA VAI COM A NOVA CONDICAO ANECOICA MAIS GROSSA.\n"; 
+    std::string title = "\nAGORA COM O NUMERO DE REYNOLDS EH 441, QUE NEM DO ARTIGO DO ANDREY DE 2009. Agora com Mach sugado -0.15!!!! No 2!!!!\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -188,9 +189,9 @@ int main(int argc, char **argv){
 
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT <= maxT_final_source /*&& iT > maxT/2*/){
+        if (iT <= maxT_final_source && iT > maxT/2){
             plint total_signals = 20;
-	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
+	    T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             //T chirp_hand = get_linear_chirp(ka_min, ka_max, maxT_final_source, iT, drho, radius);
             //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
             history_signal_in << setprecision(10) << chirp_hand << endl;
