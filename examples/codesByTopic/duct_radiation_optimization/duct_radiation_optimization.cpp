@@ -52,7 +52,7 @@ int main(int argc, char **argv){
     
     const T lattice_speed_sound = 1/sqrt(3);
     //const T omega = 1.985;
-    const T omega = 1.9100;
+    const T omega = 1.98;
     const plint maxT = 2*(pow(2,13) + nz*sqrt(3));
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
@@ -96,7 +96,7 @@ int main(int argc, char **argv){
     set_nodynamics(lattice, nx, ny, off_set_z);
         
     T rhoBar_target = 0;
-    const T mach_number = -0.15;
+    const T mach_number = -0.2;
     //const T mach_number = 0;
     const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
@@ -160,7 +160,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO BORA VER O QUE ESTA ACONTECENDO COM A FISICA DA PARADA. Agora com Mach sugado -0.15!!!! NO 1!!\n"; 
+    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO BORA VER O QUE ESTA ACONTECENDO COM A FISICA DA PARADA. Agora com Mach sugado -0.2 com omega 1.99!!!! NO 2!!\n"; 
     
     AllSimulationInfo << endl
     << title << endl
