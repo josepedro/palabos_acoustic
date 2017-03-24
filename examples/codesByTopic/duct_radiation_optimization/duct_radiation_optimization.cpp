@@ -33,7 +33,7 @@ int main(int argc, char **argv){
 
     const T rho0 = 1;
     const T drho = rho0/100;
-    const plint radius = 20;
+    const plint radius = 5;
     const plint diameter = 2*radius;
     
     const plint nx = (6*diameter + 60);
@@ -62,6 +62,8 @@ int main(int argc, char **argv){
     const T ka_max = 2.5;
     const T ka_min = 0;
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
+    const T mach_max = 0.2;
+    const T mach_min = 0.01;
 
     // Saving a propery directory
     std::string fNameOut = currentDateTime() + "+tmp";
@@ -96,9 +98,6 @@ int main(int argc, char **argv){
     set_nodynamics(lattice, nx, ny, off_set_z);
         
     T rhoBar_target = 0;
-    const T mach_number = -0.2;
-    //const T mach_number = 0;
-    const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
     defineAnechoicMRTBoards_limited(nx, ny, nz, lattice, size_anechoic_buffer,
@@ -160,7 +159,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO BORA VER O QUE ESTA ACONTECENDO COM A FISICA DA PARADA. Agora com Mach sugado -0.2 com omega 1.99!!!! NO 2!!\n"; 
+    std::string title = "\nAGORA ESTOU FAZENDO COM O MACH VARIANDO NO TEMPO, BORA LA PORRA!!!!\n"; 
     
     AllSimulationInfo << endl
     << title << endl
@@ -175,18 +174,24 @@ int main(int argc, char **argv){
     << "Tamanho duto: " << length_duct << endl
     << "Posicao do duto: " << position[2] << endl
     << "Começo dos microfones em lattice: " << begin_microphone << endl
-    << "Mach imposto: " <<  mach_number << endl;
+    << "Mach imposto: " <<  "mach variando de 0.01 até 0.2" << endl;
     // --------------------------------------------------------
 
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
+        
+        /*stationary steady*/
         if (iT <= maxT_final_source && iT > maxT/2){
             plint total_signals = 20;
-	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
+	    T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             history_signal_in << setprecision(10) << chirp_hand << endl;
+            T mach = mach_progression(iT, maxT/2, maxT, mach_min, mach_max);
+            pcout << "Mach inserted: " << mach << endl;
+            T velocity_flow = mach*lattice_speed_sound;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
-        }else{
+        }/*transient*/else{
+            T velocity_flow = mach_min*lattice_speed_sound;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
         }
