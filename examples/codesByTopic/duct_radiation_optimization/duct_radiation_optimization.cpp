@@ -64,6 +64,8 @@ int main(int argc, char **argv){
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
     const T mach_max = 0.2;
     const T mach_min = 0.01;
+    const Array<T,3> array_ka(0.088, 0, 0);
+    const plint numbers_ka = 1;
 
     // Saving a propery directory
     std::string fNameOut = currentDateTime() + "+tmp";
@@ -183,10 +185,10 @@ int main(int argc, char **argv){
         /*stationary steady*/
         if (iT <= maxT_final_source && iT > maxT/2){
             plint total_signals = 20;
-	    T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
+	    //T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
+            T chirp_hand = get_linear_chirp_AZ_selected(array_ka, numbers_ka, iT, drho, radius);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             T mach = mach_progression(iT, maxT/2, maxT, mach_min, mach_max);
-            pcout << "Mach inserted: " << mach << endl;
             T velocity_flow = mach*lattice_speed_sound;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
