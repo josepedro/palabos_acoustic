@@ -53,7 +53,7 @@ int main(int argc, char **argv){
     const T lattice_speed_sound = 1/sqrt(3);
     //const T omega = 1.985;
     const T omega = 1.995;
-    const plint maxT = 2*(pow(2,13) + nz*sqrt(3));
+    const plint maxT = 5*(pow(2,13) + nz*sqrt(3));
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -64,7 +64,7 @@ int main(int argc, char **argv){
     const T cs2 = lattice_speed_sound*lattice_speed_sound;
     const T mach_max = 0.2;
     const T mach_min = 0.01;
-    const Array<T,3> array_ka(0.088, 0, 0);
+    const Array<T,3> array_ka(0.088, 0.105, 0.123);
     const plint numbers_ka = 1;
 
     // Saving a propery directory
@@ -161,7 +161,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
     
-    std::string title = "\nAGORA ESTOU FAZENDO COM O MACH VARIANDO NO TEMPO, BORA LA PORRA!!!! AQUI EH NO 1 COM KA = 0.088\n"; 
+    std::string title = "\nAGORA ESTOU FAZENDO COM O MACH VARIANDO NO TEMPO, BORA LA PORRA!!!! AQUI EH NO 2 COM KA = 0.088, 0.105, 0.123\n"; 
     
     AllSimulationInfo << endl
     << title << endl
