@@ -1108,4 +1108,24 @@ class System_Abom_Measurement{
     }
 };
 
+T mach_progression(plint time, plint final_time_transient, plint final_time, T Mach_min, T Mach_max){
+    //the equation of evolution of mach have to be M = at + b
+    T Tt = final_time;
+    T t = final_time_transient;
+    T a = (Mach_max - Mach_min)/(Tt - t);
+    T b = Mach_max - a*Tt;
+    T M = a*time + b;
+    return M;
+}
+
+T get_linear_chirp_AZ_selected(Array<T,3> array_ka, plint numbers_ka, plint iT, T drho, plint radius){
+    T cs = 1/sqrt(3);
+    T chirp_value = 1; 
+    for (plint ka = 0; ka < numbers_ka; ka++){
+        T phase = (array_ka[ka]*cs*iT)/(radius);
+        chirp_value += drho*sin(phase);
+    }
+    return chirp_value;
+}
+
 }
