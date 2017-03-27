@@ -54,6 +54,7 @@ int main(int argc, char **argv){
     //const T omega = 1.985;
     const T omega = 1.992;
     const plint maxT = 5*(pow(2,13) + nz*sqrt(3));
+    const plint time_to_finish_transient = maxT/5;
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -183,7 +184,7 @@ int main(int argc, char **argv){
     for (plint iT=0; iT<maxT; ++iT){
         
         /*stationary steady*/
-        if (iT <= maxT_final_source && iT > maxT/2){
+        if (iT <= maxT_final_source && iT > time_to_finish_transient){
             plint total_signals = 20;
 	    //T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             T chirp_hand = get_linear_chirp_AZ_selected(array_ka, numbers_ka, iT, drho, radius);
@@ -210,20 +211,20 @@ int main(int argc, char **argv){
         }
 
         // print no transiente
-        if (iT == (maxT/2) - (maxT/4)) {
+        if (iT == time_to_finish_transient - (maxT/4)) {
             Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
             writeVTK(lattice, iT, rho0, drho, local_to_extract);
         }
 
         // print no final do transiente um pouquinho antes da fonte
-        if (iT == (maxT/2) ) {
+        if (iT == (time_to_finish_transient) ) {
             //writeGifs(lattice,iT);
             Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
             writeVTK(lattice, iT, rho0, drho, local_to_extract);
         }
 
         // print junto com a fonte
-        if (iT == 18620 ) {
+        if (iT == time_to_finish_transient - 3000) {
             //writeGifs(lattice,iT);
             Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
             writeVTK(lattice, iT, rho0, drho, local_to_extract);
