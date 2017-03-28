@@ -52,7 +52,7 @@ int main(int argc, char **argv){
     
     const T lattice_speed_sound = 1/sqrt(3);
     //const T omega = 1.985;
-    const T omega = 1.992;
+    const T omega = 1.990;
     const plint maxT = 5*(pow(2,13) + nz*sqrt(3));
     const plint time_to_finish_transient = maxT/5;
     Array<T,3> u0(0, 0, 0);
