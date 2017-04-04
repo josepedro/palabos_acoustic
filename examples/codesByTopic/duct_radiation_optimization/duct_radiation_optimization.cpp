@@ -8,7 +8,7 @@ Eu realmente não preciso de coisa alguma!
 #include <vector>
 #include <cmath>
 #include <time.h>
-#include <cfloat> 
+#include <cfloat>
 
 using namespace plb;
 using namespace plb::descriptors;
@@ -31,28 +31,41 @@ int main(int argc, char **argv){
 
     global::timer("mainLoop").start();
 
+    const plint radius = atoi(argv[1]);
+    pcout << atoi(argv[1]) << endl;
+    const plint diameter = 2*radius;
+    const T mach_number = atof(argv[2]);
+    pcout << mach_number << endl;
+    const T lattice_speed_sound = 1/sqrt(3);
+    const T velocity_flow = mach_number*lattice_speed_sound;
+    const T Re = atof(argv[3]);
+    pcout << Re << endl;
+    const T tau = (0.5 + ((velocity_flow*diameter)/(Re*lattice_speed_sound*lattice_speed_sound)));
+    T omega;
+    if (Re == 0 && mach_number == 0) {
+      omega = 1.99;
+    }else{
+      omega = 1/tau;
+    }
+
     const T rho0 = 1;
     const T drho = rho0/100;
-    const plint radius = 20;
-    const plint diameter = 2*radius;
-    
+
     const plint nx = (6*diameter + 60);
     //const plint nx = 2*diameter + 60;
-    
+
     const plint ny = (6*diameter + 60);
     //const plint ny = 2*diameter + 60;
-    
+
     const plint position_duct_z = 0;
     //const plint length_duct = 0.5*(30 + 120 + 5*113 + 3*diameter);
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
-    
+
     const plint nz = length_duct + (60/2)*diameter + 30; // precious
     //const plint nz = length_duct + 3*diameter + 30;
-    
-    const T lattice_speed_sound = 1/sqrt(3);
     //const T omega = 1.985;
-    const T omega = 1.98;
+
     const plint maxT = 2*(pow(2,13) + nz*sqrt(3));
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
@@ -94,11 +107,9 @@ int main(int argc, char **argv){
     // Set NoDynamics to improve performance!
     plint off_set_z = position_duct_z + length_duct - 3*diameter - 30;
     set_nodynamics(lattice, nx, ny, off_set_z);
-        
+
     T rhoBar_target = 0;
-    const T mach_number = -0.2;
     //const T mach_number = 0;
-    const T velocity_flow = mach_number*lattice_speed_sound;
     Array<T,3> j_target(0, 0, 0);
     T size_anechoic_buffer = 30;
     defineAnechoicMRTBoards_limited(nx, ny, nz, lattice, size_anechoic_buffer,
@@ -116,34 +127,34 @@ int main(int argc, char **argv){
 
     // Setting probes ------------------------------------------
     plint begin_microphone = length_duct/2;
-    System_Abom_Measurement system_abom_measurement(lattice, position, 
+    System_Abom_Measurement system_abom_measurement(lattice, position,
         begin_microphone, length_duct, radius, fNameOut);
 
     plint double_microphone_distance = 5;
 
     plint distance_boca = 0*radius;
     string name_boca = "boca";
-    Two_Microphones two_microphones_boca(radius, double_microphone_distance, 
+    Two_Microphones two_microphones_boca(radius, double_microphone_distance,
             length_duct, position, fNameOut, name_boca, distance_boca, nx, ny, nz);
 
     plint distance_1r = 1*radius;
     string name_1r = "1r";
-    Two_Microphones two_microphones_1r(radius, double_microphone_distance, 
+    Two_Microphones two_microphones_1r(radius, double_microphone_distance,
             length_duct, position, fNameOut, name_1r, distance_1r, nx, ny, nz);
 
     plint distance_2r = 2*radius;
     string name_2r = "2r";
-    Two_Microphones two_microphones_2r(radius, double_microphone_distance, 
+    Two_Microphones two_microphones_2r(radius, double_microphone_distance,
             length_duct, position, fNameOut, name_2r, distance_2r, nx, ny, nz);
 
     plint distance_3r = 3*radius;
     string name_3r = "3r";
-    Two_Microphones two_microphones_3r(radius, double_microphone_distance, 
+    Two_Microphones two_microphones_3r(radius, double_microphone_distance,
             length_duct, position, fNameOut, name_3r, distance_3r, nx, ny, nz);
 
     plint distance_6r = length_duct - 100;
     string name_6r = "listening";
-    Two_Microphones two_microphones_6r(radius, double_microphone_distance, 
+    Two_Microphones two_microphones_6r(radius, double_microphone_distance,
             length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
 
 
@@ -154,18 +165,18 @@ int main(int argc, char **argv){
     plb_ofstream history_signal_in(to_char_signal_in);
     // ---------------------------------------------------------
 
-    // Important information about simulation ------------------    
+    // Important information about simulation ------------------
     std::string AllSimulationInfo_string = fNameOut + "/AllSimulationInfo.txt";
     char to_char_AllSimulationInfo[1024];
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
-    
-    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO BORA VER O QUE ESTA ACONTECENDO COM A FISICA DA PARADA. Agora com Mach sugado -0.2 com omega 1.99!!!! NO 2!!\n"; 
-    
+
+    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO BORA VER O QUE ESTA ACONTECENDO COM A FISICA DA PARADA. Agora com Mach sugado -0.2 com omega 1.99!!!! NO 2!!\n";
+
     AllSimulationInfo << endl
     << title << endl
     << "Dados da simulação" << endl
-    << "Lattice:" << endl << endl 
+    << "Lattice:" << endl << endl
     << "nx: " << nx << " ny: " << ny << " nz: " << nz << endl
     << "omega: " << omega << endl << endl
     << "Tempos: " << endl
