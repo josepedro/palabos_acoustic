@@ -798,8 +798,8 @@ void set_source(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> posit
             if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
                 Array<plint, 6> local_source_2(x, x, y, y, position[2] + 29, position[2] + 30);
                 impulse_local.from_plbArray(local_source_2);
-                Array<T,3> u_chirp_hand(0, 0, (chirp_hand-1)/(1/sqrt(3)));
-                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u0);
+                Array<T,3> u_chirp_hand(0, 0, u0[2] + (chirp_hand-1)/(1/sqrt(3)));
+                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u_chirp_hand);
             }
         }
     }
@@ -1107,5 +1107,63 @@ class System_Abom_Measurement{
         file_velocities_z << endl;
     }
 };
+
+void build_duct_with_horn(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
+    Array<plint,3> position, plint radius, plint length, plint thickness, T omega, plint size_horn){
+    length += 4;
+    T mach_number = 0;
+    T lattice_speed_sound = 1/sqrt(3);
+    T velocity_flow = -mach_number*lattice_speed_sound;
+    plint anechoic_size = 29;
+    // Duct is constructed along the Z direction
+    //plint size_square = 50;
+    plint size_square = 2*radius;
+    plint radius_intern = radius - thickness;
+    for (plint x = position[0] - radius; x < nx/2 + size_square/2; ++x){
+        for (plint y = position[1] - radius; y < ny/2 + size_square/2; ++y){
+            for (plint z = position[2]; z < length + position[2]; ++z){
+
+                if (radius*radius > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
+                    DotList3D points_to_aplly_dynamics;
+                    points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                    defineDynamics(lattice, points_to_aplly_dynamics, new BounceBack<T,DESCRIPTOR>(0));
+                }
+                // extrude
+                if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2) && z > position[2] + 2){
+                    DotList3D points_to_aplly_dynamics;
+                    points_to_aplly_dynamics.addDot(Dot3D(x,y,z));
+                    if (z < position[2] + 2 + anechoic_size && z > position[2] + 3){
+                        Array<T,3> u0(0, 0, velocity_flow);
+                        T rhoBar_target = 0;
+                        AnechoicBackgroundDynamics *anechoicDynamics = 
+                        new AnechoicBackgroundDynamics(omega);
+                        T delta_efective = anechoic_size - z - position[2] - 2;
+                        anechoicDynamics->setDelta(delta_efective);
+                        anechoicDynamics->setRhoBar_target(rhoBar_target);
+                        anechoicDynamics->setBuffer_size(anechoic_size);
+                        anechoicDynamics->setJ_target(u0);
+                        defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
+                        
+                    }else{
+                        defineDynamics(lattice, points_to_aplly_dynamics, new BackgroundDynamics(omega));
+                    }
+                }
+            }
+        }
+    }
+}
+
+T compute_drho(T NPS){
+	T p_ref = 2*10e-5;
+	T p_line_phis =  p_ref*pow(10, (NPS/20));
+	T cs = 1/sqrt(3);
+	T c_o = 343;
+	T rho_o = 1.22;
+	T qsi = c_o/cs;
+	T p_line_lattice = p_line_phis/((qsi*qsi)*rho_o);
+	T delta_rho = p_line_lattice/(cs*cs);
+	return delta_rho;
+}
+
 
 }

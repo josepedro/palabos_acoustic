@@ -49,7 +49,7 @@ int main(int argc, char **argv){
     }
 
     const T rho0 = 1;
-    const T drho = rho0/100;
+    const T drho = compute_drho(80); // NPS dB
 
     const plint nx = (6*diameter + 60);
     //const plint nx = 2*diameter + 60;
