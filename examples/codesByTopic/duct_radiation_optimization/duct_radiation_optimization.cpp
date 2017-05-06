@@ -41,15 +41,10 @@ int main(int argc, char **argv){
     const T Re = atof(argv[3]);
     pcout << Re << endl;
     const T tau = (0.5 + ((velocity_flow*diameter)/(Re*lattice_speed_sound*lattice_speed_sound)));
-    T omega;
-    if (Re == 0 && mach_number == 0) {
-      omega = 1.99;
-    }else{
-      omega = 1/tau;
-    }
+    T omega = atof(argv[3]);
 
     const T rho0 = 1;
-    const T drho = rho0/100;
+    const T drho = compute_drho(80); // NPS dB
 
     const plint nx = (6*diameter + 60);
     //const plint nx = 2*diameter + 60;
@@ -193,7 +188,7 @@ int main(int argc, char **argv){
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source && iT > maxT/2){
             plint total_signals = 20;
-	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
+            T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
