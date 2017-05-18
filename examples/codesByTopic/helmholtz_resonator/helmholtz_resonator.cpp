@@ -35,6 +35,8 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <time.h>
+#include <string> 
 
 using namespace plb;
 using namespace plb::descriptors;
@@ -44,7 +46,7 @@ typedef double T;
 //#define DESCRIPTOR plb::descriptors::D2Q9Descriptor
 #define DESCRIPTOR MRTD2Q9Descriptor
 typedef MRTdynamics<T,DESCRIPTOR> BackgroundDynamics;
-//typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
+typedef AnechoicMRTdynamics<T,DESCRIPTOR> AnechoicBackgroundDynamics;
 
 // ---------------------------------------------
 // Includes of acoustics resources
@@ -52,46 +54,68 @@ typedef MRTdynamics<T,DESCRIPTOR> BackgroundDynamics;
 using namespace plb_acoustics_2D;
 // ---------------------------------------------
 
+const T c_o = 343;
+const T density_phys = 1.22;
+const T freq_phys = 500; // Hz
+//const T delta_x = 1*10e-5;
+const T delta_x = 2*10e-4;
+const T NPS = 100;
 const T rho0 = 1.;
-const T deltaRho = 1.e-2;
-const T lattice_speed_sound = 1/sqrt(3);
-const T lattice_speed_sound_square = lattice_speed_sound*lattice_speed_sound;
-// 120000. 5400 keeps (5000 finish transient and 6000 vortice contact anechoic condition) 
-const plint maxIter = 50000;
-//const plint maxIter = 5500; // 120000. 5400 keeps
-const plint nx = 1000;       // Choice of lattice dimensions.
-const plint ny = 1000;
-const T reynolds_number = 150;
-const T mach_number = 0.1;
-const T velocity_flow = mach_number*lattice_speed_sound;
-//const T tau = (0.5 + ((velocity_flow*size_square)/(reynolds_number*lattice_speed_sound*lattice_speed_sound)));
-const T omega = 1.990;
-
-T get_linear_chirp(T frequency_min, T frequency_max, plint maxT_final_source, plint iT, T drho){
-    T lattice_speed_sound = 1/sqrt(3);
-    T initial_frequency = frequency_min;
-    T frequency_max_lattice = frequency_max;
-    T variation_frequency = (frequency_max_lattice - initial_frequency)/maxT_final_source;
-    T frequency_function = initial_frequency*iT + (variation_frequency*iT*iT)/2;
-    T phase = 2*M_PI*frequency_function;
-    T chirp_hand = 1. + drho*sin(phase);
-
-    return chirp_hand;
-}
+const Array<T,2> u0((T)0,(T)0);
+const T delta_t = 5.66*10e-9;
+const T As_lattice = (2*10e-3)/delta_x;
+const T d_thickness_phys = 10e-3;
+const plint d_thickness_lattice = d_thickness_phys/delta_x;
+const T size_anechoic_buffer = 50;
+const plint HH = (120*10e-3)/delta_x;
+const plint H = (150*10e-3)/delta_x;
+const plint ny = 2*size_anechoic_buffer + HH + d_thickness_lattice + H;
+const plint At = (35*10e-3)/delta_x;
+const plint Af = ((120*10e-3)/delta_x - At)/2;
+const plint nx = 2*size_anechoic_buffer + 2*Af + At;       // Choice of lattice dimensions.
+const T cs = 1/sqrt(3);
+const T cs2 = cs*cs;
+const T zeta = c_o/cs;
+const plint period_cicle_duration = HH/cs;
+const plint transient_time = 20*period_cicle_duration;
+const plint record_time_points = 5*period_cicle_duration;
+const plint maxIter = transient_time + record_time_points;
+const T omega = 1.99;
+const T tau = 1/omega;
+const T kinematic_viscosity_lattice = cs2*(tau - 0.5);
+const T kinematic_viscosity_phys = zeta*delta_x*kinematic_viscosity_lattice;
+const T dynamic_viscosity_phys = kinematic_viscosity_phys/density_phys;
+const T reynolds_number = (density_phys*c_o*d_thickness_phys)/dynamic_viscosity_phys;
+const T mach_number = 0;
+const T velocity_flow = mach_number*cs;
 
 int main(int argc, char* argv[]) {
     plbInit(&argc, &argv);
-    global::directories().setOutputDir("./tmp/");
+    std::string fNameOut = currentDateTime() + "+tmp";
+    std::string command = "mkdir -p " + fNameOut;
+    char to_char_command[1024];
+    strcpy(to_char_command, command.c_str());
+    system(to_char_command);
+
+    global::directories().setOutputDir(fNameOut+"/");
+
+    MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new AnechoicBackgroundDynamics(omega));
+    defineDynamics(lattice, lattice.getBoundingBox(), new BackgroundDynamics(omega));
 
     plint numCores = global::mpi().getSize();
     pcout << "Number of MPI threads: " << numCores << std::endl;
     pcout << "omega: " << omega << std::endl;
     pcout << "velocity_flow: " << velocity_flow << std::endl;
     pcout << "Total iteration: " << maxIter << std::endl;
+    pcout << getMultiBlockInfo(lattice) << std::endl;
+    pcout << "Total memory RAM required (Gb): " << T (((nx*ny*19*8)/1000)/1000)/1000 << std::endl;
 
-    MultiBlockLattice2D<T, DESCRIPTOR> lattice(nx, ny, new BackgroundDynamics(omega));
-
-    Array<T,2> u0((T)0,(T)0);
+    std::string file_string_info = fNameOut + "/reynolds_dynamic_viscosity_phys.dat";
+    char to_char_file_string_info[1024];
+    strcpy(to_char_file_string_info, file_string_info.c_str());
+    plb_ofstream info_reynols_dynamic_viscosity_phys(to_char_file_string_info);
+    info_reynols_dynamic_viscosity_phys << "Reynolds Number: "  <<  setprecision(10) << reynolds_number  
+    << endl << "Dynamic Viscosity Physical: " << setprecision(10) << dynamic_viscosity_phys << endl;
 
     // Initialize constant density everywhere.
     initializeAtEquilibrium(lattice, lattice.getBoundingBox(), rho0, u0);
@@ -101,86 +125,80 @@ int main(int argc, char* argv[]) {
     // Anechoic Condition
     T rhoBar_target = 0;
     Array<T,2> j_target(0, 0.0/std::sqrt(3));
-    T size_anechoic_buffer = 30;
     // Define Anechoic Boards
     defineAnechoicMRTBoards(nx, ny, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target,
       rhoBar_target, rhoBar_target, rhoBar_target, rhoBar_target);
 
-    Box2D above_bounce_back(0, nx - 1, ny - 31 , ny - 1);
-    defineDynamics(lattice, above_bounce_back, new BounceBack<T,DESCRIPTOR>((T)0));
-
-    Box2D square_1(0, nx/2 - nx/5, 0, ny/2);
+    Box2D square_1(0, Af + size_anechoic_buffer, 0, H + size_anechoic_buffer + d_thickness_lattice);
     defineDynamics(lattice, square_1, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_2(nx/2 - nx/5, nx/2 + nx/5, 0, ny/10);
+    Box2D square_2(0, nx - 1, 0, size_anechoic_buffer - 1);
     defineDynamics(lattice, square_2, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_3(nx/2 + nx/5, nx, 0, ny/2);
+    Box2D square_3(nx - Af - size_anechoic_buffer, nx - 1, 0,  H + size_anechoic_buffer + d_thickness_lattice);
     defineDynamics(lattice, square_3, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_4(nx/2 - nx/5, nx/2 - nx/50, ny/2 - ny/50, ny/2);
+    Box2D square_4(0, size_anechoic_buffer + Af + (At - As_lattice)/2,
+    size_anechoic_buffer + H, size_anechoic_buffer + H  + d_thickness_lattice);
     defineDynamics(lattice, square_4, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    Box2D square_5(nx/2 + nx/50, nx/2 + nx/5, ny/2 - ny/50, ny/2);
+    Box2D square_5(size_anechoic_buffer + Af + (At - As_lattice)/2 + As_lattice, nx - 1, 
+    size_anechoic_buffer + H, size_anechoic_buffer + H  + d_thickness_lattice);
     defineDynamics(lattice, square_5, new BounceBack<T,DESCRIPTOR>((T)0));
 
-    // Files to capture data in time
-    plint position_x_in = nx/5;
-    plint position_x_out = position_x_in + nx/2;
-    Array<plint,2> position_y(ny/2 + 1, ny - 30);
-    Box2D point_capture_in(position_x_in, position_x_in, position_y[0], position_y[1]);
-    Box2D point_capture_out(position_x_out, position_x_out, position_y[0], position_y[1]);
-
-    //Box2D point_capture(nx/2, nx/2, ny/2 - 5, ny/2 - 5);
-    plb_ofstream file_pressures_in("pressures_in.dat");
-    plb_ofstream file_pressures_out("pressures_out.dat");
-    //plb_ofstream file_velocities_x("velocities_x.dat");
-    //plb_ofstream file_velocities_y("velocities_y.dat");
+    Box2D above(0, nx-1, ny - size_anechoic_buffer - 1, ny - 1);
+    defineDynamics(lattice, above, new BounceBack<T,DESCRIPTOR>((T)0));
 
     // Main loop over time iterations.
-    Box2D signal_input_place(31, 32, 0, ny - 1);
-    for (plint iT = 0; iT <= maxIter; iT++){
+    Box2D signal_input_place(size_anechoic_buffer + Af, nx - Af - size_anechoic_buffer,
+    ny - size_anechoic_buffer - 2, ny  - size_anechoic_buffer - 2);
+    Box2D local_to_extract(Af + size_anechoic_buffer, Af + size_anechoic_buffer + At,
+    size_anechoic_buffer, 2*H+d_thickness_lattice + size_anechoic_buffer);
+    info_reynols_dynamic_viscosity_phys << "Nx local: "  <<  setprecision(10) << local_to_extract.getNx()  
+    << endl << "Ny local: " << setprecision(10) << local_to_extract.getNy()
+    << endl << "Total number iterations: " << maxIter + 1 << endl;
 
+    Box2D pressures_1_extract_local(size_anechoic_buffer + Af - (15*10e-3)/delta_x,size_anechoic_buffer + Af - (15*10e-3)/delta_x,
+    size_anechoic_buffer + H  + d_thickness_lattice + 2,size_anechoic_buffer + H  + d_thickness_lattice + 2);
+    std::string file_string_pressures_1 = fNameOut + "/pressures_1.dat";
+    char to_char_file_string_pressures_1[1024];
+    strcpy(to_char_file_string_pressures_1, file_string_pressures_1.c_str());
+    plb_ofstream pressures_1(to_char_file_string_pressures_1);
+
+    Box2D pressures_2_extract_local(size_anechoic_buffer + Af + At/2,size_anechoic_buffer + Af + At/2, 
+        size_anechoic_buffer + 2, size_anechoic_buffer + 2);
+    std::string file_string_pressures_2 = fNameOut + "/pressures_2.dat";
+    char to_char_file_string_pressures_2[1024];
+    strcpy(to_char_file_string_pressures_2, file_string_pressures_2.c_str());
+    plb_ofstream pressures_2(to_char_file_string_pressures_2);
+    for (plint iT = 0; iT <= maxIter; iT++){
 
         // excitation signal
         if (iT >= 0){
-            //T rho_changing = 1. + drho*sin(2*M_PI*(lattice_speed_sound/20)*iT);
-            T rho_changing = get_linear_chirp(0, 0.1, maxIter, iT, deltaRho);
+            T rho_changing = get_tone_pure_omega(freq_phys, iT, NPS, delta_x);
             initializeAtEquilibrium(lattice, signal_input_place, rho_changing, u0);
         }
-        
-
 
         if (iT%100==0) { 
             pcout << "iT= " << iT << endl;
 
-            /*VtkImageOutput2D<T> vtkOut(createFileName("vtk", iT, 6), 1.);
-            vtkOut.writeData<float>(*computeDensity(lattice), "density", 1.);
-            vtkOut.writeData<2,float>(*computeVelocity(lattice), "velocity", 1.);
-            vtkOut.writeData<float>(*computeDensity(lattice), "vorticity", 1.);*/
+            writeVTK(lattice, iT, local_to_extract);
 
             pcout << " energy ="
             << setprecision(10) << getStoredAverageEnergy<T>(lattice)
             << " rho ="
             << getStoredAverageDensity<T>(lattice)
             << " max_velocity ="
-            << setprecision(10) << (getStoredMaxVelocity<T>(lattice))///lattice_speed_sound
+            << setprecision(10) << (getStoredMaxVelocity<T>(lattice))///cs
             << endl;
         }
-
-        file_pressures_in << setprecision(10) << (computeAverageDensity(lattice, point_capture_in) 
-            - rho0)*lattice_speed_sound_square << endl;
-        file_pressures_out << setprecision(10) << (computeAverageDensity(lattice, point_capture_out) 
-            - rho0)*lattice_speed_sound_square << endl;
-        /*std::auto_ptr<MultiScalarField2D<T> > velocity_x(plb::computeVelocityComponent(lattice, point_capture, 0));
-        file_velocities_x << setprecision(10) << computeAverage(*velocity_x, point_capture) << endl;
-        std::auto_ptr<MultiScalarField2D<T> > velocity_y(plb::computeVelocityComponent(lattice, point_capture, 1));
-        file_velocities_y << setprecision(10) << computeAverage(*velocity_y, point_capture) << endl;*/
-
+       
         // Execute lattice Boltzmann iteration.
         lattice.collideAndStream();
         
+        pressures_1 << setprecision(10) << (computeAverageDensity(lattice, pressures_1_extract_local) - rho0)*cs2 << endl;
+        pressures_2 << setprecision(10) << (computeAverageDensity(lattice, pressures_2_extract_local) - rho0)*cs2 << endl;
     }
 
 }
