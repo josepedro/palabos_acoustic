@@ -154,7 +154,7 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD2Q9DescriptorBa
         return jSqr;
     }
 
-    static T anechoicMRTCollision( Array<T,Descriptor::q>& f, const T &omega, T delta, T rhoBar_target, Array<T,2> j_target)
+    static T anechoicMRTCollision( Array<T,Descriptor::q>& f, const T &omega, T delta, T rhoBar_target, Array<T,2> j_target, T buffer_size)
     {
         Array<T,9> m, meq, mt;
         //pcout << "MRT HERE!!! Legal!!!" << std::endl;
@@ -171,7 +171,7 @@ template<typename T> struct mrtTemplatesImpl<T, descriptors::MRTD2Q9DescriptorBa
         computeEquilibriumMoments(mt, rhoBar_target, j_target, jSqr_target);
 
         // Parameters of Anechoic Condition
-        T total_distance = 30;
+        T total_distance = buffer_size;
         T sigma_m = 0.3;
         // Targets values to anechoic dynamics
         T sigma_target = sigma_m*((delta/total_distance)*(delta/total_distance));
