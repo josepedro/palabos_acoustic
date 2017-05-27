@@ -62,11 +62,12 @@ int main(int argc, char **argv){
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
 
-    const plint nz = length_duct + (60/2)*diameter + 30; // precious
-    //const plint nz = length_duct + 3*diameter + 30;
+    //const plint nz = length_duct + (60/2)*diameter + 30; // precious
+    const plint nz = length_duct + 3*diameter + 30;
     //const T omega = 1.985;
 
-    const plint maxT = 2*(pow(2,13) + nz*sqrt(3));
+    const plint transient_time = (2*nz)/(mach_number*lattice_speed_sound);
+    const plint maxT = 12000 + transient_time;
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -191,9 +192,9 @@ int main(int argc, char **argv){
 
     // Mean for-loop
     for (plint iT=0; iT<maxT; ++iT){
-        if (iT <= maxT_final_source && iT > maxT/2){
+        if (iT <= maxT_final_source && iT > transient_time){
             plint total_signals = 20;
-	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - maxT/2, drho, radius);
+	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - transient_time, drho, radius);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
@@ -214,13 +215,13 @@ int main(int argc, char **argv){
         }
 
         // print no transiente
-        if (iT == (maxT/2) - (maxT/4)) {
+        if (iT == (transient_time) - (transient_time/2)) {
             Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
             writeVTK(lattice, iT, rho0, drho, local_to_extract);
         }
 
         // print no final do transiente um pouquinho antes da fonte
-        if (iT == (maxT/2) ) {
+        if (iT == (transient_time) ) {
             //writeGifs(lattice,iT);
             Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
             writeVTK(lattice, iT, rho0, drho, local_to_extract);
