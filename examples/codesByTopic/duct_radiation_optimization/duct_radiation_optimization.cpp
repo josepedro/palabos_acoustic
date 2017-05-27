@@ -41,12 +41,7 @@ int main(int argc, char **argv){
     const T Re = atof(argv[3]);
     pcout << Re << endl;
     const T tau = (0.5 + ((velocity_flow*diameter)/(Re*lattice_speed_sound*lattice_speed_sound)));
-    T omega;
-    if (Re == 0 && mach_number == 0) {
-      omega = 1.99;
-    }else{
-      omega = 1/tau;
-    }
+    T omega = atof(argv[3]);
 
     const T rho0 = 1;
     const T drho = compute_drho(80); // NPS dB

@@ -129,6 +129,7 @@ namespace plb_acoustics_2D{
 						anechoicDynamics->setDelta(delta_efective);
 						anechoicDynamics->setRhoBar_target(rhoBar_target_1);
 						anechoicDynamics->setJ_target(j_target_1);
+						anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 						DotList2D points_to_aplly_dynamics;
 						points_to_aplly_dynamics.addDot(Dot2D(x,y));
 						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
@@ -144,6 +145,7 @@ namespace plb_acoustics_2D{
 						anechoicDynamics->setDelta(delta_efective);
 						anechoicDynamics->setRhoBar_target(rhoBar_target_2);
 						anechoicDynamics->setJ_target(j_target_2);
+						anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 						DotList2D points_to_aplly_dynamics;
 						points_to_aplly_dynamics.addDot(Dot2D(x,y));
 						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
@@ -159,6 +161,7 @@ namespace plb_acoustics_2D{
 						anechoicDynamics->setDelta(delta_efective);
 						anechoicDynamics->setRhoBar_target(rhoBar_target_3);
 						anechoicDynamics->setJ_target(j_target_3);
+						anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 						DotList2D points_to_aplly_dynamics;
 						points_to_aplly_dynamics.addDot(Dot2D(x,y));
 						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
@@ -174,6 +177,7 @@ namespace plb_acoustics_2D{
 						anechoicDynamics->setDelta(delta_efective);
 						anechoicDynamics->setRhoBar_target(rhoBar_target_4);
 						anechoicDynamics->setJ_target(j_target_4);
+						anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 						DotList2D points_to_aplly_dynamics;
 						points_to_aplly_dynamics.addDot(Dot2D(x,y));
 						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
@@ -373,6 +377,7 @@ namespace plb_acoustics_2D{
 						anechoicDynamics->setDelta(delta_efective);
 						anechoicDynamics->setRhoBar_target(rhoBar_target_1);
 						anechoicDynamics->setJ_target(j_target_1);
+						anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 						DotList2D points_to_aplly_dynamics;
 						points_to_aplly_dynamics.addDot(Dot2D(x,y));
 						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
@@ -388,6 +393,7 @@ namespace plb_acoustics_2D{
 						anechoicDynamics->setDelta(delta_efective);
 						anechoicDynamics->setRhoBar_target(rhoBar_target_2);
 						anechoicDynamics->setJ_target(j_target_2);
+						anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 						DotList2D points_to_aplly_dynamics;
 						points_to_aplly_dynamics.addDot(Dot2D(x,y));
 						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
@@ -403,6 +409,7 @@ namespace plb_acoustics_2D{
 						anechoicDynamics->setDelta(delta_efective);
 						anechoicDynamics->setRhoBar_target(rhoBar_target_3);
 						anechoicDynamics->setJ_target(j_target_3);
+						anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 						DotList2D points_to_aplly_dynamics;
 						points_to_aplly_dynamics.addDot(Dot2D(x,y));
 						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
@@ -418,6 +425,7 @@ namespace plb_acoustics_2D{
 						anechoicDynamics->setDelta(delta_efective);
 						anechoicDynamics->setRhoBar_target(rhoBar_target_4);
 						anechoicDynamics->setJ_target(j_target_4);
+						anechoicDynamics->setBuffer_size(size_anechoic_buffer);
 						DotList2D points_to_aplly_dynamics;
 						points_to_aplly_dynamics.addDot(Dot2D(x,y));
 						defineDynamics(lattice, points_to_aplly_dynamics, anechoicDynamics);
@@ -426,6 +434,49 @@ namespace plb_acoustics_2D{
 			}
 		}
 	}
+
+T compute_drho(T NPS){
+	T p_line_phis =  2*10e-5*pow(10, (NPS/20));
+	T cs = 1/sqrt(3);
+	T c_o = 343;
+	T rho_o = 1.22;
+	T qsi = c_o/cs;
+	T p_line_lattice = p_line_phis/((qsi*qsi)*rho_o);
+	T delta_rho = p_line_lattice/(cs*cs);
+	return delta_rho;
+}
+
+T get_tone_pure_omega(T freq_phys, plint iT, T NPS, T delta_x){
+    T chirp_value = 1;
+    T cs = 1/sqrt(3);
+    T c_o = 343;
+    T qsi = c_o/cs;
+    T freq = freq_phys*(delta_x/qsi);
+    T phase = 2*M_PI*freq*iT;
+    T drho = compute_drho(NPS);
+    chirp_value += drho*cos(phase);
+    return chirp_value;
+}
+
+void writeVTK(MultiBlockLattice2D<T,DESCRIPTOR>& lattice, plint iter, Box2D local_to_extract){
+        VtkImageOutput2D<T> vtkOut(createFileName("vtk", iter, 6), 1.);
+        vtkOut.writeData<float>(*computeDensity(lattice, local_to_extract), "pressure", 1.);
+        vtkOut.writeData<2,float>(*computeVelocity(lattice, local_to_extract), "velocity", 1.);
+        vtkOut.writeData<float>(*computeVorticity(*computeVelocity(lattice, local_to_extract)), "vorticity", 1.);
+}
+
+// Get current date/time, format is YYYY-MM-DD.HH:mm:ss
+const std::string currentDateTime() {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+    return buf;
+}
 
 
 }
