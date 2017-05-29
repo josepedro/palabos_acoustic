@@ -59,9 +59,8 @@ int main(int argc, char **argv){
 
     //const plint nz = length_duct + (60/2)*diameter + 30; // precious
     const plint nz = length_duct + 3*diameter + 30;
-    //const T omega = 1.985;
 
-    const plint transient_time = (2*nz)/(mach_number*lattice_speed_sound);
+    const plint transient_time = (nz)/(mach_number*lattice_speed_sound);
     const plint maxT = 12000 + transient_time;
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
