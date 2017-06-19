@@ -57,11 +57,11 @@ using namespace plb_acoustics_2D;
 const T c_o = 343;
 const T density_phys = 1.22;
 const T freq_phys = 500; // Hz
-const T delta_x = 2*10e-5;
-//const T delta_x = 2*10e-4;
+//const T delta_x = 2*10e-5;
+const T delta_x = 2*10e-4;
 const T NPS = 100;
 const T rho0 = 1.;
-const Array<T,2> u0((T)0,(T)0);
+const Array<T,2> u0((T) 0,(T)0);
 const T delta_t = 5.66*10e-9;
 const T As_lattice = (2*10e-3)/delta_x;
 const T d_thickness_phys = 10e-3;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 
     // Anechoic Condition
     T rhoBar_target = 0;
-    Array<T,2> j_target(1.5/std::sqrt(3), 0.0/std::sqrt(3));
+    Array<T,2> j_target(0.15/std::sqrt(3), 0.0/std::sqrt(3));
     // Define Anechoic Boards
     defineAnechoicMRTBoards(nx, ny, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target,
@@ -151,8 +151,10 @@ int main(int argc, char* argv[]) {
     defineDynamics(lattice, above, new BounceBack<T,DESCRIPTOR>((T)0));
 
     // Main loop over time iterations.
-    Box2D signal_input_place(size_anechoic_buffer + Af, nx - Af - size_anechoic_buffer,
-    ny - size_anechoic_buffer - 2, ny  - size_anechoic_buffer - 2);
+    /*Box2D signal_input_place(size_anechoic_buffer + Af, nx - Af - size_anechoic_buffer,
+    ny - size_anechoic_buffer - 2, ny  - size_anechoic_buffer - 2);*/
+    Box2D signal_input_place(size_anechoic_buffer + 1, size_anechoic_buffer + 1,
+    size_anechoic_buffer + H  + d_thickness_lattice, ny  - size_anechoic_buffer - 2);
     //Box2D local_to_extract(Af + size_anechoic_buffer, Af + size_anechoic_buffer + At,
     //size_anechoic_buffer, 2*H+d_thickness_lattice + size_anechoic_buffer);
     Box2D local_to_extract(Af + size_anechoic_buffer, Af + size_anechoic_buffer + At,
@@ -197,8 +199,9 @@ int main(int argc, char* argv[]) {
             << endl;
         }
 
-	if(iT%10000==0){
-		writeVTK(lattice, iT, local_to_extract);
+	if(iT%100==0){
+		//writeVTK(lattice, iT, local_to_extract);
+        writeVTK(lattice, iT, lattice.getBoundingBox());
 	}
        
         // Execute lattice Boltzmann iteration.
