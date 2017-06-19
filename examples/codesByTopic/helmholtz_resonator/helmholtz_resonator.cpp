@@ -57,8 +57,8 @@ using namespace plb_acoustics_2D;
 const T c_o = 343;
 const T density_phys = 1.22;
 const T freq_phys = 500; // Hz
-//const T delta_x = 1*10e-5;
-const T delta_x = 2*10e-4;
+const T delta_x = 2*10e-5;
+//const T delta_x = 2*10e-4;
 const T NPS = 100;
 const T rho0 = 1.;
 const Array<T,2> u0((T)0,(T)0);
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 
     // Anechoic Condition
     T rhoBar_target = 0;
-    Array<T,2> j_target(0, 0.0/std::sqrt(3));
+    Array<T,2> j_target(1.5/std::sqrt(3), 0.0/std::sqrt(3));
     // Define Anechoic Boards
     defineAnechoicMRTBoards(nx, ny, lattice, size_anechoic_buffer,
       omega, j_target, j_target, j_target, j_target,
@@ -153,8 +153,11 @@ int main(int argc, char* argv[]) {
     // Main loop over time iterations.
     Box2D signal_input_place(size_anechoic_buffer + Af, nx - Af - size_anechoic_buffer,
     ny - size_anechoic_buffer - 2, ny  - size_anechoic_buffer - 2);
+    //Box2D local_to_extract(Af + size_anechoic_buffer, Af + size_anechoic_buffer + At,
+    //size_anechoic_buffer, 2*H+d_thickness_lattice + size_anechoic_buffer);
     Box2D local_to_extract(Af + size_anechoic_buffer, Af + size_anechoic_buffer + At,
-    size_anechoic_buffer, 2*H+d_thickness_lattice + size_anechoic_buffer);
+    size_anechoic_buffer + H - 5*d_thickness_lattice, size_anechoic_buffer + H  + 6*d_thickness_lattice);
+
     info_reynols_dynamic_viscosity_phys << "Nx local: "  <<  setprecision(10) << local_to_extract.getNx()  
     << endl << "Ny local: " << setprecision(10) << local_to_extract.getNy()
     << endl << "Total number iterations: " << maxIter + 1 << endl;
@@ -180,10 +183,10 @@ int main(int argc, char* argv[]) {
             initializeAtEquilibrium(lattice, signal_input_place, rho_changing, u0);
         }
 
-        if (iT%100==0) { 
+        if (iT%50==0) { 
             pcout << "iT= " << iT << endl;
 
-            writeVTK(lattice, iT, local_to_extract);
+            
 
             pcout << " energy ="
             << setprecision(10) << getStoredAverageEnergy<T>(lattice)
@@ -193,6 +196,10 @@ int main(int argc, char* argv[]) {
             << setprecision(10) << (getStoredMaxVelocity<T>(lattice))///cs
             << endl;
         }
+
+	if(iT%10000==0){
+		writeVTK(lattice, iT, local_to_extract);
+	}
        
         // Execute lattice Boltzmann iteration.
         lattice.collideAndStream();
