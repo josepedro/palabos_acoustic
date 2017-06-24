@@ -79,8 +79,8 @@ const T zeta = c_o/cs;
 const plint period_cicle_duration = HH/cs;
 const plint transient_time = 20*period_cicle_duration;
 const plint record_time_points = 5*period_cicle_duration;
-const plint maxIter = transient_time + record_time_points;
-const T omega = 1.99;
+const plint maxIter = transient_time + record_time_points + 10000;
+const T omega = 1.97;
 const T tau = 1/omega;
 const T kinematic_viscosity_lattice = cs2*(tau - 0.5);
 const T kinematic_viscosity_phys = zeta*delta_x*kinematic_viscosity_lattice;
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
         // excitation signal
         if (iT >= 0){
             T rho_changing = get_tone_pure_omega(freq_phys, iT, NPS, delta_x);
-            initializeAtEquilibrium(lattice, signal_input_place, rho_changing, u0);
+            //initializeAtEquilibrium(lattice, signal_input_place, rho_changing, u0);
         }
 
         if (iT%50==0) { 
