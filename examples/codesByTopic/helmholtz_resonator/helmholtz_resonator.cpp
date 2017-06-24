@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
     // Main loop over time iterations.
     /*Box2D signal_input_place(size_anechoic_buffer + Af, nx - Af - size_anechoic_buffer,
     ny - size_anechoic_buffer - 2, ny  - size_anechoic_buffer - 2);*/
-    Box2D signal_input_place(size_anechoic_buffer + 1, size_anechoic_buffer + 1,
+    Box2D signal_input_place(nx - size_anechoic_buffer - 1, nx - size_anechoic_buffer - 1,
     size_anechoic_buffer + H  + d_thickness_lattice, ny  - size_anechoic_buffer - 2);
     //Box2D local_to_extract(Af + size_anechoic_buffer, Af + size_anechoic_buffer + At,
     //size_anechoic_buffer, 2*H+d_thickness_lattice + size_anechoic_buffer);
