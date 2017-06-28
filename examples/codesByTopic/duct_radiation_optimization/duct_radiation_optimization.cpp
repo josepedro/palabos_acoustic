@@ -57,10 +57,11 @@ int main(int argc, char **argv){
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
 
-    //const plint nz = length_duct + (60/2)*diameter + 30; // precious
-    const plint nz = length_duct + 3*diameter + 30;
+    const plint nz = length_duct + (60/2)*diameter + 30; // precious
+    //const plint nz = length_duct + 3*diameter + 30;
 
-    const plint transient_time = (nz)/(mach_number*lattice_speed_sound);
+    //const plint transient_time = (nz)/(mach_number*lattice_speed_sound);
+    const plint transient_time = 16000; 
     const plint maxT = 12000 + transient_time;
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
@@ -166,7 +167,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
 
-    std::string title = "\nAGORA COM TUDO VALIDADO BONITINHO BORA VER O QUE ESTA ACONTECENDO COM A FISICA DA PARADA. Agora com Mach sugado -0.2 com omega 1.99!!!! NO 2!!\n";
+    std::string title = "\nRevendo o munt pra cravar.\n";
 
     AllSimulationInfo << endl
     << title << endl
