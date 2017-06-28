@@ -57,8 +57,8 @@ int main(int argc, char **argv){
     const plint length_duct = 3*(3*diameter);
     //const plint length_duct = 3*diameter;
 
-    const plint nz = length_duct + (60/2)*diameter + 30; // precious
-    //const plint nz = length_duct + 3*diameter + 30;
+    //const plint nz = length_duct + (60/2)*diameter + 30; // precious
+    const plint nz = length_duct + 3*diameter + 30;
 
     //const plint transient_time = (nz)/(mach_number*lattice_speed_sound);
     const plint transient_time = 16000; 
@@ -189,10 +189,17 @@ int main(int argc, char **argv){
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source && iT > transient_time){
             plint total_signals = 20;
-	        T chirp_hand = get_linear_chirp_AZ(ka_max,  total_signals, maxT_final_source, iT - transient_time, drho, radius);
+            T ka = 0.25;
+            T chirp_hand = get_tonal(ka, maxT_final_source, iT, drho, radius);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
+
+        if (iT % 10 == 0){
+            Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 200, length_duct + 3 + radius);
+            writeVTK(lattice, iT, rho0, drho, local_to_extract);
+        }
+        
         }else{
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, rho0, j_target, radius, radius_intern, nx, ny);
@@ -207,26 +214,6 @@ int main(int argc, char **argv){
             << " max_velocity ="
             << setprecision(10) << (getStoredMaxVelocity<T>(lattice))/lattice_speed_sound
             << endl;
-        }
-
-        // print no transiente
-        if (iT == (transient_time) - (transient_time/2)) {
-            Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
-            writeVTK(lattice, iT, rho0, drho, local_to_extract);
-        }
-
-        // print no final do transiente um pouquinho antes da fonte
-        if (iT == (transient_time) ) {
-            //writeGifs(lattice,iT);
-            Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
-            writeVTK(lattice, iT, rho0, drho, local_to_extract);
-        }
-
-        // print junto com a fonte
-        if (iT == 18620 ) {
-            //writeGifs(lattice,iT);
-            Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 0, length_duct + 3 + radius);
-            writeVTK(lattice, iT, rho0, drho, local_to_extract);
         }
 
         // extract values of pressure and velocities
