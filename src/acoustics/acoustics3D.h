@@ -1116,6 +1116,87 @@ class System_Abom_Measurement{
     }
 };
 
+
+class System_Abom_Measurement_points{
+    private:
+        std::vector<Box3D> microphones_positions; 
+        plb_ofstream file_pressures;
+        plb_ofstream file_velocities_x;
+        plb_ofstream file_velocities_y;
+        plb_ofstream file_velocities_z;
+    public:
+        System_Abom_Measurement_points(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> position_duct, 
+            plint begin_microphone, plint length_duct, plint radius, string directory, Array<plint,2> centering_point, string name_probe){
+
+            directory = directory + "/" + name_probe;
+            std::string command = "mkdir -p " + directory;
+            char to_char_command[1024];
+            strcpy(to_char_command, command.c_str());
+            system(to_char_command);
+
+            /*const plint nx = lattice.getNx();
+            const plint ny = lattice.getNy();
+            const plint nz = lattice.getNz();
+            const plint diameter = 2*radius;*/
+
+            string pressures_string = directory + "/history_pressures_" + name_probe + ".dat";
+            string velocities_x_string = directory + "/history_velocities_x_" + name_probe + ".dat";
+            string velocities_y_string = directory + "/history_velocities_y_" + name_probe + ".dat";
+            string velocities_z_string = directory + "/history_velocities_z_" + name_probe + ".dat";
+            char to_char_pressures[1024];
+            char to_char_velocities_x[1024];
+            char to_char_velocities_y[1024];
+            char to_char_velocities_z[1024];
+            strcpy(to_char_pressures, pressures_string.c_str());
+            strcpy(to_char_velocities_x, velocities_x_string.c_str());
+            strcpy(to_char_velocities_y, velocities_y_string.c_str());
+            strcpy(to_char_velocities_z, velocities_z_string.c_str());
+
+            this->file_pressures.open(to_char_pressures);
+            this->file_velocities_x.open(to_char_velocities_x);
+            this->file_velocities_y.open(to_char_velocities_y);
+            this->file_velocities_z.open(to_char_velocities_z);
+
+            plint radius_probe = (radius - 1)/sqrt(2);
+            for (int i = begin_microphone; i <= length_duct + 3 + radius/2; i++){
+            	plint position_microphone = position_duct[2] + i;
+
+            	Box3D surface_microphone(
+            		position_duct[0] + centering_point[0], 
+            		position_duct[0] + centering_point[0],
+                	position_duct[1] + centering_point[1], 
+                	position_duct[1] + centering_point[1],
+                	position_microphone, 
+                	position_microphone);
+
+            	this->microphones_positions.push_back(surface_microphone);
+            }
+
+            pcout << "MICROPHONES" << endl;
+            for (int i = 0; i < this->microphones_positions.size(); i++){
+                Box3D to_see = microphones_positions[i];
+                Array<plint, 6> test = to_see.to_plbArray();
+                pcout << i + 1 << " - " << test[5] << "; ";
+            }
+        }
+
+    void save_point(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, T rho0, T cs2){
+        for (int mic = 0; mic < this->microphones_positions.size(); mic++){
+            file_pressures << setprecision(10) << (computeAverageDensity(lattice, this->microphones_positions[mic]) - rho0)*cs2 << " ";
+            std::auto_ptr<MultiScalarField3D<T> > velocity_x(plb::computeVelocityComponent(lattice, this->microphones_positions[mic], 0));
+            file_velocities_x << setprecision(10) << computeAverage(*velocity_x, this->microphones_positions[mic]) << " ";
+            std::auto_ptr<MultiScalarField3D<T> > velocity_y(plb::computeVelocityComponent(lattice, this->microphones_positions[mic], 1));
+            file_velocities_y << setprecision(10) << computeAverage(*velocity_y, this->microphones_positions[mic]) << " ";
+            std::auto_ptr<MultiScalarField3D<T> > velocity_z(plb::computeVelocityComponent(lattice, this->microphones_positions[mic], 2));
+            file_velocities_z << setprecision(10) << computeAverage(*velocity_z, this->microphones_positions[mic]) << " ";
+        }
+        file_pressures << endl;
+        file_velocities_x << endl;
+        file_velocities_y << endl;
+        file_velocities_z << endl;
+    }
+};
+
 void build_duct_with_horn(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, plint nx, plint ny,
     Array<plint,3> position, plint radius, plint length, plint thickness, T omega, plint size_horn){
     length += 4;
