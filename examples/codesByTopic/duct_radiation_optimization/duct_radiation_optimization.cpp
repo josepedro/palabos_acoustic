@@ -44,7 +44,7 @@ int main(int argc, char **argv){
     T omega = atof(argv[3]);
 
     const T rho0 = 1;
-    const T drho = compute_drho(80); // NPS dB
+    const T drho = compute_drho(120); // NPS dB
 
     const plint nx = (6*diameter + 60);
     //const plint nx = 2*diameter + 60;
@@ -126,6 +126,31 @@ int main(int argc, char **argv){
     System_Abom_Measurement system_abom_measurement(lattice, position,
         begin_microphone, length_duct, radius, fNameOut);
 
+    string name_point_1 = "point_1";
+    Array<plint,2> centering_point_1(4, 4);
+    System_Abom_Measurement_points system_abom_measurement_point_1(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_1, name_point_1);
+
+    string name_point_2 = "point_2";
+    Array<plint,2> centering_point_2(8, 8);
+    System_Abom_Measurement_points system_abom_measurement_point_2(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_2, name_point_2);
+
+    string name_point_3 = "point_3";
+    Array<plint,2> centering_point_3(12, 12);
+    System_Abom_Measurement_points system_abom_measurement_point_3(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_3, name_point_3);
+
+    string name_point_4 = "point_4";
+    Array<plint,2> centering_point_4(16, 16);
+    System_Abom_Measurement_points system_abom_measurement_point_4(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_4, name_point_4);
+
+    string name_point_5 = "point_5";
+    Array<plint,2> centering_point_5(20, 20);
+    System_Abom_Measurement_points system_abom_measurement_point_5(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_5, name_point_5);
+    
     plint double_microphone_distance = 5;
 
     plint distance_boca = 0*radius;
@@ -167,7 +192,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
 
-    std::string title = "\nRevendo o munt pra cravar.\n";
+    std::string title = "\nTestando varios pontos para pegar a energia turbulenta.\n";
 
     AllSimulationInfo << endl
     << title << endl
@@ -189,16 +214,11 @@ int main(int argc, char **argv){
     for (plint iT=0; iT<maxT; ++iT){
         if (iT <= maxT_final_source && iT > transient_time){
             plint total_signals = 20;
-            T ka = 0.25;
+            T ka = atof(argv[4]);
             T chirp_hand = get_tonal(ka, maxT_final_source, iT, drho, radius);
             history_signal_in << setprecision(10) << chirp_hand << endl;
             Array<T,3> j_target(0, 0, velocity_flow);
             set_source(lattice, position, chirp_hand, j_target, radius, radius_intern, nx, ny);
-
-        if (iT % 10 == 0){
-            Box3D local_to_extract(nx/4, nx-1 - nx/4, ny/4, ny-1 - ny/4, 200, length_duct + 3 + radius);
-            writeVTK(lattice, iT, rho0, drho, local_to_extract);
-        }
         
         }else{
             Array<T,3> j_target(0, 0, velocity_flow);
@@ -218,11 +238,11 @@ int main(int argc, char **argv){
 
         // extract values of pressure and velocities
         system_abom_measurement.save_point(lattice, rho0, cs2);
-        two_microphones_1r.save_point(lattice, rho0, cs2);
-        two_microphones_2r.save_point(lattice, rho0, cs2);
-        two_microphones_3r.save_point(lattice, rho0, cs2);
-        two_microphones_6r.save_point(lattice, rho0, cs2);
-        two_microphones_boca.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_1.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_2.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_3.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_4.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_5.save_point(lattice, rho0, cs2);
 
         lattice.collideAndStream();
     }
