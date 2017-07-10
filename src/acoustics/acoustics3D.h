@@ -1254,5 +1254,51 @@ T compute_drho(T NPS){
 	return delta_rho;
 }
 
+class Howe_Corollary{
+private:
+    Box3D plane; 
+    plint total_period;
+    plint initial_time;
+    std::auto_ptr<MultiScalarField3D<T> > mean_velocities_axial; // z
+    std::auto_ptr<MultiScalarField3D<T> > mean_velocities_upright; // y or x because it's axyssimetric
+public:
+	Howe_Corollary(Box3D plane, plint total_period, plint initial_time){
+		this->plane = plane;
+		this->total_period = total_period;
+		this->initial_time = initial_time;
+	}
+
+	void extract_velocities(MultiBlockLattice3D<T,DESCRIPTOR>& lattice){
+			 std::auto_ptr<MultiScalarField3D<T> > velocity_z(plb::computeVelocityComponent(lattice, this->plane, 2));
+			 this->mean_velocities_axial = velocity_z;
+			 std::auto_ptr<MultiScalarField3D<T> > velocity_x(plb::computeVelocityComponent(lattice, this->plane, 0));
+			 this->mean_velocities_upright = velocity_x;
+	}
+
+	void calculate_acoustic_energy(string directory, string name_file){
+		plb_ofstream howe_corollary_result;
+
+
+		plint iter = 9999;
+		std::ostringstream ss;
+     	ss << iter;
+        string howe_string = directory + "/" + name_file + ss.str() + ".dat";
+        
+        char to_char_howe[1024];
+        strcpy(to_char_howe, howe_string.c_str());
+
+        howe_corollary_result.open(to_char_howe);
+
+        howe_corollary_result << setprecision(10) << *(this->mean_velocities_axial);
+        howe_corollary_result.close();
+
+        
+        VtkImageOutput3D<T> vtkOut(createFileName(name_file, iter, 6), 1.);
+        vtkOut.writeData<T>(*(this->mean_velocities_axial), "velocity", 1.);
+
+	}
+	
+};
+
 
 }

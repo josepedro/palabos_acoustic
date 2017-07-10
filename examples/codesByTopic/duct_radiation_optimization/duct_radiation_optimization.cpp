@@ -61,8 +61,10 @@ int main(int argc, char **argv){
     const plint nz = length_duct + 3*diameter + 30;
 
     //const plint transient_time = (nz)/(mach_number*lattice_speed_sound);
+    // tempo de transiente diminuido
     const plint transient_time = 16000; 
-    const plint maxT = 12000 + transient_time;
+    //const plint maxT = 12000 + transient_time;
+    const plint maxT = 200;
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
@@ -125,59 +127,14 @@ int main(int argc, char **argv){
     plint begin_microphone = length_duct/2;
     System_Abom_Measurement system_abom_measurement(lattice, position,
         begin_microphone, length_duct, radius, fNameOut);
-
-    string name_point_1 = "point_1";
-    Array<plint,2> centering_point_1(4, 4);
-    System_Abom_Measurement_points system_abom_measurement_point_1(lattice, position,
-        begin_microphone, length_duct, radius, fNameOut, centering_point_1, name_point_1);
-
-    string name_point_2 = "point_2";
-    Array<plint,2> centering_point_2(8, 8);
-    System_Abom_Measurement_points system_abom_measurement_point_2(lattice, position,
-        begin_microphone, length_duct, radius, fNameOut, centering_point_2, name_point_2);
-
-    string name_point_3 = "point_3";
-    Array<plint,2> centering_point_3(12, 12);
-    System_Abom_Measurement_points system_abom_measurement_point_3(lattice, position,
-        begin_microphone, length_duct, radius, fNameOut, centering_point_3, name_point_3);
-
-    string name_point_4 = "point_4";
-    Array<plint,2> centering_point_4(16, 16);
-    System_Abom_Measurement_points system_abom_measurement_point_4(lattice, position,
-        begin_microphone, length_duct, radius, fNameOut, centering_point_4, name_point_4);
-
-    string name_point_5 = "point_5";
-    Array<plint,2> centering_point_5(20, 20);
-    System_Abom_Measurement_points system_abom_measurement_point_5(lattice, position,
-        begin_microphone, length_duct, radius, fNameOut, centering_point_5, name_point_5);
-    
-    plint double_microphone_distance = 5;
-
-    plint distance_boca = 0*radius;
-    string name_boca = "boca";
-    Two_Microphones two_microphones_boca(radius, double_microphone_distance,
-            length_duct, position, fNameOut, name_boca, distance_boca, nx, ny, nz);
-
-    plint distance_1r = 1*radius;
-    string name_1r = "1r";
-    Two_Microphones two_microphones_1r(radius, double_microphone_distance,
-            length_duct, position, fNameOut, name_1r, distance_1r, nx, ny, nz);
-
-    plint distance_2r = 2*radius;
-    string name_2r = "2r";
-    Two_Microphones two_microphones_2r(radius, double_microphone_distance,
-            length_duct, position, fNameOut, name_2r, distance_2r, nx, ny, nz);
-
-    plint distance_3r = 3*radius;
-    string name_3r = "3r";
-    Two_Microphones two_microphones_3r(radius, double_microphone_distance,
-            length_duct, position, fNameOut, name_3r, distance_3r, nx, ny, nz);
-
-    plint distance_6r = length_duct - 100;
-    string name_6r = "listening";
-    Two_Microphones two_microphones_6r(radius, double_microphone_distance,
-            length_duct, position, fNameOut, name_6r, distance_6r, nx, ny, nz);
-
+    plint xa = nx/2 - diameter; 
+    plint xb = nx/2 + diameter;
+    plint ya = ny/2; 
+    plint yb = ny/2; 
+    plint za = 0;
+    plint zb = length_duct + diameter;
+    Box3D plane(xa, xb, ya, yb, za, zb);
+    Howe_Corollary howe_corollary(plane, maxT, 0);
 
     // Recording entering signal -------------------------------
     std::string signal_in_string = fNameOut+"/signal_in.dat";
@@ -207,7 +164,14 @@ int main(int argc, char **argv){
     << "Tamanho duto: " << length_duct << endl
     << "Posicao do duto: " << position[2] << endl
     << "Começo dos microfones em lattice: " << begin_microphone << endl
-    << "Mach imposto: " <<  mach_number << endl;
+    << "Mach imposto: " <<  mach_number << endl
+    << "Dimensoes plano: " <<  xa << endl
+    <<  xb << endl
+    <<  ya << endl
+    <<  yb << endl
+    <<  za << endl
+    <<  zb << endl
+    ;
     // --------------------------------------------------------
 
     // Mean for-loop
@@ -238,14 +202,14 @@ int main(int argc, char **argv){
 
         // extract values of pressure and velocities
         system_abom_measurement.save_point(lattice, rho0, cs2);
-        system_abom_measurement_point_1.save_point(lattice, rho0, cs2);
-        system_abom_measurement_point_2.save_point(lattice, rho0, cs2);
-        system_abom_measurement_point_3.save_point(lattice, rho0, cs2);
-        system_abom_measurement_point_4.save_point(lattice, rho0, cs2);
-        system_abom_measurement_point_5.save_point(lattice, rho0, cs2);
-
+        howe_corollary.extract_velocities(lattice);
+        
+        
         lattice.collideAndStream();
     }
+
+    string test_file_name = "howe_corollary_"; 
+    howe_corollary.calculate_acoustic_energy(fNameOut, test_file_name);
 
     T total_time_simulation = global::timer("mainLoop").stop();
     pcout << "End of simulation at iteration with total time: " << total_time_simulation << endl;
