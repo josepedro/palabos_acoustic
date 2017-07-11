@@ -134,7 +134,11 @@ int main(int argc, char **argv){
     plint za = 0;
     plint zb = length_duct + diameter;
     Box3D plane(xa, xb, ya, yb, za, zb);
-    Howe_Corollary howe_corollary(plane, maxT, 0);
+    plint max_time_period = atoi(argv[5]);
+    plint initial_time = atoi(argv[6]);
+    Howe_Corollary howe_corollary(plane, max_time_period, initial_time);
+    pcout << initial_time << endl;
+    pcout << max_time_period << endl;
 
     // Recording entering signal -------------------------------
     std::string signal_in_string = fNameOut+"/signal_in.dat";
@@ -171,6 +175,8 @@ int main(int argc, char **argv){
     <<  yb << endl
     <<  za << endl
     <<  zb << endl
+    << initial_time << endl
+    << max_time_period << endl
     ;
     // --------------------------------------------------------
 
@@ -202,7 +208,7 @@ int main(int argc, char **argv){
 
         // extract values of pressure and velocities
         system_abom_measurement.save_point(lattice, rho0, cs2);
-        if (iT >= howe_corollary.get_initial_time() && iT < howe_corollary.get_total_period()){
+        if (iT >= howe_corollary.get_initial_time() && iT <= howe_corollary.get_total_period()){
             howe_corollary.extract_velocities(lattice);
         }
         
