@@ -202,8 +202,9 @@ int main(int argc, char **argv){
 
         // extract values of pressure and velocities
         system_abom_measurement.save_point(lattice, rho0, cs2);
-        howe_corollary.extract_velocities(lattice);
-        
+        if (iT >= howe_corollary.get_initial_time() && iT < howe_corollary.get_total_period()){
+            howe_corollary.extract_velocities(lattice);
+        }
         
         lattice.collideAndStream();
     }
