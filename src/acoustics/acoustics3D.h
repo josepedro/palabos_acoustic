@@ -806,8 +806,8 @@ void set_source(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> posit
             if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
                 Array<plint, 6> local_source_2(x, x, y, y, position[2] + 29, position[2] + 30);
                 impulse_local.from_plbArray(local_source_2);
-                Array<T,3> u_chirp_hand(0, 0, u0[2] + (chirp_hand-1)*(1/sqrt(3)));
-                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u0);
+                Array<T,3> u_chirp_hand(0, 0, u0[2] + (chirp_hand-1)*(sqrt(3)));
+                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u_chirp_hand);
             }
         }
     }
