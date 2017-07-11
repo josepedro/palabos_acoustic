@@ -63,8 +63,7 @@ int main(int argc, char **argv){
     //const plint transient_time = (nz)/(mach_number*lattice_speed_sound);
     // tempo de transiente diminuido
     const plint transient_time = 16000; 
-    //const plint maxT = 12000 + transient_time;
-    const plint maxT = 200;
+    const plint maxT = 12000 + transient_time;
     Array<T,3> u0(0, 0, 0);
     const Array<plint,3> position(nx/2, ny/2, position_duct_z);
     const plint thickness_duct = 2;
