@@ -1268,6 +1268,14 @@ public:
 		this->initial_time = initial_time;
 	}
 
+	plint get_total_period(){
+		return this->total_period;
+	}
+
+	plint get_initial_time(){
+		return this->initial_time;
+	}
+
 	void extract_velocities(MultiBlockLattice3D<T,DESCRIPTOR>& lattice){
 			 std::auto_ptr<MultiScalarField3D<T> > velocity_z(plb::computeVelocityComponent(lattice, this->plane, 2));
 			 this->several_mean_velocities_axial.push_back(*velocity_z);
