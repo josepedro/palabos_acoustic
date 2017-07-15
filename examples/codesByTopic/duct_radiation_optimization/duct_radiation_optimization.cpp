@@ -61,7 +61,6 @@ int main(int argc, char **argv){
     const plint nz = length_duct + 3*diameter + 30;
 
     //const plint transient_time = (nz)/(mach_number*lattice_speed_sound);
-    // tempo de transiente diminuido
     const plint transient_time = 16000; 
     const plint maxT = 12000 + transient_time;
     Array<T,3> u0(0, 0, 0);
@@ -139,6 +138,31 @@ int main(int argc, char **argv){
     pcout << initial_time << endl;
     pcout << max_time_period << endl;
 
+    string name_point_1 = "point_1";
+    Array<plint,2> centering_point_1(4, 4);
+    System_Abom_Measurement_points system_abom_measurement_point_1(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_1, name_point_1);
+
+    string name_point_2 = "point_2";
+    Array<plint,2> centering_point_2(8, 8);
+    System_Abom_Measurement_points system_abom_measurement_point_2(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_2, name_point_2);
+
+    string name_point_3 = "point_3";
+    Array<plint,2> centering_point_3(12, 12);
+    System_Abom_Measurement_points system_abom_measurement_point_3(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_3, name_point_3);
+
+    string name_point_4 = "point_4";
+    Array<plint,2> centering_point_4(16, 16);
+    System_Abom_Measurement_points system_abom_measurement_point_4(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_4, name_point_4);
+
+    string name_point_5 = "point_5";
+    Array<plint,2> centering_point_5(20, 20);
+    System_Abom_Measurement_points system_abom_measurement_point_5(lattice, position,
+        begin_microphone, length_duct, radius, fNameOut, centering_point_5, name_point_5);
+
     // Recording entering signal -------------------------------
     std::string signal_in_string = fNameOut+"/signal_in.dat";
     char to_char_signal_in[1024];
@@ -152,7 +176,7 @@ int main(int argc, char **argv){
     strcpy(to_char_AllSimulationInfo, AllSimulationInfo_string.c_str());
     plb_ofstream AllSimulationInfo(to_char_AllSimulationInfo);
 
-    std::string title = "\nTestando varios pontos para pegar a energia turbulenta.\n";
+    std::string title = "\nTestando varios pontos para pegar a energia turbulenta +  colorario para Mach 0.07.\n";
 
     AllSimulationInfo << endl
     << title << endl
@@ -210,6 +234,12 @@ int main(int argc, char **argv){
         if (iT >= howe_corollary.get_initial_time() && iT <= howe_corollary.get_total_period()){
             howe_corollary.extract_velocities(lattice);
         }
+
+        system_abom_measurement_point_1.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_2.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_3.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_4.save_point(lattice, rho0, cs2);
+        system_abom_measurement_point_5.save_point(lattice, rho0, cs2);
         
         lattice.collideAndStream();
     }
