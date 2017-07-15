@@ -806,8 +806,8 @@ void set_source(MultiBlockLattice3D<T,DESCRIPTOR>& lattice, Array<plint,3> posit
             if (radius_intern*radius_intern > (x-nx/2)*(x-nx/2) + (y-ny/2)*(y-ny/2)){
                 Array<plint, 6> local_source_2(x, x, y, y, position[2] + 29, position[2] + 30);
                 impulse_local.from_plbArray(local_source_2);
-                Array<T,3> u_chirp_hand(0, 0, u0[2] + (chirp_hand-1)*(1/sqrt(3)));
-                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u0);
+                Array<T,3> u_chirp_hand(0, 0, u0[2] + (chirp_hand-1)*(sqrt(3)));
+                initializeAtEquilibrium(lattice, impulse_local, chirp_hand, u_chirp_hand);
             }
         }
     }
@@ -1253,6 +1253,69 @@ T compute_drho(T NPS){
 	T delta_rho = p_line_lattice/(cs*cs);
 	return delta_rho;
 }
+
+class Howe_Corollary{
+private:
+    Box3D plane;
+    std::vector<MultiScalarField3D<T> > several_mean_velocities_axial; // z
+    std::vector<MultiScalarField3D<T> > several_mean_velocities_upright; // y or x because it's axyssimetric
+    plint total_period;
+    plint initial_time;
+public:
+	Howe_Corollary(Box3D plane, plint total_period, plint initial_time){
+		this->plane = plane;
+		this->total_period = total_period;
+		this->initial_time = initial_time;
+	}
+
+	plint get_total_period(){
+		return this->total_period;
+	}
+
+	plint get_initial_time(){
+		return this->initial_time;
+	}
+
+	void extract_velocities(MultiBlockLattice3D<T,DESCRIPTOR>& lattice){
+			 std::auto_ptr<MultiScalarField3D<T> > velocity_z(plb::computeVelocityComponent(lattice, this->plane, 2));
+			 this->several_mean_velocities_axial.push_back(*velocity_z);
+			 std::auto_ptr<MultiScalarField3D<T> > velocity_x(plb::computeVelocityComponent(lattice, this->plane, 0));
+			 this->several_mean_velocities_upright.push_back(*velocity_x);
+	}
+
+	void calculate_acoustic_energy(string directory, string name_file){
+		
+        for (int i = 0; i < this->several_mean_velocities_axial.size(); i++){
+        	plb_ofstream howe_corollary_result_axial;    
+        	std::ostringstream ss;
+     		ss << i;
+        	string howe_string = directory + "/" + name_file + ss.str() + "_axial" + ".dat";
+            char to_char_howe[1024];
+	        strcpy(to_char_howe, howe_string.c_str());
+	        howe_corollary_result_axial.open(to_char_howe);
+	        howe_corollary_result_axial << setprecision(10) << (this->several_mean_velocities_axial[i]);
+	        howe_corollary_result_axial.close();
+	        /*VtkImageOutput3D<T> vtkOut(createFileName(name_file, i, 6), 1.);
+        	vtkOut.writeData<T>((this->several_mean_velocities_axial[i]), "velocity", 1.);*/
+        }
+
+
+        for (int i = 0; i < this->several_mean_velocities_upright.size(); i++){
+        	plb_ofstream howe_corollary_result_upright;    
+        	std::ostringstream ss;
+     		ss << i;
+        	string howe_string = directory + "/" + name_file + ss.str() + "_upright" + ".dat";
+            char to_char_howe[1024];
+	        strcpy(to_char_howe, howe_string.c_str());
+	        howe_corollary_result_upright.open(to_char_howe);
+	        howe_corollary_result_upright << setprecision(10) << (this->several_mean_velocities_upright[i]);
+	        howe_corollary_result_upright.close();
+	        /*VtkImageOutput3D<T> vtkOut(createFileName(name_file, i, 6), 1.);
+        	vtkOut.writeData<T>((this->several_mean_velocities_axial[i]), "velocity", 1.);*/
+        }
+	}
+	
+};
 
 
 }

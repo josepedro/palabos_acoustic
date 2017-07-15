@@ -6,6 +6,7 @@ total_time = 482;
 initial_time = 0;
 times_period = initial_time:total_time-1;
 radius = 20;
+
 diameter = 2*radius;
 length_duct = 3*(3*diameter);
 distance_from_start = 0; 
