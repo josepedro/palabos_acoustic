@@ -15,28 +15,28 @@ Nz = 1 + length_duct + diameter - distance_from_start;
 file_name = '2017-07-21.16:10:02+tmp/';
 
 sentinella = textread(strcat(file_name,'howe_corollary_0_upright.dat'));
-sentinella = sentinella(1:end-1);
+sentinella = sentinella(280:end-1);
 sentinella = reshape(sentinella, Nz, length(sentinella)/Nz);
 sizes = size(sentinella);
 
 % abrindo arquivos e colocando nas matrizes
-velocities_axial(1:sizes(1), 1:sizes(2), 1:length(times_period)) = 0; 
-velocities_upright(1:sizes(1), 1:sizes(2), 1:length(times_period)) = 0;
+velocities_axial(280:sizes(1), 1:sizes(2), 1:length(times_period)) = 0; 
+velocities_upright(280:sizes(1), 1:sizes(2), 1:length(times_period)) = 0;
 veltorial_product_axial = velocities_upright;
 veltorial_product_upright = velocities_upright; 
-mean_velocities_axial(1:sizes(1), 1:sizes(2)) = 0;
+mean_velocities_axial(280:sizes(1), 1:sizes(2)) = 0;
 mean_velocities_upright = mean_velocities_axial;
 for time = 1:length(times_period)
 	disp('tempo: ');
 	disp(time);
 	sentinella = textread(strcat(file_name, 'howe_corollary_', num2str(time - 1), '_axial.dat'));
-	sentinella = sentinella(1:end-1);
+	sentinella = sentinella(280:end-1);
 	sentinella = reshape(sentinella, Nz, length(sentinella)/Nz);
 	velocities_axial(:,:,time) = sentinella;
 	mean_velocities_axial = mean_velocities_axial + velocities_axial(:,:,time); 
 
 	sentinella = textread(strcat(file_name, 'howe_corollary_', num2str(time - 1), '_upright.dat'));
-	sentinella = sentinella(1:end-1);
+	sentinella = sentinella(280:end-1);
 	sentinella = reshape(sentinella, Nz, length(sentinella)/Nz);
 	velocities_upright(:,:,time) = sentinella;
 	mean_velocities_upright = mean_velocities_upright + velocities_upright(:,:,time);
@@ -64,7 +64,7 @@ mean_velocities_upright = mean_velocities_upright/length(times_period);
 mean_velocities_axial = mean_velocities_axial/length(times_period);
 
 % calulando o resultado final
-acoustic_energy(1:sizes(1), 1:sizes(2), 1:length(times_period)) = 0;
+acoustic_energy(280:sizes(1), 1:sizes(2), 1:length(times_period)) = 0;
 for time = 1:length(times_period)
 	for z = 1:sizes(1)
 		for x = 1:sizes(2)
