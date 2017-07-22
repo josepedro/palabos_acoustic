@@ -15,8 +15,9 @@ Nz = 1 + length_duct + diameter - distance_from_start;
 file_name = '2017-07-21.16:10:02+tmp/';
 
 sentinella = textread(strcat(file_name,'howe_corollary_0_upright.dat'));
-sentinella = sentinella(280:end-1);
+sentinella = sentinella(1:end-1);
 sentinella = reshape(sentinella, Nz, length(sentinella)/Nz);
+sentinella = (280:end,:);
 sizes = size(sentinella);
 
 % abrindo arquivos e colocando nas matrizes
@@ -30,14 +31,16 @@ for time = 1:length(times_period)
 	disp('tempo: ');
 	disp(time);
 	sentinella = textread(strcat(file_name, 'howe_corollary_', num2str(time - 1), '_axial.dat'));
-	sentinella = sentinella(280:end-1);
+	sentinella = sentinella(1:end-1);
 	sentinella = reshape(sentinella, Nz, length(sentinella)/Nz);
+	sentinella = (280:end,:);
 	velocities_axial(:,:,time) = sentinella;
 	mean_velocities_axial = mean_velocities_axial + velocities_axial(:,:,time); 
 
 	sentinella = textread(strcat(file_name, 'howe_corollary_', num2str(time - 1), '_upright.dat'));
-	sentinella = sentinella(280:end-1);
+	sentinella = sentinella(1:end-1);
 	sentinella = reshape(sentinella, Nz, length(sentinella)/Nz);
+	sentinella = (280:end,:);
 	velocities_upright(:,:,time) = sentinella;
 	mean_velocities_upright = mean_velocities_upright + velocities_upright(:,:,time);
 
