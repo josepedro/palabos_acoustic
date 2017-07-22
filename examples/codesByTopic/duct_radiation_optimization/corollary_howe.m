@@ -2,7 +2,7 @@
 
 clear('all'); close all; clc;
 
-total_time = 482;
+total_time = 2300;
 initial_time = 0;
 times_period = initial_time:total_time-1;
 radius = 20;
@@ -12,7 +12,7 @@ length_duct = 3*(3*diameter);
 distance_from_start = 0; 
 Nz = 1 + length_duct + diameter - distance_from_start;
 
-file_name = 'analisando_howe/max_ka/';
+file_name = '2017-07-21.16:10:02+tmp/';
 
 sentinella = textread(strcat(file_name,'howe_corollary_0_upright.dat'));
 sentinella = sentinella(1:end-1);
@@ -27,6 +27,8 @@ veltorial_product_upright = velocities_upright;
 mean_velocities_axial(1:sizes(1), 1:sizes(2)) = 0;
 mean_velocities_upright = mean_velocities_axial;
 for time = 1:length(times_period)
+	disp('tempo: ');
+	disp(time);
 	sentinella = textread(strcat(file_name, 'howe_corollary_', num2str(time - 1), '_axial.dat'));
 	sentinella = sentinella(1:end-1);
 	sentinella = reshape(sentinella, Nz, length(sentinella)/Nz);
@@ -73,4 +75,8 @@ for time = 1:length(times_period)
 			acoustic_energy(z,x,time) = dot([alphA betA],[Uac_axial Uac_upright]);
 		end		
 	end
+	disp('tempo 2: ');
+	disp(time);
 end
+
+save('2017-07-21.16:10:02+tmp/max_ka_005.mat')
